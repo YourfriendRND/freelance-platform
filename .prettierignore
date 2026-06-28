@@ -1,0 +1,14 @@
+# Dependencies
+node_modules
+dist
+coverage
+.nx
+
+# Build outputs
+*.min.js
+*.min.css
+
+# Misc
+.DS_Store
+
+.angular
