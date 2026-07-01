@@ -1,60 +1,94 @@
 # Freelance Platform
 
-Nx monorepo for a freelance marketplace (PostgreSQL, DDD, Event-Driven Architecture).
+Nx monorepo для онлайн-площадки фриланса: поиск исполнителей на разовые задачи.
 
-## Stack
+Стек: NestJS (backend), Angular (frontend), PostgreSQL, TypeScript. Проект развивается поэтапно - от foundation и CRUD к DDD и event-driven архитектуре.
 
-| Layer | Technology |
-|-------|------------|
-| Monorepo | Nx 23, Yarn 1.x |
-| Backend | NestJS 11 |
-| Frontend | Angular 21 |
-| Shared | TypeScript libraries with path aliases |
+## Стек
 
-## Structure
+- **Monorepo** - Nx 23, Yarn 1.x
+- **Backend** - NestJS 11, `pg`
+- **Frontend** - Angular 21
+- **Database** - PostgreSQL
+- **Shared libs** - TypeScript-библиотеки с path aliases
+
+## Структура
 
 ```
 apps/
-  backend/     # NestJS API
-  frontend/    # Angular SPA
+  backend/
+    src/
+      app/              # NestJS-модули, контроллеры
+      database/         # DatabaseModule, pg-клиент, migration runner
+      migrations/       # SQL-миграции
+  frontend/             # Angular SPA
 libs/
-  shared-types/  # enums, interfaces (@freelance-platform/shared-types)
-  shared-dto/    # request DTOs with class-validator (@freelance-platform/shared-dto)
-  shared-rdo/    # response objects (@freelance-platform/shared-rdo)
+  shared-config/        # валидация env (@freelance-platform/shared-config)
+  shared-types/         # enums, interfaces
+  shared-dto/           # request DTOs
+  shared-rdo/           # response objects
+docs/
+  backend_change_log.md         # журнал изменений Backend app
 ```
 
-## Requirements
+## Требования
 
-- Node.js 22.16.0 (see `.nvmrc`)
+- Node.js 22.16.0 (см. `.nvmrc`)
 - Yarn 1.22.x
+- PostgreSQL (локально)
 
-## Setup
+## Настройка
 
 ```bash
 yarn install
+cp .env.example .env   # заполнить значения
 ```
 
-## Scripts
+Переменные окружения хранятся в `.env` в корне репозитория.
 
-| Command | Description |
-|---------|-------------|
-| `yarn backend` | Start NestJS API (http://localhost:3000/api) |
-| `yarn frontend` | Start Angular dev server (http://localhost:4200) |
-| `yarn backend:build` | Build backend |
-| `yarn frontend:build` | Build frontend |
-| `yarn build` | Build all projects |
-| `yarn lint` | Lint all projects |
-| `yarn format` | Format with Prettier |
+## Запуск
 
-## API docs
+```bash
+yarn backend    # API: http://localhost:3000/api
+yarn frontend   # SPA: http://localhost:4200
+```
 
-After starting the backend, Swagger UI is available at http://localhost:3000/docs
+Swagger UI: http://localhost:3000/docs
+
+## База данных
+
+### Подключение
+
+Backend подключается к PostgreSQL через глобальный `DatabaseModule`. Взаимодействие с БД идёт через абстрактный `DatabaseClient` — реализация `PgDatabaseClient` на `pg`. Конфигурация загружается из env через `shared-config` и `@nestjs/config`.
+
+При старте приложения, если БД из `DB_NAME` не существует, она создаётся автоматически.
+
+### Миграции
+
+Миграции запускаются вручную, отдельно от `serve`:
+
+```bash
+yarn migrate:init       # создать таблицу schema_migrations (один раз)
+yarn migrate            # применить новые миграции
+yarn migrate:rollback   # откатить последнюю (если есть down)
+```
+
+Порядок для новой БД: запустить backend (создаст БД) => `migrate:init` => `migrate`.
+
+Файлы миграций - в `apps/backend/src/migrations/`. Каждый файл экспортирует объект `migration` с полями `version`, `checksum`, `description`, `up`, `down` (опционально).
+
+## Скрипты
+
+- `yarn backend` / `yarn frontend` — dev-серверы
+- `yarn build` - сборка всех проектов
+- `yarn lint` - линтинг
+- `yarn format` - Prettier
+- `yarn migrate:init` / `yarn migrate` / `yarn migrate:rollback` - миграции
 
 ## Shared libraries
 
-Import shared code in any app:
-
 ```typescript
+import { loadDatabaseConfig } from '@freelance-platform/shared-config';
 import { UserRole } from '@freelance-platform/shared-types';
 import { CreateUserDto } from '@freelance-platform/shared-dto';
 import { UserRdo } from '@freelance-platform/shared-rdo';
@@ -63,6 +97,6 @@ import { UserRdo } from '@freelance-platform/shared-rdo';
 ## Nx
 
 ```bash
-yarn nx graph          # dependency graph
+yarn nx graph
 yarn nx show project backend
 ```
