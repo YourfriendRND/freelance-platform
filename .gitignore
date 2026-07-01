@@ -31,3 +31,6 @@ lerna-debug.log*
 .angular
 
 __screenshots__/
+
+# Secrets
+.private
