@@ -18,7 +18,7 @@ Nx monorepo для онлайн-площадки фриланса: поиск и
 apps/
   backend/
     src/
-      app/              # NestJS-модули, контроллеры
+      modules/          # NestJS-модули (user, app)
       database/         # DatabaseModule, pg-клиент, migration runner
       migrations/       # SQL-миграции
   frontend/             # Angular SPA
