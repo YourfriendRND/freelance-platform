@@ -18,7 +18,8 @@
     "frontend:build": "nx build frontend",
     "migrate:init": "tsx --tsconfig apps/backend/tsconfig.app.json apps/backend/src/database/migration-runner/migrate.ts init",
     "migrate": "tsx --tsconfig apps/backend/tsconfig.app.json apps/backend/src/database/migration-runner/migrate.ts up",
-    "migrate:rollback": "tsx --tsconfig apps/backend/tsconfig.app.json apps/backend/src/database/migration-runner/migrate.ts rollback"
+    "migrate:rollback": "tsx --tsconfig apps/backend/tsconfig.app.json apps/backend/src/database/migration-runner/migrate.ts rollback",
+    "reset": "nx reset"
   },
   "dependencies": {
     "@angular/common": "~21.2.0",
