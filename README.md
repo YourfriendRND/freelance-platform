@@ -8,7 +8,7 @@ Nx monorepo для онлайн-площадки фриланса: поиск и
 
 - **Monorepo** - Nx 23, Yarn 1.x
 - **Backend** - NestJS 11, `pg`
-- **Frontend** - Angular 21
+- **Frontend** - Angular 21 (standalone components, SCSS)
 - **Database** - PostgreSQL
 - **Shared libs** - TypeScript-библиотеки с path aliases
 
@@ -21,14 +21,20 @@ apps/
       modules/          # NestJS-модули (user, app)
       database/         # DatabaseModule, pg-клиент, migration runner
       migrations/       # SQL-миграции
-  frontend/             # Angular SPA
+  frontend/
+    src/
+      app/
+        features/       # feature-first: register и др.
+        app.routes.ts   # lazy load feature-маршрутов
 libs/
+  ui/                   # общие UI-компоненты (@freelance-platform/ui)
   shared-config/        # валидация env (@freelance-platform/shared-config)
   shared-types/         # enums, interfaces
   shared-dto/           # request DTOs
   shared-rdo/           # response objects
 docs/
-  backend_change_log.md         # журнал изменений Backend app
+  backend_change_log.md
+  frontend_change_log.md
 ```
 
 ## Требования
@@ -44,7 +50,7 @@ yarn install
 cp .env.example .env   # заполнить значения
 ```
 
-Переменные окружения хранятся в `.env` в корне репозитория.
+Переменные окружения хранятся в `.env` в корне репозитория (сейчас используются backend).
 
 ## Запуск
 
@@ -54,6 +60,8 @@ yarn frontend   # SPA: http://localhost:4200
 ```
 
 Swagger UI: http://localhost:3000/docs
+
+При пустой странице в dev-режиме (ошибки Vite `Outdated Optimize Dep` / `EPERM` в `.angular/cache`) - остановить сервер, выполнить `yarn nx reset`, удалить `.angular/cache`, запустить `yarn frontend` снова.
 
 ## База данных
 
@@ -88,10 +96,11 @@ yarn migrate:rollback   # откатить последнюю (если есть
 ## Shared libraries
 
 ```typescript
-import { loadDatabaseConfig } from '@freelance-platform/shared-config';
+import { UiButtonComponent } from '@freelance-platform/ui';
 import { UserRole } from '@freelance-platform/shared-types';
 import { CreateUserDto } from '@freelance-platform/shared-dto';
 import { UserRdo } from '@freelance-platform/shared-rdo';
+import { loadDatabaseConfig } from '@freelance-platform/shared-config';
 ```
 
 ## Nx
@@ -99,4 +108,5 @@ import { UserRdo } from '@freelance-platform/shared-rdo';
 ```bash
 yarn nx graph
 yarn nx show project backend
+yarn nx show project frontend
 ```

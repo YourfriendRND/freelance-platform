@@ -1,0 +1,19 @@
+<div class="ui-checkbox" [class.ui-checkbox--invalid]="!!error()">
+  <label class="ui-checkbox__label" [attr.for]="inputId()">
+    <input
+      class="ui-checkbox__input"
+      type="checkbox"
+      [attr.id]="inputId()"
+      [checked]="checked()"
+      [disabled]="isDisabled()"
+      (change)="onToggle($event)"
+    />
+    <span class="ui-checkbox__text">
+      <ng-content />
+    </span>
+  </label>
+
+  @if (error()) {
+    <p class="ui-checkbox__error" role="alert">{{ error() }}</p>
+  }
+</div>

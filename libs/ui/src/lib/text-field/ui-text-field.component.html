@@ -1,0 +1,19 @@
+<div class="ui-text-field" [class.ui-text-field--invalid]="!!error()">
+  <label class="ui-text-field__label" [attr.for]="inputId()">{{ label() }}</label>
+
+  <input
+    class="ui-text-field__input"
+    [attr.id]="inputId()"
+    [attr.type]="type()"
+    [attr.placeholder]="placeholder()"
+    [attr.autocomplete]="autocomplete()"
+    [disabled]="isDisabled()"
+    [value]="value()"
+    (input)="onInput($event)"
+    (blur)="onBlur()"
+  />
+
+  @if (error()) {
+    <p class="ui-text-field__error" role="alert">{{ error() }}</p>
+  }
+</div>
