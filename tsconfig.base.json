@@ -18,7 +18,8 @@
       "@freelance-platform/shared-config": ["libs/shared-config/src/index.ts"],
       "@freelance-platform/shared-dto": ["libs/shared-dto/src/index.ts"],
       "@freelance-platform/shared-rdo": ["libs/shared-rdo/src/index.ts"],
-      "@freelance-platform/shared-types": ["libs/shared-types/src/index.ts"]
+      "@freelance-platform/shared-types": ["libs/shared-types/src/index.ts"],
+      "@freelance-platform/ui": ["./libs/ui/src/index.ts"]
     }
   },
   "exclude": ["node_modules", "tmp"]

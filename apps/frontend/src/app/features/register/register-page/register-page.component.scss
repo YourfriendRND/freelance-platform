@@ -1,0 +1,29 @@
+.register-page__sign-in {
+  margin: 1.5rem 0 0;
+  color: var(--color-text-muted);
+  font-size: 0.875rem;
+  text-align: center;
+}
+
+.register-page__link {
+  color: var(--color-text);
+  font-weight: 600;
+  text-decoration: none;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+.register-page__back {
+  display: block;
+  margin-top: 1.5rem;
+  color: var(--color-text-muted);
+  font-size: 0.875rem;
+  text-align: center;
+  text-decoration: none;
+
+  &:hover {
+    color: var(--color-primary);
+  }
+}

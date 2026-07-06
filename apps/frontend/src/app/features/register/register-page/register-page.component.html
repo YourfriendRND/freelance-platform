@@ -1,0 +1,18 @@
+<ui-auth-shell>
+  <ui-brand-header
+    brandName="TaskFlow"
+    title="Создать аккаунт"
+    subtitle="Присоединяйтесь к тысячам пользователей TaskFlow"
+  />
+
+  <ui-auth-card>
+    <app-register-form />
+
+    <p class="register-page__sign-in">
+      Уже есть аккаунт?
+      <a href="#" class="register-page__link" (click)="$event.preventDefault()">Войти</a>
+    </p>
+  </ui-auth-card>
+
+  <a href="#" class="register-page__back" (click)="$event.preventDefault()">← На главную</a>
+</ui-auth-shell>
