@@ -18,7 +18,8 @@ Nx monorepo для онлайн-площадки фриланса: поиск и
 apps/
   backend/
     src/
-      modules/          # NestJS-модули (user, app)
+      modules/          # NestJS-модули (auth, session, user, app)
+      common/           # hash/verify password, fillRdo
       database/         # DatabaseModule, pg-клиент, migration runner
       migrations/       # SQL-миграции
   frontend/
@@ -51,6 +52,17 @@ cp .env.example .env   # заполнить значения
 ```
 
 Переменные окружения хранятся в `.env` в корне репозитория (сейчас используются backend).
+
+Помимо БД (`DB_*`) для auth нужны:
+
+```
+SALT_WORD=...
+APP_PREFIX=app
+SESSION_LIFETIME_SECONDS=1800
+REFRESH_AFTER_SECONDS=3600
+```
+
+Auth endpoints: `POST /api/auth/join|login|logout|refresh` (сессия в cookie `{APP_PREFIX}_{sessionId}`).
 
 ## Запуск
 

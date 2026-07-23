@@ -1,5 +1,62 @@
 # Change Log
 
+## Epic 1: Task 4 Реализовать модуль авторизации
+
+Регистрация, логин, logout и refresh сессии на backend. Сессии хранятся в БД, аутентификация через cookie.
+
+### Auth API (`POST /api/auth/*`)
+
+- `join` - регистрация пользователя (`CreateUserDto`), ответ `UserRdo` (201), конфликт email - 409
+- `login` - проверка email/пароля, создание сессии, установка httpOnly cookie; ответ `UserRdo`
+- `logout` - удаление сессии по текущему пользователю, очистка cookie; ответ `CommonRdo`
+- `refresh` - ротация сессии (удаление старой + создание новой), перезапись cookie; `@SkipExpiresCheck()` чтобы guard не блокировал по `expiresAt`
+- Cookie: имя `{APP_PREFIX}_{sessionId}`, значение = token; `maxAge` берётся из `refreshAfter`
+
+### SessionModule
+
+- Миграция `user_sessions`: `id`, `user_id` (FK - users), `token` (varchar 128), `refresh_after`, `expires_at`, timestamps
+- `ISession` / `SessionDbRow` / `SessionEntity` в `shared-types`
+- `SessionService`: генерация одноразового token (128 hex-символов), создание сессии с TTL из env (`SESSION_LIFETIME_SECONDS`, `REFRESH_AFTER_SECONDS`)
+- `SessionRepository`: create / findByIdAndToken / deleteByIdAndUserId
+
+### AuthGuard и декораторы
+
+- `AuthGuard` - извлекает cookie `{APP_PREFIX}_{sessionId}` + token, загружает сессию и пользователя в request
+- По умолчанию отклоняет сессию, если `now >= expiresAt`
+- `@SkipExpiresCheck()` - отключает проверку `expiresAt` (используется на refresh)
+- `@CurrentUser()` - достаёт `AuthUserPayload` (`user`, `sessionId`, `token`) из request
+
+### Безопасность паролей
+
+- `hashPassword` / `verifyPassword` на `scrypt` + `SALT_WORD` из env
+- Формат хранения: `randomSalt:derivedKeyHex`
+- `findByEmail` **не** читает `password_hash`
+- Отдельный `findAuthCredentialsById` - `UserAuthCredentials` (`id`, `email`, `passwordHash`) только для login
+
+### shared-config
+
+- Валидация конфигов через class-validator schemas + общий `validateConfig`
+- `DatabaseConfigSchema`, `AuthConfigSchema` (`SALT_WORD`, `APP_PREFIX`, `SESSION_LIFETIME_SECONDS`, `REFRESH_AFTER_SECONDS`)
+- Для `yarn migrate` добавлен `tsconfig.migrate.json` (`experimentalDecorators` + `useDefineForClassFields: false`), иначе tsx ломает decorators class-validator
+
+### Shared libs
+
+- DTO: `LoginUserDto`, Swagger `@ApiProperty` на `CreateUserDto`
+- RDO: расширен `UserRdo` (`firstName`, `lastName`), добавлен `CommonRdo`
+- Types: `AuthUserPayload`, `SuccessLoginUser`, `CreateUserRecord`, `UserAuthCredentials`, session-типы
+- Backend utils: `fillRdo`, `buildSalt`, `hashPassword`, `verifyPassword`
+- Зависимость: `cookie-parser` (чтение cookie в Nest)
+
+### Env (`.env.example`)
+
+```
+SALT_WORD=...
+APP_PREFIX=app
+SESSION_LIFETIME_SECONDS=1800
+REFRESH_AFTER_SECONDS=3600
+```
+
+
 ## Epic 1: Task 3
 
 Реализовать модуль и таблицу для хранения пользователей.
