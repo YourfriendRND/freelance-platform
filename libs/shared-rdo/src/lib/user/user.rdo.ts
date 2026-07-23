@@ -19,6 +19,21 @@ export class UserRdo {
 
   @Expose()
   @ApiProperty({
+    description: 'Имя пользователя',
+    example: 'Иван'
+  })
+  firstName?: string;
+
+  @Expose()
+  @ApiProperty({
+    description: 'Фамилия пользователя',
+    example: 'Иванов',
+    required: false
+  })
+  lastName?: string;
+
+  @Expose()
+  @ApiProperty({
     description: 'Роль пользователя на площадке',
     example: UserRole.Client
   })

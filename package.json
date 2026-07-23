@@ -16,9 +16,9 @@
     "frontend": "nx serve frontend",
     "backend:build": "nx build backend",
     "frontend:build": "nx build frontend",
-    "migrate:init": "tsx --tsconfig apps/backend/tsconfig.app.json apps/backend/src/database/migration-runner/migrate.ts init",
-    "migrate": "tsx --tsconfig apps/backend/tsconfig.app.json apps/backend/src/database/migration-runner/migrate.ts up",
-    "migrate:rollback": "tsx --tsconfig apps/backend/tsconfig.app.json apps/backend/src/database/migration-runner/migrate.ts rollback",
+    "migrate:init": "tsx --tsconfig apps/backend/tsconfig.migrate.json apps/backend/src/database/migration-runner/migrate.ts init",
+    "migrate": "tsx --tsconfig apps/backend/tsconfig.migrate.json apps/backend/src/database/migration-runner/migrate.ts up",
+    "migrate:rollback": "tsx --tsconfig apps/backend/tsconfig.migrate.json apps/backend/src/database/migration-runner/migrate.ts rollback",
     "reset": "nx reset"
   },
   "dependencies": {
@@ -36,6 +36,7 @@
     "axios": "^1.6.0",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.15.1",
+    "cookie-parser": "^1.4.7",
     "pg": "^8.22.0",
     "reflect-metadata": "^0.2.0",
     "rxjs": "^7.8.0"
@@ -64,6 +65,7 @@
     "@playwright/test": "^1.37.0",
     "@schematics/angular": "~21.2.0",
     "@swc/helpers": "~0.5.18",
+    "@types/cookie-parser": "^1.4.10",
     "@types/node": "^22.0.0",
     "@typescript-eslint/eslint-plugin": "^8.62.0",
     "@typescript-eslint/parser": "^8.62.0",
