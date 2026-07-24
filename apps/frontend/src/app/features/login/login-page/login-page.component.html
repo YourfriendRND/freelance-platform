@@ -1,0 +1,28 @@
+<div class="login-page">
+  <ui-header mode="guest" loginHref="/login" getStartedHref="/register" />
+
+  <ui-auth-shell>
+    <ui-brand-header
+      brandName="TaskFlow"
+      title="С возвращением"
+      subtitle="Войдите в аккаунт, чтобы продолжить"
+    />
+
+    <ui-auth-card>
+      <app-login-form />
+
+      <p class="login-page__sign-up">
+        Нет аккаунта?
+        <a routerLink="/register" class="login-page__link">Зарегистрироваться</a>
+      </p>
+
+      <a href="#" class="login-page__forgot" (click)="$event.preventDefault()">
+        Забыли пароль?
+      </a>
+    </ui-auth-card>
+
+    <a routerLink="/" class="login-page__back">← На главную</a>
+  </ui-auth-shell>
+
+  <ui-footer />
+</div>

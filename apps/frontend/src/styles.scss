@@ -27,6 +27,11 @@ body {
   height: 100%;
 }
 
+app-root {
+  display: block;
+  height: 100%;
+}
+
 body {
   margin: 0;
   background: var(--color-background);

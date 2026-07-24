@@ -7,10 +7,10 @@ import {
   UiFooterComponent,
   UiHeaderComponent,
 } from '@freelance-platform/ui';
-import { RegisterFormComponent } from '../register-form/register-form.component';
+import { LoginFormComponent } from '../login-form/login-form.component';
 
 @Component({
-  selector: 'app-register-page',
+  selector: 'app-login-page',
   imports: [
     RouterLink,
     UiHeaderComponent,
@@ -18,10 +18,10 @@ import { RegisterFormComponent } from '../register-form/register-form.component'
     UiAuthShellComponent,
     UiBrandHeaderComponent,
     UiAuthCardComponent,
-    RegisterFormComponent,
+    LoginFormComponent,
   ],
-  templateUrl: './register-page.component.html',
-  styleUrl: './register-page.component.scss',
+  templateUrl: './login-page.component.html',
+  styleUrl: './login-page.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class RegisterPageComponent {}
+export class LoginPageComponent {}

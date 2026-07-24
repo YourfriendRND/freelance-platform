@@ -1,0 +1,119 @@
+<header class="ui-header">
+  <div class="ui-header__inner">
+    <div class="ui-header__left">
+      <a
+        class="ui-header__brand"
+        [attr.href]="homeHref()"
+        (click)="homeClick.emit($event)"
+      >
+        <span class="ui-header__logo" aria-hidden="true">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="20"
+            height="20"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path d="M16 20V4a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
+            <rect width="20" height="14" x="2" y="6" rx="2"></rect>
+          </svg>
+        </span>
+        <span class="ui-header__brand-name">{{ brandName() }}</span>
+      </a>
+
+      @if (isAuthenticated() && pageTitle()) {
+        <div class="ui-header__divider" aria-hidden="true"></div>
+        <p class="ui-header__page-title">{{ pageTitle() }}</p>
+      }
+    </div>
+
+    @if (isAuthenticated()) {
+      <div class="ui-header__actions">
+        <button
+          type="button"
+          class="ui-header__icon-button"
+          aria-label="Переключить тему"
+          (click)="themeToggleClick.emit($event)"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="20"
+            height="20"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            aria-hidden="true"
+          >
+            <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"></path>
+          </svg>
+        </button>
+
+        <button
+          type="button"
+          class="ui-header__icon-button"
+          aria-label="Уведомления"
+          (click)="notificationsClick.emit($event)"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="20"
+            height="20"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            aria-hidden="true"
+          >
+            <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"></path>
+            <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"></path>
+          </svg>
+        </button>
+
+        <button
+          type="button"
+          class="ui-header__user"
+          (click)="userMenuClick.emit($event)"
+        >
+          <span class="ui-header__avatar" aria-hidden="true">{{ avatarInitial() }}</span>
+          <span class="ui-header__user-text">
+            <span class="ui-header__user-name">{{ userName() }}</span>
+            <span class="ui-header__user-role">{{ userRole() }}</span>
+          </span>
+        </button>
+      </div>
+    } @else {
+      <nav class="ui-header__nav" aria-label="Основная навигация">
+        <a
+          class="ui-header__nav-link"
+          [attr.href]="browseTasksHref()"
+          (click)="browseTasksClick.emit($event)"
+        >
+          Смотреть задачи
+        </a>
+        <a
+          class="ui-header__nav-link"
+          [attr.href]="loginHref()"
+          (click)="loginClick.emit($event)"
+        >
+          Войти
+        </a>
+        <a
+          class="ui-header__cta"
+          [attr.href]="getStartedHref()"
+          (click)="getStartedClick.emit($event)"
+        >
+          Начать
+        </a>
+      </nav>
+    }
+  </div>
+</header>

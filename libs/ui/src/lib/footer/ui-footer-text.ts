@@ -1,0 +1,17 @@
+export enum UiFooterText {
+  Tagline = 'Современная платформа для фриланс-услуг и совместной работы над проектами.',
+  ForCustomers = 'Для заказчиков',
+  BrowseTasks = 'Смотреть задачи',
+  PostTask = 'Разместить задачу',
+  HowItWorks = 'Как это работает',
+  ForFreelancers = 'Для исполнителей',
+  FindWork = 'Найти работу',
+  SignUp = 'Регистрация',
+  SuccessStories = 'Истории успеха',
+  Company = 'Компания',
+  AboutUs = 'О нас',
+  Contact = 'Контакты',
+  PrivacyPolicy = 'Политика конфиденциальности',
+  TermsOfService = 'Условия использования',
+  CopyrightSuffix = 'Все права защищены.',
+}

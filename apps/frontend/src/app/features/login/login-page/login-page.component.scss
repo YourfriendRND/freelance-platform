@@ -3,7 +3,7 @@
   height: 100%;
 }
 
-.register-page {
+.login-page {
   display: grid;
   grid-template-rows: auto 1fr auto;
   height: 100%;
@@ -11,14 +11,14 @@
   overflow: hidden;
 }
 
-.register-page__sign-in {
+.login-page__sign-up {
   margin: 1.5rem 0 0;
   color: var(--color-text-muted);
   font-size: 0.875rem;
   text-align: center;
 }
 
-.register-page__link {
+.login-page__link {
   color: var(--color-text);
   font-weight: 600;
   text-decoration: none;
@@ -28,7 +28,21 @@
   }
 }
 
-.register-page__back {
+.login-page__forgot {
+  display: block;
+  margin-top: 0.75rem;
+  color: var(--color-text-muted);
+  font-size: 0.875rem;
+  text-align: center;
+  text-decoration: none;
+
+  &:hover {
+    color: var(--color-primary);
+    text-decoration: underline;
+  }
+}
+
+.login-page__back {
   display: block;
   margin-top: 1.5rem;
   color: var(--color-text-muted);
