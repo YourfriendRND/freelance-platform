@@ -41,8 +41,12 @@ export class RegisterFormComponent {
       firstName: this.formBuilder.control('', [
         Validators.required,
         Validators.minLength(2),
+        Validators.maxLength(255),
       ]),
-      lastName: this.formBuilder.control(''),
+      lastName: this.formBuilder.control('', [
+        Validators.minLength(2),
+        Validators.maxLength(255),
+      ]),
       email: this.formBuilder.control('', [Validators.required, Validators.email]),
       password: this.formBuilder.control('', [
         Validators.required,
@@ -73,7 +77,7 @@ export class RegisterFormComponent {
       return null;
     }
 
-    return 'Выберите тип аккаунта.';
+    return 'Выберите тип аккаунта';
   }
 
   protected fieldError(controlName: keyof RegisterFormComponent['form']['controls']): string | null {
@@ -84,21 +88,27 @@ export class RegisterFormComponent {
     }
 
     if (control.errors['required']) {
-      return 'Обязательное поле.';
+      return 'Обязательное поле';
     }
 
     if (control.errors['email']) {
-      return 'Введите корректный email.';
+      return 'Введите корректный email';
     }
 
     if (control.errors['minlength']) {
       const requiredLength = control.errors['minlength'].requiredLength;
 
-      return `Минимум ${requiredLength} символа.`;
+      return `Минимум ${requiredLength} символа`;
+    }
+
+    if (control.errors['maxlength']) {
+      const requiredLength = control.errors['maxlength'].requiredLength;
+
+      return `Максимум ${requiredLength} символов`;
     }
 
     if (control.errors['requiredTrue']) {
-      return 'Необходимо принять условия.';
+      return 'Необходимо принять условия';
     }
 
     return null;
@@ -112,11 +122,11 @@ export class RegisterFormComponent {
     }
 
     if (control.errors?.['required']) {
-      return 'Подтвердите пароль.';
+      return 'Подтвердите пароль';
     }
 
     if (this.form.errors?.['passwordMismatch']) {
-      return 'Пароли не совпадают.';
+      return 'Пароли не совпадают';
     }
 
     return null;

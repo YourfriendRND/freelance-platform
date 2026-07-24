@@ -1,18 +1,24 @@
-<ui-auth-shell>
-  <ui-brand-header
-    brandName="TaskFlow"
-    title="Создать аккаунт"
-    subtitle="Присоединяйтесь к тысячам пользователей TaskFlow"
-  />
+<div class="register-page">
+  <ui-header mode="guest" loginHref="/login" getStartedHref="/register" />
 
-  <ui-auth-card>
-    <app-register-form />
+  <ui-auth-shell>
+    <ui-brand-header
+      brandName="TaskFlow"
+      title="Создать аккаунт"
+      subtitle="Присоединяйтесь к тысячам пользователей TaskFlow"
+    />
 
-    <p class="register-page__sign-in">
-      Уже есть аккаунт?
-      <a href="#" class="register-page__link" (click)="$event.preventDefault()">Войти</a>
-    </p>
-  </ui-auth-card>
+    <ui-auth-card>
+      <app-register-form />
 
-  <a href="#" class="register-page__back" (click)="$event.preventDefault()">← На главную</a>
-</ui-auth-shell>
+      <p class="register-page__sign-in">
+        Уже есть аккаунт?
+        <a routerLink="/login" class="register-page__link">Войти</a>
+      </p>
+    </ui-auth-card>
+
+    <a href="#" class="register-page__back" (click)="$event.preventDefault()">← На главную</a>
+  </ui-auth-shell>
+
+  <ui-footer />
+</div>
