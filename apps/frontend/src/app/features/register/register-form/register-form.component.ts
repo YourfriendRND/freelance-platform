@@ -1,10 +1,17 @@
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import { HttpErrorResponse } from '@angular/common/http';
 import {
   NonNullableFormBuilder,
   ReactiveFormsModule,
   Validators,
 } from '@angular/forms';
-import { UserRole } from '@freelance-platform/shared-types';
+import { Router } from '@angular/router';
+import { finalize } from 'rxjs';
+import { AuthApi } from '@freelance-platform/client-api';
+import {
+  CreateUserRequest,
+  UserRole,
+} from '@freelance-platform/shared-types';
 import {
   UiButtonComponent,
   UiCheckboxComponent,
@@ -32,8 +39,12 @@ import { passwordMatchValidator } from './register-form.validation';
 })
 export class RegisterFormComponent {
   private readonly formBuilder = inject(NonNullableFormBuilder);
+  private readonly authApi = inject(AuthApi);
+  private readonly router = inject(Router);
 
   protected readonly roleOptions = REGISTER_ROLE_OPTIONS;
+  protected readonly submitting = signal(false);
+  protected readonly submitError = signal<string | null>(null);
 
   protected readonly form = this.formBuilder.group(
     {
@@ -66,8 +77,40 @@ export class RegisterFormComponent {
       return;
     }
 
+    if (this.submitting()) {
+      return;
+    }
+
     const value = this.form.getRawValue() satisfies RegisterFormValue;
-    void value;
+
+    if (value.role === null) {
+      return;
+    }
+
+    const lastName = value.lastName.trim();
+
+    const body: CreateUserRequest = {
+      role: value.role,
+      firstName: value.firstName,
+      email: value.email,
+      password: value.password,
+      ...(lastName ? { lastName } : {}),
+    };
+
+    this.submitting.set(true);
+    this.submitError.set(null);
+
+    this.authApi
+      .join(body)
+      .pipe(finalize(() => this.submitting.set(false)))
+      .subscribe({
+        next: () => {
+          void this.router.navigate(['/login']);
+        },
+        error: (error: unknown) => {
+          this.submitError.set(this.resolveSubmitError(error));
+        },
+      });
   }
 
   protected roleError(): string | null {
@@ -130,5 +173,23 @@ export class RegisterFormComponent {
     }
 
     return null;
+  }
+
+  private resolveSubmitError(error: unknown): string {
+    if (!(error instanceof HttpErrorResponse)) {
+      return 'Не удалось зарегистрироваться';
+    }
+
+    const message = error.error?.['message'];
+
+    if (typeof message === 'string' && message.trim()) {
+      return message.trim();
+    }
+
+    if (Array.isArray(message) && typeof message[0] === 'string' && message[0].trim()) {
+      return message[0].trim();
+    }
+
+    return 'Не удалось зарегистрироваться';
   }
 }

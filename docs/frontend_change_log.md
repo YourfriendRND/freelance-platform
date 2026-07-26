@@ -1,5 +1,24 @@
 # Change Log
 
+## Epic 1: Task 3 Настройка HTTP-layer
+
+HTTP-клиент, proxy и вызов регистрации через API.
+
+### HTTP (`libs/http`)
+
+- `provideApiHttp` - `HttpClient`, base URL `/api`, credentials interceptor
+- Подключение в `app.config.ts`
+
+### Client API (`libs/client-api`)
+
+- Домен auth: `AuthApi.join()`
+- Клиентские типы в `shared-types`: `auth-client.type.ts`
+
+### Proxy и регистрация
+
+- Proxy `/api` => `localhost:3000` (без CORS на backend)
+- `RegisterFormComponent`: вызов `join`, loading/error, в случае успеха редирект на `/login`
+
 ## Epic 1: Task 2 Реализация основных модулей и блоков
 
 Общий chrome приложения и страница авторизации. Старт SPA с login.

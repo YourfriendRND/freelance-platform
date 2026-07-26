@@ -65,5 +65,11 @@
     <a href="#" class="register-form__link" (click)="$event.preventDefault()">Политикой конфиденциальности</a>.
   </ui-checkbox>
 
-  <ui-button type="submit" [fullWidth]="true">Создать аккаунт</ui-button>
+  @if (submitError(); as errorMessage) {
+    <p class="register-form__submit-error" role="alert">{{ errorMessage }}</p>
+  }
+
+  <ui-button type="submit" [fullWidth]="true" [disabled]="submitting()">
+    {{ submitting() ? 'Создание…' : 'Создать аккаунт' }}
+  </ui-button>
 </form>
