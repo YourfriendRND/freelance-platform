@@ -42,7 +42,8 @@ docs/
 
 - Node.js 22.16.0 (см. `.nvmrc`)
 - Yarn 1.22.x
-- PostgreSQL (локально)
+- PostgreSQL - локально или через Docker (`docker-compose.local.yml`)
+- Docker / Docker Compose - для БД в dev и для деплоя
 
 ## Настройка
 
@@ -74,6 +75,37 @@ yarn frontend   # SPA: http://localhost:4200
 Swagger UI: http://localhost:3000/docs
 
 При пустой странице в dev-режиме (ошибки Vite `Outdated Optimize Dep` / `EPERM` в `.angular/cache`) - остановить сервер, выполнить `yarn nx reset`, удалить `.angular/cache`, запустить `yarn frontend` снова.
+
+## Docker
+
+### Локально (только PostgreSQL)
+
+Приложения на хосте (`yarn`), БД в контейнере. В `.env`: `DB_HOST=localhost` и заполненные `DB_*`.
+
+```bash
+docker compose -f docker-compose.local.yml up -d
+yarn migrate:init && yarn migrate   # после первого поднятия БД
+yarn backend
+yarn frontend
+```
+
+### Production
+
+Сервисы: 
+- `pg`, 
+- `migrate`, 
+- `backend`
+- `frontend` (nginx на порту 80). 
+
+Переменные только из `.env` (без дефолтов в compose). В контейнерах `DB_HOST=pg`.
+
+```bash
+docker compose --env-file .env up -d --build
+```
+
+- SPA / API / Swagger: http://localhost / http://localhost/api / http://localhost/docs
+- `migrate` - one-shot: `migrate:init` + `migrate`, затем стартует backend
+- Образы: `apps/backend/Dockerfile`, `apps/frontend/Dockerfile`
 
 ## База данных
 

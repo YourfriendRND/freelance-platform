@@ -1,5 +1,33 @@
 # Change Log
 
+## Epic 1: Task 5 Настройка Docker
+
+Локально - PostgreSQL в Docker, apps на хосте. 
+Production - полный стек в Docker Compose с отдельным сервисом миграций.
+
+### Локально (`docker-compose.local.yml`)
+
+- Сервис `pg`
+- Порт `${DB_PORT:-5432}:5432`, credentials из `.env` с дефолтами для удобства local
+- Frontend/backend в Docker для local **не** поднимаются
+- Запуск apps: `yarn backend` / `yarn frontend`, в `.env` - `DB_HOST=localhost`
+- Миграции локально по-прежнему: `yarn migrate:init` => `yarn migrate`
+
+### Production (`docker-compose.yml`)
+
+- Сервисы: `pg`, `migrate`, `backend`, `frontend` - без `${VAR:-default}`, только значения из `.env`
+- Порядок: `pg` (healthy) => `migrate` => `backend` => `frontend`
+- `migrate` и `backend` - один образ `freelance-platform-backend`; у migrate `command: yarn migrate:init && yarn migrate`, `restart: no`
+- Backend: `expose: 3000` (на хост не публикуется), frontend: `80:80`
+- `POSTGRES_DB=${DB_NAME}` создаёт БД при первом старте volume - migrate не зависит от автосоздания БД в Nest
+
+### Env
+
+- Local: `DB_HOST=localhost`
+- Production compose: `DB_HOST` / `DB_PORT` для apps задаются в `environment` сервисов (`pg` / `5432`)
+- Смена `DB_USER`/`DB_PASSWORD` после первого `up` не обновляет уже инициализированный volume - нужен `down -v` или ручное создание пользователя
+
+
 ## Epic 1: Task 4 Реализовать модуль авторизации
 
 Регистрация, логин, logout и refresh сессии на backend. Сессии хранятся в БД, аутентификация через cookie.
