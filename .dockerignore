@@ -1,0 +1,35 @@
+# Dependencies & build
+node_modules
+dist
+.tmp
+.angular
+.nx
+
+# Git & IDE
+.git
+.gitignore
+.idea
+.vscode
+*.swp
+*.swo
+
+# Env & secrets
+.env
+.env.*
+!.env.example
+
+# Tests & e2e
+coverage
+**/playwright-report
+**/test-results
+apps/backend-e2e
+apps/frontend-e2e
+
+# Docs & misc
+docs
+*.md
+!README.md
+.DS_Store
+npm-debug.log*
+yarn-error.log*
+package-lock.json
