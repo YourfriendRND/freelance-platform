@@ -1,11 +1,10 @@
 :host {
   display: block;
-  height: 100%;
-  min-height: 0;
-  overflow: auto;
+  flex: 1;
+  width: 100%;
 }
 
-.ui-auth-shell {
+.ui-auth-container {
   display: flex;
   box-sizing: border-box;
   align-items: center;
@@ -15,7 +14,7 @@
   padding: 1.5rem 1rem;
   background: var(--color-background);
 
-  &__container {
+  &__inner {
     width: 100%;
     max-width: 28rem;
   }

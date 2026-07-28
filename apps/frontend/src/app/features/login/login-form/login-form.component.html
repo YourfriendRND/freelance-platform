@@ -19,5 +19,11 @@
     [error]="fieldError('password')"
   />
 
-  <ui-button type="submit" [fullWidth]="true">Войти</ui-button>
+  @if (submitError(); as errorMessage) {
+    <p class="login-form__submit-error" role="alert">{{ errorMessage }}</p>
+  }
+
+  <ui-button type="submit" [fullWidth]="true" [disabled]="submitting()">
+    {{ submitting() ? 'Вход…' : 'Войти' }}
+  </ui-button>
 </form>

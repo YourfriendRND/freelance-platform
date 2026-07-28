@@ -1,7 +1,12 @@
-<div class="login-page">
-  <ui-header mode="guest" loginHref="/login" getStartedHref="/register" />
+<ui-page-wrapper>
+  <ui-header
+    uiPageHeader
+    mode="guest"
+    loginHref="/login"
+    getStartedHref="/register"
+  />
 
-  <ui-auth-shell>
+  <ui-auth-container>
     <ui-brand-header
       brandName="TaskFlow"
       title="С возвращением"
@@ -21,8 +26,8 @@
       </a>
     </ui-auth-card>
 
-    <a routerLink="/" class="login-page__back">← На главную</a>
-  </ui-auth-shell>
+    <a routerLink="/welcome" class="login-page__back">← На главную</a>
+  </ui-auth-container>
 
-  <ui-footer />
-</div>
+  <ui-footer uiPageFooter />
+</ui-page-wrapper>

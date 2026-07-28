@@ -4,7 +4,14 @@ export const appRoutes: Route[] = [
   {
     path: '',
     pathMatch: 'full',
-    redirectTo: 'login',
+    redirectTo: 'welcome',
+  },
+  {
+    path: 'welcome',
+    loadChildren: () =>
+      import('./features/welcome/welcome.routes').then(
+        (module) => module.welcomeRoutes,
+      ),
   },
   {
     path: 'login',

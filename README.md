@@ -25,10 +25,12 @@ apps/
   frontend/
     src/
       app/
-        features/       # feature-first: register и др.
+        features/       # feature-first: welcome, login, register
         app.routes.ts   # lazy load feature-маршрутов
 libs/
   ui/                   # общие UI-компоненты (@freelance-platform/ui)
+  http/                 # HttpClient + credentials (@freelance-platform/http)
+  client-api/           # API-клиенты доменов (@freelance-platform/client-api)
   shared-config/        # валидация env (@freelance-platform/shared-config)
   shared-types/         # enums, interfaces
   shared-dto/           # request DTOs
@@ -69,7 +71,7 @@ Auth endpoints: `POST /api/auth/join|login|logout|refresh` (сессия в cook
 
 ```bash
 yarn backend    # API: http://localhost:3000/api
-yarn frontend   # SPA: http://localhost:4200
+yarn frontend   # SPA: http://localhost:4200 (`/` => Welcome Page)
 ```
 
 Swagger UI: http://localhost:3000/docs
@@ -141,6 +143,7 @@ yarn migrate:rollback   # откатить последнюю (если есть
 
 ```typescript
 import { UiButtonComponent } from '@freelance-platform/ui';
+import { AuthApi } from '@freelance-platform/client-api';
 import { UserRole } from '@freelance-platform/shared-types';
 import { CreateUserDto } from '@freelance-platform/shared-dto';
 import { UserRdo } from '@freelance-platform/shared-rdo';
