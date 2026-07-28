@@ -2,10 +2,11 @@ import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import {
   UiAuthCardComponent,
-  UiAuthShellComponent,
+  UiAuthContainerComponent,
   UiBrandHeaderComponent,
   UiFooterComponent,
   UiHeaderComponent,
+  UiPageWrapperComponent,
 } from '@freelance-platform/ui';
 import { RegisterFormComponent } from '../register-form/register-form.component';
 
@@ -13,9 +14,10 @@ import { RegisterFormComponent } from '../register-form/register-form.component'
   selector: 'app-register-page',
   imports: [
     RouterLink,
+    UiPageWrapperComponent,
     UiHeaderComponent,
     UiFooterComponent,
-    UiAuthShellComponent,
+    UiAuthContainerComponent,
     UiBrandHeaderComponent,
     UiAuthCardComponent,
     RegisterFormComponent,

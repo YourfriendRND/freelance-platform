@@ -8,6 +8,11 @@ export type CreateUserRequest = {
   password: string;
 };
 
+export type LoginUserRequest = {
+  email: string;
+  password: string;
+};
+
 export type UserResponse = {
   id: string;
   email: string;

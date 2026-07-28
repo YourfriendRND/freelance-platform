@@ -1,5 +1,26 @@
 # Change Log
 
+## Epic 1: Task 4 Верстка и интеграция страницы авторизации
+
+Layout страниц, Welcome Page, интеграция login с backend.
+
+### Layout
+
+- Fix: Убран sticky у Header/Footer - страница скроллится целиком
+- `UiPageWrapper` - общий layout: header / body / footer
+- `UiAuthShell` переименован в `UiAuthContainer` - центрирует и ограничивает ширину контента
+
+### Welcome Page
+
+- Добавлен Feature `welcome-page`
+- Добавлен Lazy route `/welcome`; `/` => redirect на `/welcome`
+
+### Login API
+
+- Реализован `AuthApi.login()` - `POST /auth/login`
+- Клиентский тип `LoginUserRequest` в `shared-types`
+- Изменен `LoginFormComponent`, добавлен вызов `login`
+
 ## Epic 1: Task 3 Настройка HTTP-layer
 
 HTTP-клиент, proxy и вызов регистрации через API.

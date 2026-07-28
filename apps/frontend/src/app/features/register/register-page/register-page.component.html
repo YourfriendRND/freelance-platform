@@ -1,7 +1,12 @@
-<div class="register-page">
-  <ui-header mode="guest" loginHref="/login" getStartedHref="/register" />
+<ui-page-wrapper>
+  <ui-header
+    uiPageHeader
+    mode="guest"
+    loginHref="/login"
+    getStartedHref="/register"
+  />
 
-  <ui-auth-shell>
+  <ui-auth-container>
     <ui-brand-header
       brandName="TaskFlow"
       title="Создать аккаунт"
@@ -17,8 +22,8 @@
       </p>
     </ui-auth-card>
 
-    <a href="#" class="register-page__back" (click)="$event.preventDefault()">← На главную</a>
-  </ui-auth-shell>
+    <a routerLink="/welcome" class="register-page__back">← На главную</a>
+  </ui-auth-container>
 
-  <ui-footer />
-</div>
+  <ui-footer uiPageFooter />
+</ui-page-wrapper>
