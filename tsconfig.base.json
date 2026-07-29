@@ -22,6 +22,7 @@
       "@freelance-platform/shared-types": ["libs/shared-types/src/index.ts"],
       "@freelance-platform/http": ["./libs/http/src/index.ts"],
       "@freelance-platform/client-api": ["./libs/client-api/src/index.ts"],
+      "@freelance-platform/client-state": ["./libs/client-state/src/index.ts"],
       "@freelance-platform/ui": ["./libs/ui/src/index.ts"]
     }
   },
