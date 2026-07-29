@@ -1,5 +1,18 @@
 # Change Log
 
+## Epic 1: Task 5 Подключение и интеграция State менеджера
+
+Каркас client-state на `@ngrx/signals` (SignalStore), без интеграции форм.
+
+### Dependencies
+
+- Добавлен `@ngrx/signals` как основной State-manager. 
+
+### Client State (`libs/client-state`)
+
+- Создана дополнительная Lib `@freelance-platform/client-state` для глобального state. 
+- Добавлен шаблон `AuthStore`
+
 ## Epic 1: Task 4 Верстка и интеграция страницы авторизации
 
 Layout страниц, Welcome Page, интеграция login с backend.

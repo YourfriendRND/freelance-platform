@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Get,
   HttpCode,
   HttpStatus,
   Post,
@@ -32,6 +33,32 @@ export class AuthController {
   constructor(
     private readonly authService: AuthService,
   ) {}
+
+  @Get('/me')
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(AuthGuard)
+  @ApiOperation({
+    summary: 'Текущий пользователь',
+    description:
+      'Возвращает данные авторизованного пользователя по cookie-сессии. Если сессия отсутствует или просрочена — 401',
+  })
+  @ApiOkResponse({
+    description: 'Данные текущего пользователя',
+    type: UserRdo,
+  })
+  @ApiUnauthorizedResponse({
+    description: 'Сессия не найдена, cookie отсутствует или сессия просрочена',
+    example: {
+      statusCode: 401,
+      message: 'Пользователь не авторизован. Сессия просрочена',
+      error: 'Unauthorized',
+    },
+  })
+  async getCurrentUser(
+    @CurrentUser() authUser: AuthUserPayload,
+  ): Promise<UserRdo> {
+    return fillRdo(UserRdo, authUser.user);
+  }
 
   @Post('/join')
   @HttpCode(HttpStatus.CREATED)

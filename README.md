@@ -8,7 +8,7 @@ Nx monorepo для онлайн-площадки фриланса: поиск и
 
 - **Monorepo** - Nx 23, Yarn 1.x
 - **Backend** - NestJS 11, `pg`
-- **Frontend** - Angular 21 (standalone components, SCSS)
+- **Frontend** - Angular 21 (standalone components, SCSS), `@ngrx/signals` (SignalStore)
 - **Database** - PostgreSQL
 - **Shared libs** - TypeScript-библиотеки с path aliases
 
@@ -31,6 +31,7 @@ libs/
   ui/                   # общие UI-компоненты (@freelance-platform/ui)
   http/                 # HttpClient + credentials (@freelance-platform/http)
   client-api/           # API-клиенты доменов (@freelance-platform/client-api)
+  client-state/         # SignalStore доменов (@freelance-platform/client-state)
   shared-config/        # валидация env (@freelance-platform/shared-config)
   shared-types/         # enums, interfaces
   shared-dto/           # request DTOs
@@ -144,6 +145,7 @@ yarn migrate:rollback   # откатить последнюю (если есть
 ```typescript
 import { UiButtonComponent } from '@freelance-platform/ui';
 import { AuthApi } from '@freelance-platform/client-api';
+import { AuthStore } from '@freelance-platform/client-state';
 import { UserRole } from '@freelance-platform/shared-types';
 import { CreateUserDto } from '@freelance-platform/shared-dto';
 import { UserRdo } from '@freelance-platform/shared-rdo';
