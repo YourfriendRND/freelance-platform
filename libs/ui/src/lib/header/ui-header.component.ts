@@ -7,6 +7,7 @@ import {
 } from '@angular/core';
 import {
   UiHeaderMode,
+  UiHeaderText,
   UiHeaderUser,
   UiHeaderModeType,
 } from './ui-header-mode';
@@ -21,8 +22,8 @@ export class UiHeaderComponent {
   readonly mode = input<UiHeaderModeType>(UiHeaderMode.Guest);
   readonly brandName = input('TaskFlow');
   readonly pageTitle = input('');
-  readonly userName = input(UiHeaderUser.Name);
-  readonly userRole = input(UiHeaderUser.Role);
+  readonly userName = input<string>(UiHeaderUser.Name);
+  readonly userRole = input<string>(UiHeaderUser.Role);
   readonly userInitial = input('');
 
   readonly homeHref = input('#');
@@ -37,6 +38,9 @@ export class UiHeaderComponent {
   readonly themeToggleClick = output<MouseEvent>();
   readonly notificationsClick = output<MouseEvent>();
   readonly userMenuClick = output<MouseEvent>();
+  readonly logoutClick = output<MouseEvent>();
+
+  protected readonly headerText = UiHeaderText;
 
   protected readonly isAuthenticated = computed(
     () => this.mode() === UiHeaderMode.Authenticated,

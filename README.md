@@ -29,7 +29,7 @@ apps/
         app.routes.ts   # lazy load feature-маршрутов
 libs/
   ui/                   # общие UI-компоненты (@freelance-platform/ui)
-  http/                 # HttpClient + credentials (@freelance-platform/http)
+  http/                 # HttpClient, credentials, session refresh (@freelance-platform/http)
   client-api/           # API-клиенты доменов (@freelance-platform/client-api)
   client-state/         # SignalStore доменов (@freelance-platform/client-state)
   shared-config/        # валидация env (@freelance-platform/shared-config)
@@ -66,7 +66,6 @@ SESSION_LIFETIME_SECONDS=1800
 REFRESH_AFTER_SECONDS=3600
 ```
 
-Auth endpoints: `POST /api/auth/join|login|logout|refresh` (сессия в cookie `{APP_PREFIX}_{sessionId}`).
 
 ## Запуск
 

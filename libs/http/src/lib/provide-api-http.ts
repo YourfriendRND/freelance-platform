@@ -1,13 +1,16 @@
 import { EnvironmentProviders, makeEnvironmentProviders } from '@angular/core';
 import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import { API_BASE_URL } from './api-base-url.token';
+import { authRefreshInterceptor } from './auth-refresh.interceptor';
 import { credentialsInterceptor } from './credentials.interceptor';
 
 export function provideApiHttp(
   baseUrl = '/api',
 ): EnvironmentProviders {
   return makeEnvironmentProviders([
-    provideHttpClient(withInterceptors([credentialsInterceptor])),
+    provideHttpClient(
+      withInterceptors([credentialsInterceptor, authRefreshInterceptor]),
+    ),
     {
       provide: API_BASE_URL,
       useValue: baseUrl,

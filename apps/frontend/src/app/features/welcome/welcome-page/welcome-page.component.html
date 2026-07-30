@@ -1,10 +1,13 @@
 <ui-page-wrapper>
   <ui-header
     uiPageHeader
-    mode="guest"
+    [mode]="headerMode()"
+    [userName]="userName()"
+    [userRole]="userRoleLabel()"
     homeHref="/welcome"
     loginHref="/login"
     getStartedHref="/register"
+    (logoutClick)="onLogout()"
   />
 
   <main class="welcome-page__content">

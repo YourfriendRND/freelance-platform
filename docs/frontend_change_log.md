@@ -1,5 +1,32 @@
 # Change Log
 
+## Epic 1: Task 6 Интеграция состояния пользователей
+
+Завершена cookie-сессионная авторизация на frontend: store, me/refresh/logout, 401 => refresh => retry для любых доменных API.
+
+### Shared Types (`libs/shared-types`)
+
+Добавлены типы:
+
+- `MessageResponse` в `lib/common/common-client.type.ts` - общий ответ с `message` (logout и будущие домены)
+- `UserRoleLabel` / `USER_ROLE_LABEL` - подписи ролей
+
+### HTTP (`libs/http`)
+
+- Token `AUTH_SESSION_INVALIDATOR` - колбэк очистки клиентской сессии без зависимости
+- `authRefreshInterceptor`: на 401 сохраняет исходный запрос, single-flight `POST /auth/refresh` через `HttpBackend`, retry; при провале refresh вызывает invalidator
+- Skip refresh для `/auth/login`, `/auth/join`, `/auth/refresh`, `/auth/logout`
+- Цепочка в `provideApiHttp`: credentials => authRefresh
+- Вынесена утилита `resolveHttpErrorMessage(error, fallback)` - общая разборка Nest-ошибок
+
+### Client API (`libs/client-api`)
+
+Добавлены запросы: 
+
+- `AuthApi.me()` - `GET /auth/me`
+- `AuthApi.refresh()` - `POST /auth/refresh`
+- `AuthApi.logout()` - `POST /auth/logout`
+
 ## Epic 1: Task 5 Подключение и интеграция State менеджера
 
 Каркас client-state на `@ngrx/signals` (SignalStore), без интеграции форм.
