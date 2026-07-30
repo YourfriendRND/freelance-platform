@@ -1,6 +1,10 @@
-import { ApplicationConfig, provideBrowserGlobalErrorListeners } from '@angular/core';
+import { ApplicationConfig, inject, provideBrowserGlobalErrorListeners } from '@angular/core';
 import { provideRouter } from '@angular/router';
-import { provideApiHttp } from '@freelance-platform/http';
+import { AuthStore } from '@freelance-platform/client-state';
+import {
+  AUTH_SESSION_INVALIDATOR,
+  provideApiHttp,
+} from '@freelance-platform/http';
 import { appRoutes } from './app.routes';
 
 export const appConfig: ApplicationConfig = {
@@ -8,5 +12,12 @@ export const appConfig: ApplicationConfig = {
     provideBrowserGlobalErrorListeners(),
     provideRouter(appRoutes),
     provideApiHttp(),
+    {
+      provide: AUTH_SESSION_INVALIDATOR,
+      useFactory: () => {
+        const authStore = inject(AuthStore);
+        return () => authStore.clear();
+      },
+    },
   ],
 };

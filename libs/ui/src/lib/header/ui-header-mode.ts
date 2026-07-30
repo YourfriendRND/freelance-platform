@@ -9,3 +9,8 @@ export enum UiHeaderUser {
   Name = 'Пользователь',
   Role = 'Гость',
 }
+
+export enum UiHeaderText {
+  Logout = 'Выйти',
+  Profile = 'Профиль',
+}

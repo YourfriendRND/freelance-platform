@@ -1,5 +1,4 @@
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
-import { HttpErrorResponse } from '@angular/common/http';
 import {
   NonNullableFormBuilder,
   ReactiveFormsModule,
@@ -7,7 +6,7 @@ import {
 } from '@angular/forms';
 import { Router } from '@angular/router';
 import { finalize } from 'rxjs';
-import { AuthApi } from '@freelance-platform/client-api';
+import { AuthStore } from '@freelance-platform/client-state';
 import { LoginUserRequest } from '@freelance-platform/shared-types';
 import { UiButtonComponent, UiTextFieldComponent } from '@freelance-platform/ui';
 
@@ -25,7 +24,7 @@ type LoginFormValue = {
 })
 export class LoginFormComponent {
   private readonly formBuilder = inject(NonNullableFormBuilder);
-  private readonly authApi = inject(AuthApi);
+  private readonly authStore = inject(AuthStore);
   private readonly router = inject(Router);
 
   protected readonly submitting = signal(false);
@@ -59,15 +58,15 @@ export class LoginFormComponent {
     this.submitting.set(true);
     this.submitError.set(null);
 
-    this.authApi
+    this.authStore
       .login(body)
       .pipe(finalize(() => this.submitting.set(false)))
       .subscribe({
         next: () => {
           void this.router.navigate(['/welcome']);
         },
-        error: (error: unknown) => {
-          this.submitError.set(this.resolveSubmitError(error));
+        error: () => {
+          this.submitError.set(this.authStore.error() ?? 'Не удалось войти');
         },
       });
   }
@@ -96,27 +95,5 @@ export class LoginFormComponent {
     }
 
     return null;
-  }
-
-  private resolveSubmitError(error: unknown): string {
-    if (!(error instanceof HttpErrorResponse)) {
-      return 'Не удалось войти';
-    }
-
-    const { message } = error.error ?? {};
-
-    if (typeof message === 'string' && message.trim()) {
-      return message.trim();
-    }
-
-    if (Array.isArray(message)) {
-      const [firstMessage] = message;
-
-      if (typeof firstMessage === 'string' && firstMessage.trim()) {
-        return firstMessage.trim();
-      }
-    }
-
-    return 'Не удалось войти';
   }
 }

@@ -1,5 +1,4 @@
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
-import { HttpErrorResponse } from '@angular/common/http';
 import {
   NonNullableFormBuilder,
   ReactiveFormsModule,
@@ -8,6 +7,7 @@ import {
 import { Router } from '@angular/router';
 import { finalize } from 'rxjs';
 import { AuthApi } from '@freelance-platform/client-api';
+import { resolveHttpErrorMessage } from '@freelance-platform/http';
 import {
   CreateUserRequest,
   UserRole,
@@ -108,7 +108,9 @@ export class RegisterFormComponent {
           void this.router.navigate(['/login']);
         },
         error: (error: unknown) => {
-          this.submitError.set(this.resolveSubmitError(error));
+          this.submitError.set(
+            resolveHttpErrorMessage(error, 'Не удалось зарегистрироваться'),
+          );
         },
       });
   }
@@ -173,23 +175,5 @@ export class RegisterFormComponent {
     }
 
     return null;
-  }
-
-  private resolveSubmitError(error: unknown): string {
-    if (!(error instanceof HttpErrorResponse)) {
-      return 'Не удалось зарегистрироваться';
-    }
-
-    const message = error.error?.['message'];
-
-    if (typeof message === 'string' && message.trim()) {
-      return message.trim();
-    }
-
-    if (Array.isArray(message) && typeof message[0] === 'string' && message[0].trim()) {
-      return message[0].trim();
-    }
-
-    return 'Не удалось зарегистрироваться';
   }
 }

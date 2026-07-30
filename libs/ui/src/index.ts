@@ -5,6 +5,12 @@ export { UiSelectComponent, type UiSelectOption } from './lib/select';
 export { UiAuthContainerComponent } from './lib/auth-container';
 export { UiBrandHeaderComponent } from './lib/brand-header';
 export { UiAuthCardComponent } from './lib/auth-card';
-export { UiHeaderComponent } from './lib/header';
+export {
+  UiHeaderComponent,
+  UiHeaderMode,
+  UiHeaderUser,
+  UiHeaderText,
+  type UiHeaderModeType,
+} from './lib/header';
 export { UiFooterComponent } from './lib/footer';
 export { UiPageWrapperComponent } from './lib/page-wrapper';

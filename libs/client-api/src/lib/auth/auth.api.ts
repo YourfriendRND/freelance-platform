@@ -5,6 +5,7 @@ import { API_BASE_URL } from '@freelance-platform/http';
 import {
   CreateUserRequest,
   LoginUserRequest,
+  MessageResponse,
   UserResponse,
 } from '@freelance-platform/shared-types';
 
@@ -19,5 +20,17 @@ export class AuthApi {
 
   login(body: LoginUserRequest): Observable<UserResponse> {
     return this.http.post<UserResponse>(`${this.apiBaseUrl}/auth/login`, body);
+  }
+
+  me(): Observable<UserResponse> {
+    return this.http.get<UserResponse>(`${this.apiBaseUrl}/auth/me`);
+  }
+
+  refresh(): Observable<UserResponse> {
+    return this.http.post<UserResponse>(`${this.apiBaseUrl}/auth/refresh`, {});
+  }
+
+  logout(): Observable<MessageResponse> {
+    return this.http.post<MessageResponse>(`${this.apiBaseUrl}/auth/logout`, {});
   }
 }

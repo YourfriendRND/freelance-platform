@@ -35,6 +35,19 @@
       <div class="ui-header__actions">
         <button
           type="button"
+          class="ui-header__user"
+          [attr.aria-label]="headerText.Profile"
+          (click)="userMenuClick.emit($event)"
+        >
+          <span class="ui-header__avatar" aria-hidden="true">{{ avatarInitial() }}</span>
+          <span class="ui-header__user-text">
+            <span class="ui-header__user-name">{{ userName() }}</span>
+            <span class="ui-header__user-role">{{ userRole() }}</span>
+          </span>
+        </button>
+
+        <button
+          type="button"
           class="ui-header__icon-button"
           aria-label="Переключить тему"
           (click)="themeToggleClick.emit($event)"
@@ -80,14 +93,10 @@
 
         <button
           type="button"
-          class="ui-header__user"
-          (click)="userMenuClick.emit($event)"
+          class="ui-header__logout"
+          (click)="logoutClick.emit($event)"
         >
-          <span class="ui-header__avatar" aria-hidden="true">{{ avatarInitial() }}</span>
-          <span class="ui-header__user-text">
-            <span class="ui-header__user-name">{{ userName() }}</span>
-            <span class="ui-header__user-role">{{ userRole() }}</span>
-          </span>
+          {{ headerText.Logout }}
         </button>
       </div>
     } @else {
