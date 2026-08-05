@@ -22,11 +22,13 @@ apps/
       common/           # hash/verify password, fillRdo
       database/         # DatabaseModule, pg-клиент, migration runner
       migrations/       # SQL-миграции
+  backend-e2e/          # HTTP e2e backend (Vitest + axios)
   frontend/
     src/
       app/
         features/       # feature-first: welcome, login, register
         app.routes.ts   # lazy load feature-маршрутов
+  frontend-e2e/         # e2e frontend (Playwright)
 libs/
   ui/                   # общие UI-компоненты (@freelance-platform/ui)
   http/                 # HttpClient, credentials, session refresh (@freelance-platform/http)
@@ -131,9 +133,27 @@ yarn migrate:rollback   # откатить последнюю (если есть
 
 Файлы миграций - в `apps/backend/src/migrations/`. Каждый файл экспортирует объект `migration` с полями `version`, `checksum`, `description`, `up`, `down` (опционально).
 
+## Тестирование
+
+- **Unit backend** - Vitest, specs рядом с кодом (`apps/backend/src/**/*.spec.ts`)
+- **E2E backend** - отдельное приложение `apps/backend-e2e`, Vitest + axios против живого API (`*.e2e-spec.ts`)
+- **Unit frontend** - Vitest через Angular (`yarn frontend:test`)
+- **E2E frontend** - Playwright (`apps/frontend-e2e`)
+
+E2E backend поднимает `backend:serve` через Nx; нужен доступный PostgreSQL и применённые миграции.
+
+```bash
+yarn backend:test    # unit backend
+yarn backend:e2e     # e2e backend
+yarn frontend:test   # unit frontend
+yarn test            # unit backend + frontend
+```
+
 ## Скрипты
 
 - `yarn backend` / `yarn frontend` — dev-серверы
+- `yarn backend:test` / `yarn frontend:test` / `yarn backend:e2e` — тесты
+- `yarn test` - unit backend + frontend
 - `yarn build` - сборка всех проектов
 - `yarn lint` - линтинг
 - `yarn format` - Prettier
