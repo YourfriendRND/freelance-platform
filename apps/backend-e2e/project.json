@@ -5,11 +5,10 @@
   "projectType": "application",
   "targets": {
     "e2e": {
-      "executor": "@nx/jest:jest",
-      "outputs": ["{workspaceRoot}/coverage/{e2eProjectRoot}"],
+      "executor": "nx:run-commands",
       "options": {
-        "jestConfig": "apps/backend-e2e/jest.config.cts",
-        "passWithNoTests": true
+        "command": "vitest run",
+        "cwd": "apps/backend-e2e"
       },
       "dependsOn": ["backend:build", "backend:serve"]
     }

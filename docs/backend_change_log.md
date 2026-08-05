@@ -1,5 +1,21 @@
 # Change Log
 
+## Epic 1: Task 6 Unit tests / подключение и покрытие модулей авторизации
+
+Автотесты backend на Vitest: unit рядом с кодом, HTTP e2e в отдельном приложении. Минимальное покрытие auth/common + e2e сценарии сессии.
+
+### Unit (`apps/backend`)
+
+- Файлы тестов `*.spec.ts` рядом с исходниками, исключены из production-сборки
+- Покрытие: `buildSalt`, `hashPassword` / `verifyPassword`, `fillRdo`, `UserService`, `SessionService`, `AuthService` (join/login), `AuthGuard`
+- Запуск: `yarn backend:test`
+
+### E2E (`apps/backend-e2e`)
+
+- Jest заменён на Vitest
+- Auth сценарии: positive join => login => me => refresh => logout; negative => duplicate email, wrong password, me без cookie
+- Запуск: `yarn backend:e2e` (dependsOn `backend:build` + `backend:serve`, нужен Postgres)
+
 ## Epic 1: Task 5 Настройка Docker
 
 Локально - PostgreSQL в Docker, apps на хосте. 
