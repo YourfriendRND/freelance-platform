@@ -1,4 +1,4 @@
-import { IsInt, IsNotEmpty, IsString, Min } from 'class-validator';
+import { IsBoolean, IsInt, IsNotEmpty, IsString, Min } from 'class-validator';
 import { Transform } from 'class-transformer';
 
 export class AuthConfigSchema {
@@ -19,4 +19,7 @@ export class AuthConfigSchema {
   @IsInt()
   @Min(1)
   refreshAfterSeconds!: number;
+
+  @IsBoolean()
+  cookieSecure!: boolean;
 }

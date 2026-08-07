@@ -4,6 +4,7 @@ import {
   Get,
   HttpCode,
   HttpStatus,
+  Inject,
   Post,
   Res,
   UseGuards,
@@ -17,11 +18,13 @@ import {
   ApiTags,
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
+import { ConfigType } from '@nestjs/config';
 import { AuthService } from './auth.service';
 import { CreateUserDto, LoginUserDto } from '@freelance-platform/shared-dto';
 import { CommonRdo, UserRdo } from '@freelance-platform/shared-rdo';
+import { authConfig } from '@freelance-platform/shared-config';
 import { fillRdo } from '../../common/fill-rdo';
-import { Response } from 'express';
+import { CookieOptions, Response } from 'express';
 import { AuthGuard } from './guards/auth.guard';
 import { CurrentUser } from './decorators/current-user.decorator';
 import { SkipExpiresCheck } from './decorators/skip-expires-check.decorator';
@@ -32,7 +35,17 @@ import { AuthUserPayload } from '@freelance-platform/shared-types';
 export class AuthController {
   constructor(
     private readonly authService: AuthService,
+    @Inject(authConfig.KEY)
+    private readonly authConfiguration: ConfigType<typeof authConfig>,
   ) {}
+
+  private sessionCookieOptions(): CookieOptions {
+    return {
+      httpOnly: true,
+      sameSite: 'lax',
+      secure: this.authConfiguration.cookieSecure,
+    };
+  }
 
   @Get('/me')
   @HttpCode(HttpStatus.OK)
@@ -111,10 +124,10 @@ export class AuthController {
     @Res({ passthrough: true }) res: Response,
   ): Promise<UserRdo> {
     const result = await this.authService.loginUser(dto);
+    const cookieOptions = this.sessionCookieOptions();
 
     res.cookie(result.cookieKey, result.token, {
-      httpOnly: true,
-      sameSite: 'lax',
+      ...cookieOptions,
       maxAge: Math.max(0, result.refreshAfter.getTime() - Date.now()),
     });
 
@@ -145,7 +158,8 @@ export class AuthController {
     @Res({ passthrough: true }) res: Response,
   ): Promise<CommonRdo> {
     const cookieKey = await this.authService.logout(authUser);
-    res.clearCookie(cookieKey);
+    const cookieOptions = this.sessionCookieOptions();
+    res.clearCookie(cookieKey, cookieOptions);
 
     return fillRdo(CommonRdo, { message: 'Выход выполнен успешно' });
   }
@@ -175,14 +189,14 @@ export class AuthController {
     @Res({ passthrough: true }) res: Response,
   ): Promise<UserRdo> {
     const result = await this.authService.refresh(authUser);
+    const cookieOptions = this.sessionCookieOptions();
 
     if (result.oldCookieKey) {
-      res.clearCookie(result.oldCookieKey);
+      res.clearCookie(result.oldCookieKey, cookieOptions);
     }
 
     res.cookie(result.cookieKey, result.token, {
-      httpOnly: true,
-      sameSite: 'lax',
+      ...cookieOptions,
       maxAge: Math.max(0, result.refreshAfter.getTime() - Date.now()),
     });
 

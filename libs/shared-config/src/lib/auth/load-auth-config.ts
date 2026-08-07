@@ -9,5 +9,6 @@ export function loadAuthConfig(env: NodeJS.ProcessEnv = process.env): AuthConfig
     appPrefix: env['APP_PREFIX'],
     sessionLifetimeSeconds: env['SESSION_LIFETIME_SECONDS'],
     refreshAfterSeconds: env['REFRESH_AFTER_SECONDS'],
+    cookieSecure: env['NODE_ENV'] === 'production',
   });
 }
