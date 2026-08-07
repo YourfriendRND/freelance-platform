@@ -107,9 +107,11 @@ yarn frontend
 docker compose --env-file .env up -d --build
 ```
 
-- SPA / API / Swagger: http://localhost / http://localhost/api / http://localhost/docs
+- SPA / API / Swagger (через host Nginx в проде): контейнер слушает `127.0.0.1:8080`
+- Локально без host Nginx: http://127.0.0.1:8080 / http://127.0.0.1:8080/api / http://127.0.0.1:8080/docs
 - `migrate` - one-shot: `migrate:init` + `migrate`, затем стартует backend
 - Образы: `apps/backend/Dockerfile`, `apps/frontend/Dockerfile`
+- В `NODE_ENV=production` session cookie ставится с флагом `Secure`
 
 ## База данных
 
