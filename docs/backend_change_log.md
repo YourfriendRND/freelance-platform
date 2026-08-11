@@ -1,5 +1,20 @@
 # Change Log
 
+## Epic 1: Task 7 Деплой на сервер
+
+Подготовка к деплою за host Nginx + SSL: Secure cookie в production, frontend в compose только на localhost.
+
+### Auth cookie
+
+-  Добавлен `cookieSecure` - `true` при `NODE_ENV=production`, иначе `false`
+- `login` / `refresh` / `logout` (`clearCookie`) используют эти опции - в production cookie только по HTTPS
+
+### Production Docker (`docker-compose.yml`)
+
+- Frontend: `127.0.0.1:8080:80` вместо `80:80` - снаружи доступ через host Nginx (80/443 + Let's Encrypt)
+- Backend: в `docker-compose.yml` в `environment` строго зафиксирован `NODE_ENV=production` (не зависит от значения в `.env`)
+
+
 ## Epic 1: Task 6 Unit tests / подключение и покрытие модулей авторизации
 
 Автотесты backend на Vitest: unit рядом с кодом, HTTP e2e в отдельном приложении. Минимальное покрытие auth/common + e2e сценарии сессии.
@@ -34,7 +49,7 @@ Production - полный стек в Docker Compose с отдельным се�
 - Сервисы: `pg`, `migrate`, `backend`, `frontend` - без `${VAR:-default}`, только значения из `.env`
 - Порядок: `pg` (healthy) => `migrate` => `backend` => `frontend`
 - `migrate` и `backend` - один образ `freelance-platform-backend`; у migrate `command: yarn migrate:init && yarn migrate`, `restart: no`
-- Backend: `expose: 3000` (на хост не публикуется), frontend: `80:80`
+- Backend: `expose: 3000` (на хост не публикуется), frontend: `127.0.0.1:8080:80` (для host Nginx; см. Task 7)
 - `POSTGRES_DB=${DB_NAME}` создаёт БД при первом старте volume - migrate не зависит от автосоздания БД в Nest
 
 ### Env
