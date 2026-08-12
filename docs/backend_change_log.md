@@ -9,15 +9,7 @@
 - Триггер: `push` в `main` (в т.ч. после merge PR)
 - Job `unit-test-backend`: Node из `.nvmrc`, `yarn install --frozen-lockfile`, `yarn backend:test`
 - Job `deploy` (после успешных тестов): SSH на production, `git pull origin main`, пересборка контейнеров
-- Backend и frontend собираются **отдельно** (`up -d --build backend`, затем `frontend`) - на сервере мало ОП
-- `concurrency` с `cancel-in-progress: false` - параллельные деплои не обрывают друг друга
-
-### Secrets (GitHub → Settings → Secrets and variables → Actions)
-
-- `SSH_HOST`, `SSH_USERNAME`, `SSH_PRIVATE_KEY`, `DEPLOY_PATH`
-- `SSH_PORT` - опционально (по умолчанию `22`)
-- Отдельный deploy-ключ: публичный в `authorized_keys` на сервере, приватный только в Secret
-
+- Backend и frontend собираются **отдельно** (`up -d --build backend`, затем `frontend`)
 
 ## Epic 1: Task 7 Деплой на сервер
 

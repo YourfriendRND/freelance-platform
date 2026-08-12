@@ -118,10 +118,7 @@ docker compose --env-file .env up -d --build
 
 При `push` / merge в `main` GitHub Actions (`.github/workflows/ci-cd.yml`):
 
-1. `yarn backend:test` (unit)
-2. SSH на production → `git pull` → `docker compose ... up -d --build backend`, затем отдельно `frontend` (мало ОП на сервере)
-
-Нужны repository secrets: `SSH_HOST`, `SSH_USERNAME`, `SSH_PRIVATE_KEY`, `DEPLOY_PATH` (опционально `SSH_PORT`).
+Нужны repository secrets: `SSH_HOST`, `SSH_USERNAME`, `SSH_PRIVATE_KEY`, `DEPLOY_PATH`.
 
 ## База данных
 
