@@ -1,3 +1,5 @@
+name: freelance-platform-postgres
+
 services:
   pg:
     image: postgres:16-alpine
