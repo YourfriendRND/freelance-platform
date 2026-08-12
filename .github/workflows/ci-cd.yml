@@ -1,0 +1,54 @@
+name: CI/CD
+
+on:
+  push:
+    branches:
+      - main
+
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+jobs:
+  unit-test-backend:
+    name: Backend unit tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: '.nvmrc'
+          cache: yarn
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Run backend unit tests
+        run: yarn backend:test
+
+  deploy:
+    name: Deploy to production
+    needs: unit-test-backend
+    runs-on: ubuntu-latest
+    steps:
+      - name: Pull and rebuild containers
+        uses: appleboy/ssh-action@v1.2.5
+        env:
+          DEPLOY_PATH: ${{ secrets.DEPLOY_PATH }}
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USERNAME }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: ${{ secrets.SSH_PORT || 22 }}
+          envs: DEPLOY_PATH
+          script_stop: true
+          command_timeout: 30m
+          script: |
+            set -e
+            cd "$DEPLOY_PATH"
+            git pull origin main
+            docker compose -f ./docker-compose.yml --env-file ./.env up -d --build backend
+            docker compose -f ./docker-compose.yml --env-file ./.env up -d --build frontend
