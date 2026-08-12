@@ -41,6 +41,7 @@ libs/
 docs/
   backend_change_log.md
   frontend_change_log.md
+.github/workflows/   # CI/CD (GitHub Actions)
 ```
 
 ## Требования
@@ -112,6 +113,12 @@ docker compose --env-file .env up -d --build
 - `migrate` - one-shot: `migrate:init` + `migrate`, затем стартует backend
 - Образы: `apps/backend/Dockerfile`, `apps/frontend/Dockerfile`
 - В `NODE_ENV=production` session cookie ставится с флагом `Secure`
+
+## CI/CD
+
+При `push` / merge в `main` GitHub Actions (`.github/workflows/ci-cd.yml`):
+
+Нужны repository secrets: `SSH_HOST`, `SSH_USERNAME`, `SSH_PRIVATE_KEY`, `DEPLOY_PATH`.
 
 ## База данных
 
