@@ -50,5 +50,6 @@ jobs:
             set -e
             cd "$DEPLOY_PATH"
             git pull origin main
+            docker compose -f ./docker-compose.yml --env-file ./.env up -d --build --force-recreate migrate
             docker compose -f ./docker-compose.yml --env-file ./.env up -d --build backend
             docker compose -f ./docker-compose.yml --env-file ./.env up -d --build frontend

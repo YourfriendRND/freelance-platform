@@ -138,4 +138,19 @@ describe('AuthService testing', () => {
       }),
     ).rejects.toBeInstanceOf(UnauthorizedException);
   });
+
+  it('should throw NotFoundException when email is unknown', async () => {
+    userService.findByEmail.mockRejectedValue(
+      new NotFoundException('Пользователь с "not-found-user@example.com" не найден'),
+    );
+
+    await expect(
+      service.loginUser({
+        email: 'not-found-user@example.com',
+        password: 'securePassword123',
+      }),
+    ).rejects.toBeInstanceOf(NotFoundException);
+
+    expect(userService.findAuthCredentialsById).not.toHaveBeenCalled();
+  });
 });
