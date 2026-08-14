@@ -130,6 +130,18 @@ describe('Auth e2e', () => {
       expect(loginRes.status).toBe(401);
     });
 
+    it('login: should reject unknown email', async () => {
+      const email = uniqueEmail('unknown');
+
+      const loginRes = await axios.post('/api/auth/login', {
+        email,
+        password: 'securePassword123',
+      });
+
+      expect(loginRes.status).toBe(404);
+      expect(loginRes.data.message).toBe(`Пользователь с "${email}" не найден`);
+    });
+
     it('me: should reject request without cookie', async () => {
       const meRes = await axios.get('/api/auth/me');
 

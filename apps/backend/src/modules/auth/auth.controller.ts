@@ -13,6 +13,7 @@ import {
   ApiBody,
   ApiConflictResponse,
   ApiCreatedResponse,
+  ApiNotFoundResponse,
   ApiOkResponse,
   ApiOperation,
   ApiTags,
@@ -111,11 +112,19 @@ export class AuthController {
     description: 'Пользователь авторизован',
     type: UserRdo,
   })
+  @ApiNotFoundResponse({
+    description: 'Пользователь с таким email не найден',
+    example: {
+      statusCode: 404,
+      message: 'Пользователь с "user@example.com" не найден',
+      error: 'Not Found',
+    },
+  })
   @ApiUnauthorizedResponse({
-    description: 'Неверный email или пароль',
+    description: 'Неверный пароль',
     example: {
       statusCode: 401,
-      message: 'Неверный email',
+      message: 'Неверный пароль',
       error: 'Unauthorized',
     },
   })

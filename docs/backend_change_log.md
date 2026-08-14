@@ -1,5 +1,28 @@
 # Change Log
 
+## Epic 2: TECH-01 - Спринт 1: исправление технического долга
+
+Точечные правки по прошлому спринту.
+
+### Login неизвестного email
+
+- `POST /api/auth/login`: несуществующий email отдаёт 404 из `UserService.findByEmail` (`Пользователь с "..." не найден`)
+- Убрана мёртвая ветка `if (!user)` с 401 в `AuthService.loginUser`
+- Swagger: `@ApiNotFoundResponse` для неизвестного email, `@ApiUnauthorizedResponse` только для неверного пароля
+- Unit и e2e: неизвестный email => 404
+
+### Индекс `user_sessions(user_id)`
+
+- Миграция `20260814000001_add_user_sessions_user_id_index.ts`: индекс `user_sessions_user_id_idx` для ускорения операций ON DELETE
+
+### TTL
+
+- `.env.example`: `SESSION_LIFETIME_SECONDS=1800`, `REFRESH_AFTER_SECONDS=3600` (`REFRESH_AFTER_SECONDS` должен быть больше lifetime)
+
+### Deploy
+
+- В `.github/workflows/ci-cd.yml` перед backend явно запускается `migrate` с `--force-recreate`
+
 ## Epic 1: Task 8 Настройка CI на github actions
 
 Автодеплой production через GitHub Actions: unit-тесты backend, затем обновление сервера по SSH.

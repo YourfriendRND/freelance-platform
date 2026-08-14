@@ -44,10 +44,6 @@ export class AuthService {
   ): Promise<SuccessLoginUser> {
     const user = await this.userService.findByEmail(dto.email);
 
-    if (!user) {
-      throw new UnauthorizedException('Неверный email');
-    }
-
     const credentials = await this.userService.findAuthCredentialsById(user.id);
 
     const isPasswordValid = await verifyPassword(
