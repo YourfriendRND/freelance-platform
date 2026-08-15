@@ -1,5 +1,19 @@
 # Change Log
 
+## Epic 2: BE-01 - Проектирование домена задач и схемы БД
+
+Первая версия домена Tasks: таблицы, ограничения, индексы и типы. Без создания NestJS-модуль и API.
+
+### Миграции
+
+- Добавлены миграции для создания таблиц `task_categories` и `tasks`
+
+### shared-types
+
+- `ITask` / `TaskDbRow` / `TaskEntity`
+- `ITaskCategory` / `TaskCategoryDbRow` / `TaskCategoryEntity`
+- `TaskStatus` (`draft`, `open`, `closed`), `TaskExecutionType` (`remote`, `customer_place`)
+
 ## Epic 2: TECH-01 - Спринт 1: исправление технического долга
 
 Точечные правки по прошлому спринту.
