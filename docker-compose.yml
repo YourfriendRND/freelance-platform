@@ -37,6 +37,25 @@ services:
     command: ['sh', '-c', 'yarn migrate:init && yarn migrate']
     restart: 'no'
 
+  seed:
+    image: freelance-platform-backend
+    build:
+      context: .
+      dockerfile: apps/backend/Dockerfile
+    container_name: freelance-platform-seed
+    env_file:
+      - .env
+    environment:
+      DB_HOST: pg
+      DB_PORT: '5432'
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+      pg:
+        condition: service_healthy
+    command: ['sh', '-c', 'yarn seed:init && yarn seed']
+    restart: 'no'
+
   backend:
     image: freelance-platform-backend
     build:
@@ -52,7 +71,7 @@ services:
       DB_PORT: '5432'
       PORT: '3000'
     depends_on:
-      migrate:
+      seed:
         condition: service_completed_successfully
       pg:
         condition: service_healthy

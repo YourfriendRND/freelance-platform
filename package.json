@@ -22,6 +22,8 @@
     "migrate:init": "tsx --tsconfig apps/backend/tsconfig.migrate.json apps/backend/src/database/migration-runner/migrate.ts init",
     "migrate": "tsx --tsconfig apps/backend/tsconfig.migrate.json apps/backend/src/database/migration-runner/migrate.ts up",
     "migrate:rollback": "tsx --tsconfig apps/backend/tsconfig.migrate.json apps/backend/src/database/migration-runner/migrate.ts rollback",
+    "seed:init": "tsx --tsconfig apps/backend/tsconfig.migrate.json apps/backend/src/database/seed-runner/seed.ts init",
+    "seed": "tsx --tsconfig apps/backend/tsconfig.migrate.json apps/backend/src/database/seed-runner/seed.ts up",
     "reset": "nx reset"
   },
   "dependencies": {
