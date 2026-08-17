@@ -4,6 +4,7 @@ import { databaseConfig, authConfig } from '@freelance-platform/shared-config';
 import { DatabaseModule } from '../database/database.module';
 import { UserModule } from './user/user.module';
 import { AuthModule } from './auth/auth.module';
+import { TaskCategoryModule } from './task-category/task-category.module';
 
 @Module({
   imports: [
@@ -14,6 +15,7 @@ import { AuthModule } from './auth/auth.module';
     DatabaseModule,
     UserModule,
     AuthModule,
+    TaskCategoryModule,
   ],
 })
 export class AppModule {}

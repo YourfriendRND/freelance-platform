@@ -1,5 +1,31 @@
 # Change Log
 
+## Epic 2: BE-02 - Реализация модуля категорий задач
+
+GET API списка категорий, поле `description`, seed runner по аналогии с миграциями.
+
+### Миграция
+
+- `20260817000001_add_task_categories_description.ts`: добавлена колонка `description` в `task_categories`
+
+### TaskCategoryModule
+
+- Добавлен модуль для «Категории задач»
+- Добавлены Unit тесты для `task-category.service` => `task-category.service.spec.ts`
+
+### Сиды
+
+- Добавлен Seed runner в `apps/backend/src/database/seed-runner/`
+- Добавлена таблица `schema_seeds`, создаётся командой `yarn seed:init`, не через миграцию
+- `yarn seed` - применяет только новые файлы; без `init` выбрасывает ошибку
+- Rollback нет; checksum уже применённых сидов проверяется, сид-файл при повторном запуске игнорируется
+
+### Docker / CI
+
+- Production (`docker-compose.yml`): сервис `seed` - `yarn seed:init && yarn seed`; 
+- Изменен порядок запуска сервисов, теперь `pg` => `migrate` => `seed` => `backend`
+- GitHub Actions теперь перед backend выполняют seed файлы `--force-recreate seed`
+
 ## Epic 2: BE-01 - Проектирование домена задач и схемы БД
 
 Первая версия домена Tasks: таблицы, ограничения, индексы и типы. Без создания NestJS-модуль и API.

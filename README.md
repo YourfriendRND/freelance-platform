@@ -18,10 +18,11 @@ Nx monorepo для онлайн-площадки фриланса: поиск и
 apps/
   backend/
     src/
-      modules/          # NestJS-модули (auth, session, user, app)
+      modules/          # NestJS-модули
       common/           # hash/verify password, fillRdo
-      database/         # DatabaseModule, pg-клиент, migration runner
+      database/         # DatabaseModule, pg-клиент, migration runner, seed runner
       migrations/       # SQL-миграции
+      seeds/            # seed-файлы
   backend-e2e/          # HTTP e2e backend (Vitest + axios)
   frontend/
     src/
@@ -90,6 +91,7 @@ Swagger UI: http://localhost:3000/docs
 ```bash
 docker compose -f docker-compose.local.yml up -d
 yarn migrate:init && yarn migrate   # после первого поднятия БД
+yarn seed:init && yarn seed
 yarn backend
 yarn frontend
 ```
@@ -99,6 +101,7 @@ yarn frontend
 Сервисы: 
 - `pg`, 
 - `migrate`, 
+- `seed`,
 - `backend`
 - `frontend` (nginx на порту 80). 
 
@@ -110,13 +113,17 @@ docker compose --env-file .env up -d --build
 
 - SPA / API / Swagger (через host Nginx в проде): контейнер слушает `127.0.0.1:8080`
 - Локально без host Nginx: http://127.0.0.1:8080 / http://127.0.0.1:8080/api / http://127.0.0.1:8080/docs
-- `migrate` - one-shot: `migrate:init` + `migrate`, затем стартует backend
+- `migrate` - one-shot: `migrate:init` + `migrate`
+- `seed` - one-shot: `seed:init` + `seed` (после migrate; `seed:init` пропускается, если `schema_seeds` уже есть), затем стартует backend
 - Образы: `apps/backend/Dockerfile`, `apps/frontend/Dockerfile`
 - В `NODE_ENV=production` session cookie ставится с флагом `Secure`
 
 ## CI/CD
 
 При `push` / merge в `main` GitHub Actions (`.github/workflows/ci-cd.yml`):
+
+- Job `unit-test-backend`: `yarn backend:test`
+- Job `deploy`: SSH на production, `git pull origin main`, затем `--force-recreate migrate`, `--force-recreate seed`, сборка `backend` и `frontend`
 
 Нужны repository secrets: `SSH_HOST`, `SSH_USERNAME`, `SSH_PRIVATE_KEY`, `DEPLOY_PATH`.
 
@@ -132,7 +139,7 @@ Backend подключается к PostgreSQL через глобальный `
 
 - `users` - пользователи
 - `user_sessions` - сессии
-- `task_categories` - категории задач
+- `task_categories` - категории задач (`title` unique, `description`)
 - `tasks` - задачи
 
 ### Миграции
@@ -145,9 +152,20 @@ yarn migrate            # применить новые миграции
 yarn migrate:rollback   # откатить последнюю (если есть down)
 ```
 
-Порядок для новой БД: запустить backend (создаст БД) => `migrate:init` => `migrate`.
+Порядок для новой БД: запустить backend (создаст БД) => `migrate:init` => `migrate` => `seed:init` => `seed`.
 
 Файлы миграций - в `apps/backend/src/migrations/`. Каждый файл экспортирует объект `migration` с полями `version`, `checksum`, `description`, `up`, `down` (опционально).
+
+### Сиды
+
+Сиды запускаются вручную, отдельно от `serve`. Учёт применённых файлов - таблица `schema_seeds` (создаётся `yarn seed:init`, не через миграцию). Rollback нет: повторный запуск применяет только новые файлы. Уже применённый файл с другим `checksum` даёт ошибку.
+
+```bash
+yarn seed:init          # создать таблицу schema_seeds (один раз)
+yarn seed               # применить новые сиды
+```
+
+Файлы сидов - в `apps/backend/src/seeds/`. Каждый файл экспортирует объект `seed` с полями `name`, `checksum`, `run`.
 
 ## Тестирование
 
@@ -174,6 +192,7 @@ yarn test            # unit backend + frontend
 - `yarn lint` - линтинг
 - `yarn format` - Prettier
 - `yarn migrate:init` / `yarn migrate` / `yarn migrate:rollback` - миграции
+- `yarn seed:init` / `yarn seed` - сиды
 
 ## Shared libraries
 
