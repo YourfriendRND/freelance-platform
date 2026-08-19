@@ -5,6 +5,7 @@ import { DatabaseModule } from '../database/database.module';
 import { UserModule } from './user/user.module';
 import { AuthModule } from './auth/auth.module';
 import { TaskCategoryModule } from './task-category/task-category.module';
+import { TaskModule } from './task/task.module';
 
 @Module({
   imports: [
@@ -16,6 +17,7 @@ import { TaskCategoryModule } from './task-category/task-category.module';
     UserModule,
     AuthModule,
     TaskCategoryModule,
+    TaskModule,
   ],
 })
 export class AppModule {}
