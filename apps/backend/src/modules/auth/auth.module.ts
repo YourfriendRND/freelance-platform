@@ -9,6 +9,6 @@ import { AuthGuard } from './guards/auth.guard';
   imports: [UserModule, SessionModule],
   controllers: [AuthController],
   providers: [AuthService, AuthGuard],
-  exports: [AuthService],
+  exports: [AuthService, AuthGuard, UserModule, SessionModule],
 })
 export class AuthModule {}

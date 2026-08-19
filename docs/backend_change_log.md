@@ -1,5 +1,39 @@
 # Change Log
 
+## Epic 2: BE-03 - Реализация CRUD задач
+
+Реализован NestJS-модуль задач: создание, список, получение, обновление и удаление.
+
+### API
+
+- Добавлен `POST /api/tasks` - доступен по сессии, `customerId` берется из текущего пользователя, статус `draft` или сразу `open`
+- Добавлены публичные `GET /api/tasks` и `GET /api/tasks/:id`
+- Добавлен `PATCH /api/tasks/:id` - частичное обновление по сессии
+- Добавлен `DELETE /api/tasks/:id`
+
+### Правила
+Реализовано:
+
+- создавать задачу может только заказчик (`client`)
+- изменять и удалять может только владелец
+- закрытую задачу (`closed`) нельзя изменить, удаление разрешено
+
+### Контракты
+
+- Добавлены `CreateTaskDto` и `UpdateTaskDto`
+- Добавлены `TaskRdo`, `CreateTaskRecord`, `UpdateTaskRecord`
+
+### Auth
+
+- Добавлен декоратор `@AuthCheck()` вместо связки `@UseGuards(AuthGuard)`
+- `AuthModule` экспортирует `AuthGuard`, `UserModule` и `SessionModule`, чтобы гард работал в других модулях
+
+### Тесты
+
+- Добавлены unit-тесты => `task.service.spec.ts`, `create-task.dto.spec.ts`
+- Добавлены e2e-тесты => `apps/backend-e2e/src/task/task.e2e-spec.ts`
+- Убран `killPort` из e2e teardown => Nx сам останавливает `backend:serve`
+
 ## Epic 2: BE-02 - Реализация модуля категорий задач
 
 GET API списка категорий, поле `description`, seed runner по аналогии с миграциями.

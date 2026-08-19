@@ -7,7 +7,6 @@ import {
   Inject,
   Post,
   Res,
-  UseGuards,
 } from '@nestjs/common';
 import {
   ApiBody,
@@ -26,7 +25,7 @@ import { CommonRdo, UserRdo } from '@freelance-platform/shared-rdo';
 import { authConfig } from '@freelance-platform/shared-config';
 import { fillRdo } from '../../common/fill-rdo';
 import { CookieOptions, Response } from 'express';
-import { AuthGuard } from './guards/auth.guard';
+import { AuthCheck } from './decorators/auth-check.decorator';
 import { CurrentUser } from './decorators/current-user.decorator';
 import { SkipExpiresCheck } from './decorators/skip-expires-check.decorator';
 import { AuthUserPayload } from '@freelance-platform/shared-types';
@@ -50,7 +49,7 @@ export class AuthController {
 
   @Get('/me')
   @HttpCode(HttpStatus.OK)
-  @UseGuards(AuthGuard)
+  @AuthCheck()
   @ApiOperation({
     summary: 'Текущий пользователь',
     description:
@@ -145,7 +144,7 @@ export class AuthController {
 
   @Post('/logout')
   @HttpCode(HttpStatus.OK)
-  @UseGuards(AuthGuard)
+  @AuthCheck()
   @ApiOperation({
     summary: 'Выход пользователя',
     description: 'Удаляет текущую сессию пользователя и очищает cookie',
@@ -176,7 +175,7 @@ export class AuthController {
   @Post('/refresh')
   @HttpCode(HttpStatus.OK)
   @SkipExpiresCheck()
-  @UseGuards(AuthGuard)
+  @AuthCheck()
   @ApiOperation({
     summary: 'Обновление сессии',
     description: 'Проверяет текущую сессию и создаёт новую вместо неё',

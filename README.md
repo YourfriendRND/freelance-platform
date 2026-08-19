@@ -170,7 +170,7 @@ yarn seed               # применить новые сиды
 ## Тестирование
 
 - **Unit backend** - Vitest, specs рядом с кодом (`apps/backend/src/**/*.spec.ts`)
-- **E2E backend** - отдельное приложение `apps/backend-e2e`, Vitest + axios против живого API (`*.e2e-spec.ts`)
+- **E2E backend** - отдельное приложение `apps/backend-e2e`, Vitest + axios против живого API (`*.e2e-spec.ts`): auth, tasks
 - **Unit frontend** - Vitest через Angular (`yarn frontend:test`)
 - **E2E frontend** - Playwright (`apps/frontend-e2e`)
 

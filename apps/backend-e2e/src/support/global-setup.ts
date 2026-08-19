@@ -1,4 +1,4 @@
-import { killPort, waitForPortOpen } from '@nx/node/utils';
+import { waitForPortOpen } from '@nx/node/utils';
 
 const host = process.env.HOST ?? 'localhost';
 const port = process.env.PORT ? Number(process.env.PORT) : 3000;
@@ -9,6 +9,5 @@ export async function setup() {
 }
 
 export async function teardown() {
-  await killPort(port);
   console.log('\nTearing down backend-e2e...\n');
 }

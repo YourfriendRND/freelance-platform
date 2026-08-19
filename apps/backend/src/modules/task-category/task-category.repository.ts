@@ -17,4 +17,23 @@ export class TaskCategoryRepository {
 
     return rows.map((row) => TaskCategoryEntity.fromDb(row));
   }
+
+  async findById(id: string): Promise<TaskCategoryEntity | null> {
+    const { rows } = await this.database.query<TaskCategoryDbRow>(
+      `
+        SELECT id, title, description, created_at, updated_at
+        FROM task_categories
+        WHERE id = $1
+      `,
+      [id],
+    );
+
+    const [row] = rows;
+
+    if (!row) {
+      return null;
+    }
+
+    return TaskCategoryEntity.fromDb(row);
+  }
 }
