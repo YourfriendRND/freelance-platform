@@ -1,0 +1,31 @@
+<nav class="tasks-pagination" aria-label="Пагинация">
+  <button
+    type="button"
+    class="tasks-pagination__button"
+    [disabled]="isFirstPage()"
+    (click)="onPrevious()"
+  >
+    Назад
+  </button>
+
+  @for (page of pages(); track page) {
+    <button
+      type="button"
+      class="tasks-pagination__button"
+      [class.tasks-pagination__button--active]="page === currentPage()"
+      [attr.aria-current]="page === currentPage() ? 'page' : null"
+      (click)="onPage(page)"
+    >
+      {{ page }}
+    </button>
+  }
+
+  <button
+    type="button"
+    class="tasks-pagination__button"
+    [disabled]="isLastPage()"
+    (click)="onNext()"
+  >
+    Вперёд
+  </button>
+</nav>

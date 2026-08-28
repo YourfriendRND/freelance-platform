@@ -1,0 +1,26 @@
+:host {
+  display: block;
+  flex: 1;
+  width: 100%;
+}
+
+.tasks-page-container {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 100%;
+  padding: 2rem 20%;
+}
+
+:host-context(ui-dashboard-wrapper) .tasks-page-container {
+  padding: 2rem;
+}
+
+@media (max-width: 640px) {
+  .tasks-page-container {
+    padding: 1.5rem 10%;
+  }
+
+  :host-context(ui-dashboard-wrapper) .tasks-page-container {
+    padding: 1.5rem 1rem;
+  }
+}

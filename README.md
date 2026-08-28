@@ -27,7 +27,7 @@ apps/
   frontend/
     src/
       app/
-        features/       # feature-first: welcome, login, register
+        features/       # feature-first: welcome, login, register, tasks
         app.routes.ts   # lazy load feature-маршрутов
   frontend-e2e/         # e2e frontend (Playwright)
 libs/
@@ -123,7 +123,10 @@ docker compose --env-file .env up -d --build
 При `push` / merge в `main` GitHub Actions (`.github/workflows/ci-cd.yml`):
 
 - Job `unit-test-backend`: `yarn backend:test`
+- Job `unit-test-frontend`: `yarn frontend:test`
 - Job `deploy`: SSH на production, `git pull origin main`, затем `--force-recreate migrate`, `--force-recreate seed`, сборка `backend` и `frontend`
+
+Деплой стартует только если оба набора unit-тестов прошли.
 
 Нужны repository secrets: `SSH_HOST`, `SSH_USERNAME`, `SSH_PRIVATE_KEY`, `DEPLOY_PATH`.
 

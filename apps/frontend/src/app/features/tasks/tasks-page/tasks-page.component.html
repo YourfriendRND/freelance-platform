@@ -1,0 +1,67 @@
+<ui-dashboard-wrapper>
+  <ui-dashboard-sidebar
+    uiDashboardSidebar
+    homeHref="/welcome"
+    [items]="sidebarItems"
+  />
+
+  <ui-header
+    uiDashboardHeader
+    [mode]="headerMode()"
+    [showBrand]="false"
+    [embedded]="true"
+    pageTitle="Дашборд"
+    [userName]="userName()"
+    [userRole]="userRoleLabel()"
+    loginHref="/login"
+    getStartedHref="/register"
+    (logoutClick)="onLogout()"
+  />
+
+  <app-tasks-page-container>
+    <header class="tasks-page__header">
+      <h1 class="tasks-page__title">Задачи</h1>
+      <p class="tasks-page__subtitle">
+        Найдите подходящую задачу среди {{ availableCount() }} доступных
+      </p>
+    </header>
+
+    <app-tasks-filters
+      [categories]="categories()"
+      [shownCount]="pagedTasks().length"
+      [totalCount]="availableCount()"
+    />
+
+    @switch (view()) {
+      @case ('loading') {
+        <p class="tasks-page__status">Загрузка</p>
+      }
+      @case ('empty') {
+        <div class="tasks-page__empty">
+          <p class="tasks-page__empty-title">Список задач пуст</p>
+        </div>
+      }
+      @case ('error') {
+        <p class="tasks-page__status">
+          {{ errorMessage() ?? 'Не удалось загрузить задачи' }}
+        </p>
+      }
+      @case ('list') {
+        <ul class="tasks-page__list">
+          @for (task of pagedTasks(); track task.id) {
+            <li>
+              <app-task-item [task]="task" />
+            </li>
+          }
+        </ul>
+
+        <app-tasks-pagination
+          class="tasks-page__pagination"
+          [currentPage]="currentPage()"
+          [totalPages]="totalPages()"
+          (pageChange)="onPageChange($event)"
+        />
+      }
+    }
+  </app-tasks-page-container>
+</ui-dashboard-wrapper>

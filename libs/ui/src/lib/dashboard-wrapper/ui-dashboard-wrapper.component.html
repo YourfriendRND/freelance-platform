@@ -1,0 +1,15 @@
+<div class="ui-dashboard-wrapper">
+  <aside class="ui-dashboard-wrapper__sidebar">
+    <ng-content select="[uiDashboardSidebar]" />
+  </aside>
+
+  <div class="ui-dashboard-wrapper__main">
+    <div class="ui-dashboard-wrapper__header">
+      <ng-content select="[uiDashboardHeader]" />
+    </div>
+
+    <div class="ui-dashboard-wrapper__body">
+      <ng-content />
+    </div>
+  </div>
+</div>

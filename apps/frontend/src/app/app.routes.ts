@@ -25,4 +25,9 @@ export const appRoutes: Route[] = [
         (module) => module.registerRoutes,
       ),
   },
+  {
+    path: 'tasks',
+    loadChildren: () =>
+      import('./features/tasks/tasks.routes').then((module) => module.tasksRoutes),
+  },
 ];
