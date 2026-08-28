@@ -1,0 +1,32 @@
+:host {
+  display: block;
+}
+
+.ui-dashboard-wrapper {
+  display: grid;
+  grid-template-columns: 16rem 1fr;
+  min-height: 100dvh;
+}
+
+.ui-dashboard-wrapper__sidebar {
+  min-width: 0;
+  background: var(--color-surface);
+  border-right: 1px solid var(--color-border);
+}
+
+.ui-dashboard-wrapper__main {
+  display: grid;
+  grid-template-rows: auto 1fr;
+  min-width: 0;
+}
+
+.ui-dashboard-wrapper__header,
+.ui-dashboard-wrapper__body {
+  min-width: 0;
+}
+
+.ui-dashboard-wrapper__body {
+  display: flex;
+  flex-direction: column;
+  background: var(--color-background);
+}

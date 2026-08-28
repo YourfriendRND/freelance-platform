@@ -26,6 +26,9 @@ export class UiHeaderComponent {
   readonly userRole = input<string>(UiHeaderUser.Role);
   readonly userInitial = input('');
 
+  readonly showBrand = input(true);
+  readonly embedded = input(false);
+
   readonly homeHref = input('#');
   readonly browseTasksHref = input('#');
   readonly loginHref = input('#');

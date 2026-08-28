@@ -14,3 +14,8 @@ export {
 } from './lib/header';
 export { UiFooterComponent } from './lib/footer';
 export { UiPageWrapperComponent } from './lib/page-wrapper';
+export { UiDashboardWrapperComponent } from './lib/dashboard-wrapper';
+export {
+  UiDashboardSidebarComponent,
+  type UiDashboardNavItem,
+} from './lib/dashboard-sidebar';

@@ -1,0 +1,58 @@
+:host {
+  display: block;
+}
+
+.tasks-page__header {
+  margin-bottom: 1.5rem;
+}
+
+.tasks-page__title {
+  margin: 0;
+  color: var(--color-text);
+  font-size: 1.875rem;
+  font-weight: 700;
+  line-height: 1.25;
+}
+
+.tasks-page__subtitle {
+  margin: 0.5rem 0 0;
+  color: var(--color-text-muted);
+  font-size: 0.9375rem;
+  line-height: 1.5;
+}
+
+.tasks-page__status {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: 0.9375rem;
+  line-height: 1.5;
+}
+
+.tasks-page__empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4rem 1rem;
+}
+
+.tasks-page__empty-title {
+  margin: 0;
+  color: var(--color-text);
+  font-size: 1.5rem;
+  font-weight: 700;
+  line-height: 1.25;
+  text-align: center;
+}
+
+.tasks-page__list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.tasks-page__pagination {
+  margin-top: 1.5rem;
+}

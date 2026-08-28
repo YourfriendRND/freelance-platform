@@ -1,0 +1,59 @@
+<div class="ui-dashboard-sidebar">
+  <a
+    class="ui-dashboard-sidebar__brand"
+    [attr.href]="homeHref()"
+    (click)="homeClick.emit($event)"
+  >
+    <span class="ui-dashboard-sidebar__logo" aria-hidden="true">
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        width="20"
+        height="20"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+      >
+        <path d="M16 20V4a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
+        <rect width="20" height="14" x="2" y="6" rx="2"></rect>
+      </svg>
+    </span>
+    <span class="ui-dashboard-sidebar__brand-name">{{ brandName() }}</span>
+  </a>
+
+  <nav class="ui-dashboard-sidebar__nav" aria-label="Навигация">
+    @for (item of items(); track item.href) {
+      <a
+        class="ui-dashboard-sidebar__item"
+        [class.ui-dashboard-sidebar__item--active]="item.active"
+        [attr.href]="item.href"
+        [attr.aria-current]="item.active ? 'page' : null"
+        (click)="itemClick.emit({ item, event: $event })"
+      >
+        <span class="ui-dashboard-sidebar__item-icon" aria-hidden="true">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="18"
+            height="18"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path d="M8 6h13"></path>
+            <path d="M8 12h13"></path>
+            <path d="M8 18h13"></path>
+            <path d="M3 6h.01"></path>
+            <path d="M3 12h.01"></path>
+            <path d="M3 18h.01"></path>
+          </svg>
+        </span>
+        <span>{{ item.label }}</span>
+      </a>
+    }
+  </nav>
+</div>
