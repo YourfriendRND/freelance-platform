@@ -1,17 +1,11 @@
 import { TestBed } from '@angular/core/testing';
-import {
-  ActivatedRouteSnapshot,
-  provideRouter,
-  Router,
-  RouterStateSnapshot,
-  UrlTree,
-} from '@angular/router';
+import { PartialMatchRouteSnapshot, provideRouter } from '@angular/router';
 import { firstValueFrom, Observable, of } from 'rxjs';
 import { AuthStore } from '@freelance-platform/client-state';
-import { homeGuard } from './session.guard';
+import { homeRedirect } from './session.guard';
 
-describe('homeGuard testing', () => {
-  async function runGuard(isAuthenticated: boolean): Promise<string> {
+describe('homeRedirect testing', () => {
+  async function runRedirect(isAuthenticated: boolean): Promise<string> {
     TestBed.resetTestingModule();
     TestBed.configureTestingModule({
       providers: [
@@ -26,20 +20,17 @@ describe('homeGuard testing', () => {
     });
 
     const result = TestBed.runInInjectionContext(() =>
-      homeGuard({} as ActivatedRouteSnapshot, {} as RouterStateSnapshot),
-    ) as Observable<UrlTree>;
+      homeRedirect({} as PartialMatchRouteSnapshot),
+    );
 
-    const urlTree = await firstValueFrom(result);
-    const router = TestBed.inject(Router);
-
-    return router.serializeUrl(urlTree);
+    return firstValueFrom(result as Observable<string>);
   }
 
   it('should redirect a guest to /welcome', async () => {
-    expect(await runGuard(false)).toBe('/welcome');
+    expect(await runRedirect(false)).toBe('/welcome');
   });
 
   it('should redirect an authenticated user to /tasks', async () => {
-    expect(await runGuard(true)).toBe('/tasks');
+    expect(await runRedirect(true)).toBe('/tasks');
   });
 });

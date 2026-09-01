@@ -1,5 +1,5 @@
 import { ApplicationConfig, inject, provideBrowserGlobalErrorListeners } from '@angular/core';
-import { provideRouter } from '@angular/router';
+import { provideRouter, withEnabledBlockingInitialNavigation } from '@angular/router';
 import { AuthStore } from '@freelance-platform/client-state';
 import {
   AUTH_SESSION_INVALIDATOR,
@@ -10,7 +10,7 @@ import { appRoutes } from './app.routes';
 export const appConfig: ApplicationConfig = {
   providers: [
     provideBrowserGlobalErrorListeners(),
-    provideRouter(appRoutes),
+    provideRouter(appRoutes, withEnabledBlockingInitialNavigation()),
     provideApiHttp(),
     {
       provide: AUTH_SESSION_INVALIDATOR,
