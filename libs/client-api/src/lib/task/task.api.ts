@@ -12,4 +12,8 @@ export class TaskApi {
   findAll(): Observable<TaskResponse[]> {
     return this.http.get<TaskResponse[]>(`${this.apiBaseUrl}/tasks`);
   }
+
+  findOne(id: string): Observable<TaskResponse> {
+    return this.http.get<TaskResponse>(`${this.apiBaseUrl}/tasks/${id}`);
+  }
 }

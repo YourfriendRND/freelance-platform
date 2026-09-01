@@ -105,7 +105,7 @@ export class RegisterFormComponent {
       .pipe(finalize(() => this.submitting.set(false)))
       .subscribe({
         next: () => {
-          void this.router.navigate(['/login']);
+          this.router.navigate(['/login']);
         },
         error: (error: unknown) => {
           this.submitError.set(

@@ -1,11 +1,14 @@
 import { signal } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { provideRouter, Router } from '@angular/router';
 import { AuthStore, TaskStore } from '@freelance-platform/client-state';
 import {
   TaskCategoryResponse,
   TaskExecutionType,
   TaskResponse,
   TaskStatus,
+  UserResponse,
+  UserRole,
 } from '@freelance-platform/shared-types';
 import { TasksPageComponent } from './tasks-page.component';
 
@@ -13,7 +16,7 @@ describe('TasksPageComponent testing', () => {
   let fixture: ComponentFixture<TasksPageComponent>;
   let authStore: {
     isAuthenticated: ReturnType<typeof signal<boolean>>;
-    user: ReturnType<typeof signal<null>>;
+    user: ReturnType<typeof signal<UserResponse | null>>;
     bootstrap: ReturnType<typeof vi.fn>;
     logout: ReturnType<typeof vi.fn>;
   };
@@ -53,7 +56,7 @@ describe('TasksPageComponent testing', () => {
   beforeEach(async () => {
     authStore = {
       isAuthenticated: signal(false),
-      user: signal(null),
+      user: signal<UserResponse | null>(null),
       bootstrap: vi.fn(),
       logout: vi.fn(),
     };
@@ -76,6 +79,7 @@ describe('TasksPageComponent testing', () => {
     await TestBed.configureTestingModule({
       imports: [TasksPageComponent],
       providers: [
+        provideRouter([]),
         { provide: AuthStore, useValue: authStore },
         { provide: TaskStore, useValue: taskStore },
       ],
@@ -159,5 +163,29 @@ describe('TasksPageComponent testing', () => {
 
     expect(root().textContent).not.toContain('Первая задача');
     expect(root().textContent).toContain('Четвёртая задача');
+  });
+
+  it('should navigate to welcome on logout', () => {
+    const user: UserResponse = {
+      id: 'b7e14a02-91c3-4d58-8a6f-1c2d3e4f5a61',
+      email: 'ivan.petrov@example.com',
+      firstName: 'Иван',
+      lastName: 'Петров',
+      role: UserRole.Client,
+      createdAt: '2026-08-01T00:00:00.000Z',
+    };
+
+    authStore.isAuthenticated.set(true);
+    authStore.user.set(user);
+    fixture.detectChanges();
+
+    const router = TestBed.inject(Router);
+    const navigate = vi.spyOn(router, 'navigate').mockResolvedValue(true);
+
+    const logoutButton = root().querySelector('.ui-header__logout') as HTMLButtonElement;
+    logoutButton.click();
+
+    expect(authStore.logout).toHaveBeenCalledTimes(1);
+    expect(navigate).toHaveBeenCalledWith(['/welcome']);
   });
 });

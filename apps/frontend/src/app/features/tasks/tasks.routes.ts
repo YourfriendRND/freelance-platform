@@ -9,4 +9,11 @@ export const tasksRoutes: Route[] = [
         (module) => module.TasksPageComponent,
       ),
   },
+  {
+    path: ':id',
+    loadComponent: () =>
+      import('./task-details-page/task-details-page.component').then(
+        (module) => module.TaskDetailsPageComponent,
+      ),
+  },
 ];

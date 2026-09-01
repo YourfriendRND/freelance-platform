@@ -1,10 +1,8 @@
-import {
-  TaskExecutionType,
-  TaskStatus,
-  UserResponse,
-} from '@freelance-platform/shared-types';
+import { TaskExecutionType } from './task-execution-type';
+import { TaskStatus } from './task-status';
+import { UserResponse } from '../auth/auth-client.type';
 
-export type TaskItemData = {
+export type TaskViewData = {
   id: string;
   title: string;
   description: string;
@@ -12,6 +10,7 @@ export type TaskItemData = {
   budgetMin: number;
   budgetMax: number;
   executionType: TaskExecutionType;
+  deadline: string;
   createdAt: string;
   categoryTitle: string;
   // TODO: подставить applicationsCount, когда бэкенд начнёт отдавать число откликов

@@ -1,0 +1,43 @@
+<ui-dashboard-wrapper>
+  <ui-dashboard-sidebar
+    uiDashboardSidebar
+    homeHref="/welcome"
+    [items]="sidebarItems"
+  />
+
+  <ui-header
+    uiDashboardHeader
+    [mode]="headerMode()"
+    [showBrand]="false"
+    [embedded]="true"
+    pageTitle="Дашборд"
+    [userName]="userName()"
+    [userRole]="userRoleLabel()"
+    loginHref="/login"
+    getStartedHref="/register"
+    (logoutClick)="onLogout()"
+  />
+
+  <app-tasks-page-container>
+    <a routerLink="/tasks" class="task-details-page__back">← Назад к задачам</a>
+
+    @switch (view()) {
+      @case ('loading') {
+        <p class="task-details-page__status">Загрузка</p>
+      }
+      @case ('error') {
+        <p class="task-details-page__status">
+          {{ errorMessage() ?? 'Не удалось загрузить задачу' }}
+        </p>
+      }
+      @case ('content') {
+        @if (task(); as details) {
+          <div class="task-details-page__layout">
+            <app-task-details [task]="details" />
+            <app-task-details-aside [task]="details" />
+          </div>
+        }
+      }
+    }
+  </app-tasks-page-container>
+</ui-dashboard-wrapper>

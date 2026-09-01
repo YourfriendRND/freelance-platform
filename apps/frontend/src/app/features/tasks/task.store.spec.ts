@@ -12,7 +12,7 @@ import {
 
 describe('TaskStore testing', () => {
   let store: InstanceType<typeof TaskStore>;
-  let taskApi: { findAll: ReturnType<typeof vi.fn> };
+  let taskApi: { findAll: ReturnType<typeof vi.fn>; findOne: ReturnType<typeof vi.fn> };
   let taskCategoryApi: { findAll: ReturnType<typeof vi.fn> };
 
   const category: TaskCategoryResponse = {
@@ -37,7 +37,7 @@ describe('TaskStore testing', () => {
   };
 
   beforeEach(() => {
-    taskApi = { findAll: vi.fn() };
+    taskApi = { findAll: vi.fn(), findOne: vi.fn() };
     taskCategoryApi = { findAll: vi.fn() };
 
     TestBed.configureTestingModule({
@@ -54,8 +54,12 @@ describe('TaskStore testing', () => {
   it('should start with an empty idle state', () => {
     expect(store.tasks()).toEqual([]);
     expect(store.categories()).toEqual([]);
+    expect(store.selectedTask()).toBeNull();
     expect(store.isLoading()).toBe(false);
+    expect(store.isSelectedLoading()).toBe(false);
+    expect(store.isListLoaded()).toBe(false);
     expect(store.error()).toBeNull();
+    expect(store.selectedError()).toBeNull();
   });
 
   it('should load tasks and categories together', () => {
@@ -117,5 +121,103 @@ describe('TaskStore testing', () => {
 
     expect(store.error()).toBe('Не удалось загрузить задачи');
     expect(store.isLoading()).toBe(false);
+  });
+
+  it('should not reload the list after a successful load', () => {
+    taskApi.findAll.mockReturnValue(of([task]));
+    taskCategoryApi.findAll.mockReturnValue(of([category]));
+
+    store.load();
+    store.load();
+
+    expect(taskApi.findAll).toHaveBeenCalledTimes(1);
+    expect(taskCategoryApi.findAll).toHaveBeenCalledTimes(1);
+    expect(store.isListLoaded()).toBe(true);
+  });
+
+  it('should load a task by id with categories', () => {
+    taskApi.findOne.mockReturnValue(of(task));
+    taskCategoryApi.findAll.mockReturnValue(of([category]));
+
+    store.loadById(task.id);
+
+    expect(store.isSelectedLoading()).toBe(false);
+    expect(store.selectedError()).toBeNull();
+    expect(store.selectedTask()).toEqual(task);
+    expect(store.categories()).toEqual([category]);
+  });
+
+  it('should keep a single in-flight loadById request', () => {
+    const selectedTask = new Subject<TaskResponse>();
+    taskApi.findOne.mockReturnValue(selectedTask.asObservable());
+    taskCategoryApi.findAll.mockReturnValue(of([category]));
+
+    store.loadById(task.id);
+    store.loadById(task.id);
+
+    expect(taskApi.findOne).toHaveBeenCalledTimes(1);
+    expect(store.isSelectedLoading()).toBe(true);
+
+    selectedTask.next(task);
+    selectedTask.complete();
+
+    expect(store.isSelectedLoading()).toBe(false);
+    expect(store.selectedTask()).toEqual(task);
+  });
+
+  it('should not refetch categories when they are already loaded', () => {
+    taskApi.findOne.mockReturnValue(of(task));
+    taskCategoryApi.findAll.mockReturnValue(of([category]));
+
+    store.loadById(task.id);
+    store.clearSelected();
+    store.loadById(task.id);
+
+    expect(taskApi.findOne).toHaveBeenCalledTimes(2);
+    expect(taskCategoryApi.findAll).toHaveBeenCalledTimes(1);
+  });
+
+  it('should store the API error message when loadById fails', () => {
+    taskApi.findOne.mockReturnValue(
+      throwError(
+        () =>
+          new HttpErrorResponse({
+            status: 404,
+            error: { message: 'Задача с "5c8e1a97-0a01-4b62-8d11-7e9f0a1b2c01" не найдена' },
+          }),
+      ),
+    );
+    taskCategoryApi.findAll.mockReturnValue(of([category]));
+
+    store.loadById(task.id);
+
+    expect(store.isSelectedLoading()).toBe(false);
+    expect(store.selectedTask()).toBeNull();
+    expect(store.selectedError()).toBe(
+      'Задача с "5c8e1a97-0a01-4b62-8d11-7e9f0a1b2c01" не найдена',
+    );
+  });
+
+  it('should fall back to a default error message when loadById fails', () => {
+    taskApi.findOne.mockReturnValue(throwError(() => new Error('network')));
+    taskCategoryApi.findAll.mockReturnValue(of([category]));
+
+    store.loadById(task.id);
+
+    expect(store.selectedError()).toBe('Не удалось загрузить задачу');
+    expect(store.isSelectedLoading()).toBe(false);
+  });
+
+  it('should clear the selected task', () => {
+    taskApi.findOne.mockReturnValue(of(task));
+    taskCategoryApi.findAll.mockReturnValue(of([category]));
+
+    store.loadById(task.id);
+    store.clearSelected();
+
+    expect(store.selectedTask()).toBeNull();
+    expect(store.isSelectedLoading()).toBe(false);
+    expect(store.selectedError()).toBeNull();
+    expect(store.categories()).toEqual([category]);
   });
 });

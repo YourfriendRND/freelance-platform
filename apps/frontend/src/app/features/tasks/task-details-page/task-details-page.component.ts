@@ -2,10 +2,11 @@ import {
   ChangeDetectionStrategy,
   Component,
   computed,
+  DestroyRef,
   inject,
-  signal,
 } from '@angular/core';
-import { Router } from '@angular/router';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { AuthStore, TaskStore } from '@freelance-platform/client-state';
 import { TaskViewData, USER_ROLE_LABEL } from '@freelance-platform/shared-types';
 import {
@@ -15,66 +16,68 @@ import {
   UiHeaderComponent,
   UiHeaderMode,
 } from '@freelance-platform/ui';
+import { TaskDetailsAsideComponent } from '../task-details-aside/task-details-aside.component';
+import { TaskDetailsComponent } from '../task-details/task-details.component';
 import { TasksPageContainerComponent } from '../tasks-page-container/tasks-page-container.component';
-import { TaskItemComponent } from '../task-item/task-item.component';
-import { TasksFiltersComponent } from '../tasks-filters/tasks-filters.component';
-import { TasksPaginationComponent } from '../tasks-pagination/tasks-pagination.component';
 
-type TasksPageView = 'loading' | 'empty' | 'error' | 'list';
+type TaskDetailsPageView = 'loading' | 'error' | 'content';
 
-const TASKS_PAGE_SIZE = 3;
 const UNKNOWN_CATEGORY_TITLE = 'Без категории';
 
 @Component({
-  selector: 'app-tasks-page',
+  selector: 'app-task-details-page',
   imports: [
+    RouterLink,
     UiHeaderComponent,
     UiDashboardWrapperComponent,
     UiDashboardSidebarComponent,
     TasksPageContainerComponent,
-    TaskItemComponent,
-    TasksFiltersComponent,
-    TasksPaginationComponent,
+    TaskDetailsComponent,
+    TaskDetailsAsideComponent,
   ],
-  templateUrl: './tasks-page.component.html',
-  styleUrl: './tasks-page.component.scss',
+  templateUrl: './task-details-page.component.html',
+  styleUrl: './task-details-page.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class TasksPageComponent {
+export class TaskDetailsPageComponent {
   private readonly authStore = inject(AuthStore);
   private readonly taskStore = inject(TaskStore);
+  private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
+  private readonly destroyRef = inject(DestroyRef);
 
-  protected readonly currentPage = signal(1);
-  protected readonly categories = this.taskStore.categories;
-  protected readonly errorMessage = this.taskStore.error;
+  protected readonly errorMessage = this.taskStore.selectedError;
 
-  protected readonly tasks = computed<readonly TaskViewData[]>(() => {
+  protected readonly task = computed<TaskViewData | null>(() => {
+    const selectedTask = this.taskStore.selectedTask();
+
+    if (!selectedTask) {
+      return null;
+    }
+
     const categoryTitleById = this.taskStore.categoryTitleById();
 
-    return this.taskStore.tasks().map((task) => ({
-      id: task.id,
-      title: task.title,
-      description: task.description,
-      status: task.status,
-      budgetMin: task.budgetMin,
-      budgetMax: task.budgetMax,
-      executionType: task.executionType,
-      deadline: task.deadline,
-      createdAt: task.createdAt,
+    return {
+      id: selectedTask.id,
+      title: selectedTask.title,
+      description: selectedTask.description,
+      status: selectedTask.status,
+      budgetMin: selectedTask.budgetMin,
+      budgetMax: selectedTask.budgetMax,
+      executionType: selectedTask.executionType,
+      deadline: selectedTask.deadline,
+      createdAt: selectedTask.createdAt,
       categoryTitle:
-        categoryTitleById.get(task.categoryId) ?? UNKNOWN_CATEGORY_TITLE,
+        categoryTitleById.get(selectedTask.categoryId) ?? UNKNOWN_CATEGORY_TITLE,
       // TODO: подставить applicationsCount, viewsCount и author, когда бэкенд начнёт их отдавать
       applicationsCount: 0,
       viewsCount: 0,
       author: null,
-    }));
+    };
   });
 
-  protected readonly availableCount = computed(() => this.tasks().length);
-
-  protected readonly view = computed<TasksPageView>(() => {
-    if (this.taskStore.isLoading()) {
+  protected readonly view = computed<TaskDetailsPageView>(() => {
+    if (this.taskStore.isSelectedLoading()) {
       return 'loading';
     }
 
@@ -82,17 +85,7 @@ export class TasksPageComponent {
       return 'error';
     }
 
-    return this.tasks().length === 0 ? 'empty' : 'list';
-  });
-
-  protected readonly totalPages = computed(() =>
-    Math.max(1, Math.ceil(this.tasks().length / TASKS_PAGE_SIZE)),
-  );
-
-  protected readonly pagedTasks = computed(() => {
-    const start = (this.currentPage() - 1) * TASKS_PAGE_SIZE;
-
-    return this.tasks().slice(start, start + TASKS_PAGE_SIZE);
+    return this.task() ? 'content' : 'loading';
   });
 
   protected readonly sidebarItems: readonly UiDashboardNavItem[] = [
@@ -133,17 +126,24 @@ export class TasksPageComponent {
 
   constructor() {
     this.authStore.bootstrap();
-    this.taskStore.load();
+
+    this.route.paramMap.pipe(takeUntilDestroyed()).subscribe((params) => {
+      const id = params.get('id');
+
+      if (!id) {
+        return;
+      }
+
+      this.taskStore.loadById(id);
+    });
+
+    this.destroyRef.onDestroy(() => {
+      this.taskStore.clearSelected();
+    });
   }
 
   protected onLogout(): void {
     this.authStore.logout();
     this.router.navigate(['/welcome']);
-  }
-
-  protected onPageChange(page: number): void {
-    const nextPage = Math.min(Math.max(page, 1), this.totalPages());
-
-    this.currentPage.set(nextPage);
   }
 }

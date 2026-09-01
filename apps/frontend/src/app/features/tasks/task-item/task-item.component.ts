@@ -1,26 +1,25 @@
 import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
+import { RouterLink } from '@angular/router';
 import {
+  formatTaskBudget,
+  formatTaskDate,
   TASK_EXECUTION_TYPE_LABEL,
   TASK_STATUS_LABEL,
+  TaskViewData,
   USER_ROLE_LABEL,
 } from '@freelance-platform/shared-types';
-import { TaskItemData } from './task-item.model';
-
-const BUDGET_FORMATTER = new Intl.NumberFormat('ru-RU');
-const DATE_FORMATTER = new Intl.DateTimeFormat('ru-RU', {
-  day: '2-digit',
-  month: '2-digit',
-  year: 'numeric',
-});
 
 @Component({
   selector: 'app-task-item',
+  imports: [RouterLink],
   templateUrl: './task-item.component.html',
   styleUrl: './task-item.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class TaskItemComponent {
-  readonly task = input.required<TaskItemData>();
+  readonly task = input.required<TaskViewData>();
+
+  protected readonly detailsHref = computed(() => `/tasks/${this.task().id}`);
 
   protected readonly statusLabel = computed(
     () => TASK_STATUS_LABEL[this.task().status],
@@ -33,11 +32,11 @@ export class TaskItemComponent {
   protected readonly budgetLabel = computed(() => {
     const { budgetMin, budgetMax } = this.task();
 
-    return `${BUDGET_FORMATTER.format(budgetMin)} – ${BUDGET_FORMATTER.format(budgetMax)} ₽`;
+    return formatTaskBudget(budgetMin, budgetMax);
   });
 
   protected readonly postedAtLabel = computed(() =>
-    DATE_FORMATTER.format(new Date(this.task().createdAt)),
+    formatTaskDate(this.task().createdAt),
   );
 
   protected readonly author = computed(() => this.task().author);
