@@ -1,24 +1,28 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { provideRouter } from '@angular/router';
 import {
+  formatTaskBudget,
+  formatTaskDate,
   TaskExecutionType,
   TaskStatus,
+  TaskViewData,
   UserResponse,
   UserRole,
 } from '@freelance-platform/shared-types';
 import { TaskItemComponent } from './task-item.component';
-import { TaskItemData } from './task-item.model';
 
 describe('TaskItemComponent testing', () => {
   let fixture: ComponentFixture<TaskItemComponent>;
 
-  const task: TaskItemData = {
-    id: 'task-1',
+  const task: TaskViewData = {
+    id: '58ba88f8-0336-41a3-84de-38fce101c289',
     title: 'Разработка адаптивного лендинга',
     description: 'Нужен адаптивный лендинг для запуска продукта',
     status: TaskStatus.Open,
     budgetMin: 25000,
     budgetMax: 40000,
     executionType: TaskExecutionType.Remote,
+    deadline: '2026-09-15',
     createdAt: '2026-05-29T12:00:00.000Z',
     categoryTitle: 'Программирование и IT',
     applicationsCount: 0,
@@ -27,7 +31,7 @@ describe('TaskItemComponent testing', () => {
   };
 
   const author: UserResponse = {
-    id: 'user-1',
+    id: '8caf25cf-d7b9-4950-a0c5-baea8505ff1d',
     email: 'ivan.petrov@example.com',
     firstName: 'Иван',
     lastName: 'Петров',
@@ -38,12 +42,13 @@ describe('TaskItemComponent testing', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [TaskItemComponent],
+      providers: [provideRouter([])],
     }).compileComponents();
 
     fixture = TestBed.createComponent(TaskItemComponent);
   });
 
-  function render(data: TaskItemData): HTMLElement {
+  function render(data: TaskViewData): HTMLElement {
     fixture.componentRef.setInput('task', data);
     fixture.detectChanges();
 
@@ -52,12 +57,6 @@ describe('TaskItemComponent testing', () => {
 
   it('should render task fields from the card model', () => {
     const root = render(task);
-    const budgetFormatter = new Intl.NumberFormat('ru-RU');
-    const dateFormatter = new Intl.DateTimeFormat('ru-RU', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-    });
 
     expect(root.querySelector('.task-item__title')?.textContent).toContain(
       task.title,
@@ -72,17 +71,24 @@ describe('TaskItemComponent testing', () => {
       TaskStatus.Open,
     );
     expect(root.querySelector('.task-item__budget')?.textContent).toContain(
-      `${budgetFormatter.format(task.budgetMin)} – ${budgetFormatter.format(task.budgetMax)} ₽`,
+      formatTaskBudget(task.budgetMin, task.budgetMax),
     );
     expect(root.querySelector('.task-item__tag')?.textContent).toContain(
       task.categoryTitle,
     );
     expect(root.textContent).toContain('Удалённо');
     expect(root.textContent).toContain(
-      `Опубликовано ${dateFormatter.format(new Date(task.createdAt))}`,
+      `Опубликовано ${formatTaskDate(task.createdAt)}`,
     );
     expect(root.textContent).toContain('0 откликов');
     expect(root.textContent).toContain('0 просмотров');
+  });
+
+  it('should link the card to the task details page', () => {
+    const root = render(task);
+    const link = root.querySelector('a.task-item');
+
+    expect(link?.getAttribute('href')).toBe(`/tasks/${task.id}`);
   });
 
   it('should hide the author block when author is missing', () => {

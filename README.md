@@ -75,7 +75,7 @@ REFRESH_AFTER_SECONDS=3600
 
 ```bash
 yarn backend    # API: http://localhost:3000/api
-yarn frontend   # SPA: http://localhost:4200 (`/` => Welcome Page)
+yarn frontend   # SPA: http://localhost:4200 (`/` => /welcome для гостя, /tasks при сессии)
 ```
 
 Swagger UI: http://localhost:3000/docs

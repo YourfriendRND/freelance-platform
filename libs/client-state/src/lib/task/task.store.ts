@@ -9,13 +9,17 @@ import {
 import { TaskApi, TaskCategoryApi } from '@freelance-platform/client-api';
 import { resolveHttpErrorMessage } from '@freelance-platform/http';
 import { TaskState } from '@freelance-platform/shared-types';
-import { combineLatest } from 'rxjs';
+import { combineLatest, of } from 'rxjs';
 
 const initialState: TaskState = {
   tasks: [],
   categories: [],
+  selectedTask: null,
   isLoading: false,
+  isSelectedLoading: false,
+  isListLoaded: false,
   error: null,
+  selectedError: null,
 };
 
 export const TaskStore = signalStore(
@@ -33,7 +37,7 @@ export const TaskStore = signalStore(
       taskCategoryApi = inject(TaskCategoryApi),
     ) => ({
       load(): void {
-        if (store.isLoading()) {
+        if (store.isLoading() || store.isListLoaded()) {
           return;
         }
 
@@ -46,6 +50,7 @@ export const TaskStore = signalStore(
               categories,
               error: null,
               isLoading: false,
+              isListLoaded: true,
             });
           },
           error: (error: unknown) => {
@@ -57,6 +62,50 @@ export const TaskStore = signalStore(
               ),
             });
           },
+        });
+      },
+      loadById(id: string): void {
+        if (store.isSelectedLoading()) {
+          return;
+        }
+
+        patchState(store, {
+          isSelectedLoading: true,
+          selectedError: null,
+          selectedTask: null,
+        });
+
+        const categoriesRequest =
+          store.categories().length > 0
+            ? of(store.categories())
+            : taskCategoryApi.findAll();
+
+        combineLatest([taskApi.findOne(id), categoriesRequest]).subscribe({
+          next: ([task, categories]) => {
+            patchState(store, {
+              selectedTask: task,
+              categories,
+              selectedError: null,
+              isSelectedLoading: false,
+            });
+          },
+          error: (error: unknown) => {
+            patchState(store, {
+              isSelectedLoading: false,
+              selectedTask: null,
+              selectedError: resolveHttpErrorMessage(
+                error,
+                'Не удалось загрузить задачу',
+              ),
+            });
+          },
+        });
+      },
+      clearSelected(): void {
+        patchState(store, {
+          selectedTask: null,
+          isSelectedLoading: false,
+          selectedError: null,
         });
       },
     }),

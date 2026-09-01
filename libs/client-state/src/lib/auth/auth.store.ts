@@ -14,12 +14,29 @@ import {
   LoginUserRequest,
   UserResponse,
 } from '@freelance-platform/shared-types';
-import { catchError, Observable, tap, throwError } from 'rxjs';
+import {
+  catchError,
+  finalize,
+  map,
+  Observable,
+  of,
+  shareReplay,
+  tap,
+  throwError,
+} from 'rxjs';
 
 const initialState: AuthState = {
   user: null,
   isLoading: false,
   error: null,
+  isSessionResolved: false,
+};
+
+const resolvedGuestState: AuthState = {
+  user: null,
+  isLoading: false,
+  error: null,
+  isSessionResolved: true,
 };
 
 export const AuthStore = signalStore(
@@ -28,73 +45,114 @@ export const AuthStore = signalStore(
   withComputed(({ user }) => ({
     isAuthenticated: computed(() => user() !== null),
   })),
-  withMethods((store, authApi = inject(AuthApi)) => ({
-    setUser(user: UserResponse): void {
-      patchState(store, { user, error: null, isLoading: false });
-    },
-    clear(): void {
-      patchState(store, initialState);
-    },
-    setLoading(isLoading: boolean): void {
-      patchState(store, { isLoading });
-    },
-    setError(error: string | null): void {
-      patchState(store, { error, isLoading: false });
-    },
-    login(body: LoginUserRequest): Observable<UserResponse> {
-      patchState(store, { isLoading: true, error: null });
+  withMethods((store, authApi = inject(AuthApi)) => {
+    let sessionRequest: Observable<boolean> | null = null;
 
-      return authApi.login(body).pipe(
-        tap((user) => {
-          patchState(store, { user, error: null, isLoading: false });
-        }),
-        catchError((error: unknown) => {
-          patchState(store, {
-            error: resolveHttpErrorMessage(error, 'Не удалось войти'),
-            isLoading: false,
-          });
-          return throwError(() => error);
-        }),
-      );
-    },
-    logout(): void {
-      patchState(store, { isLoading: true, error: null });
-
-      authApi.logout().subscribe({
-        next: () => {
-          patchState(store, initialState);
-        },
-        error: () => {
-          patchState(store, initialState);
-        },
-      });
-    },
-    bootstrap(): void {
+    const ensureSession = (): Observable<boolean> => {
       if (store.user()) {
-        return;
+        return of(true);
+      }
+
+      if (store.isSessionResolved()) {
+        return of(false);
+      }
+
+      if (sessionRequest) {
+        return sessionRequest;
       }
 
       patchState(store, { isLoading: true, error: null });
 
-      authApi.me().subscribe({
-        next: (user) => {
-          patchState(store, { user, error: null, isLoading: false });
-        },
-        error: (error: unknown) => {
+      sessionRequest = authApi.me().pipe(
+        tap((user) => {
+          patchState(store, {
+            user,
+            error: null,
+            isLoading: false,
+            isSessionResolved: true,
+          });
+        }),
+        map(() => true),
+        catchError((error: unknown) => {
           if (error instanceof HttpErrorResponse && error.status === 401) {
-            patchState(store, initialState);
-            return;
+            patchState(store, resolvedGuestState);
+            return of(false);
           }
 
           patchState(store, {
             isLoading: false,
+            isSessionResolved: true,
             error: resolveHttpErrorMessage(
               error,
               'Не удалось загрузить профиль',
             ),
           });
-        },
-      });
-    },
-  })),
+          return of(false);
+        }),
+        finalize(() => {
+          sessionRequest = null;
+        }),
+        shareReplay({ bufferSize: 1, refCount: false }),
+      );
+
+      return sessionRequest;
+    };
+
+    return {
+      setUser(user: UserResponse): void {
+        patchState(store, {
+          user,
+          error: null,
+          isLoading: false,
+          isSessionResolved: true,
+        });
+      },
+      clear(): void {
+        patchState(store, resolvedGuestState);
+      },
+      setLoading(isLoading: boolean): void {
+        patchState(store, { isLoading });
+      },
+      setError(error: string | null): void {
+        patchState(store, { error, isLoading: false });
+      },
+      ensureSession,
+      login(body: LoginUserRequest): Observable<UserResponse> {
+        patchState(store, { isLoading: true, error: null });
+
+        return authApi.login(body).pipe(
+          tap((user) => {
+            patchState(store, {
+              user,
+              error: null,
+              isLoading: false,
+              isSessionResolved: true,
+            });
+          }),
+          catchError((error: unknown) => {
+            patchState(store, {
+              error: resolveHttpErrorMessage(error, 'Не удалось войти'),
+              isLoading: false,
+            });
+            return throwError(() => error);
+          }),
+        );
+      },
+      logout(): void {
+        patchState(store, { ...resolvedGuestState, isLoading: true });
+
+        authApi.logout().subscribe({
+          next: () => {
+            patchState(store, resolvedGuestState);
+          },
+          error: () => {
+            patchState(store, resolvedGuestState);
+          },
+        });
+      },
+      bootstrap(): void {
+        ensureSession().subscribe();
+      },
+    };
+  }),
 );

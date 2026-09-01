@@ -1,0 +1,15 @@
+<article class="task-details-client">
+  <h2 class="task-details-client__title">О заказчике</h2>
+
+  <div class="task-details-client__body">
+    <span class="task-details-client__avatar" aria-hidden="true">
+      {{ authorInitial() }}
+    </span>
+
+    <div class="task-details-client__info">
+      <p class="task-details-client__name">{{ authorName() }}</p>
+      <p class="task-details-client__role">{{ authorRoleLabel() }}</p>
+      <p class="task-details-client__since">{{ memberSinceLabel() }}</p>
+    </div>
+  </div>
+</article>

@@ -1,0 +1,116 @@
+<div class="task-details">
+  <article class="task-details__card">
+    <header class="task-details__header">
+      <h1 class="task-details__title">
+        {{ task().title }}
+        <span class="task-details__status" [attr.data-status]="task().status">
+          {{ statusLabel() }}
+        </span>
+      </h1>
+    </header>
+
+    <div class="task-details__meta-list">
+      <span class="task-details__meta">
+        <span class="task-details__meta-icon" aria-hidden="true">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <circle cx="12" cy="12" r="10"></circle>
+            <path d="M12 6v6l4 2"></path>
+          </svg>
+        </span>
+        Опубликовано {{ postedAtLabel() }}
+      </span>
+
+      <!-- TODO: подставить число просмотров, когда бэкенд начнёт его отдавать -->
+      <span class="task-details__meta">
+        <span class="task-details__meta-icon" aria-hidden="true">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path
+              d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0"
+            ></path>
+            <circle cx="12" cy="12" r="3"></circle>
+          </svg>
+        </span>
+        {{ task().viewsCount }} просмотров
+      </span>
+
+      <!-- TODO: подставить число откликов, когда бэкенд начнёт его отдавать -->
+      <span class="task-details__meta">
+        <span class="task-details__meta-icon" aria-hidden="true">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>
+            <circle cx="9" cy="7" r="4"></circle>
+            <path d="M22 21v-2a4 4 0 0 0-3-3.87"></path>
+            <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+          </svg>
+        </span>
+        {{ task().applicationsCount }} откликов
+      </span>
+
+      <span class="task-details__meta">
+        <span class="task-details__meta-icon" aria-hidden="true">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"></path>
+            <circle cx="12" cy="10" r="3"></circle>
+          </svg>
+        </span>
+        {{ executionLabel() }}
+      </span>
+    </div>
+
+    <p class="task-details__tag">{{ task().categoryTitle }}</p>
+
+    <section class="task-details__description">
+      <h2 class="task-details__section-title">Описание</h2>
+      <p class="task-details__description-text">{{ task().description }}</p>
+    </section>
+  </article>
+
+  <!-- TODO: показать блок заказчика, когда бэкенд начнёт отдавать данные пользователя -->
+  @if (author(); as client) {
+    <app-task-details-client [author]="client" />
+  }
+
+  <div class="task-details__responses">
+    <ng-content select="[taskDetailsResponses]" />
+  </div>
+</div>

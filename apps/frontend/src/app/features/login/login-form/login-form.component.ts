@@ -63,7 +63,7 @@ export class LoginFormComponent {
       .pipe(finalize(() => this.submitting.set(false)))
       .subscribe({
         next: () => {
-          void this.router.navigate(['/welcome']);
+          this.router.navigate(['/tasks']);
         },
         error: () => {
           this.submitError.set(this.authStore.error() ?? 'Не удалось войти');

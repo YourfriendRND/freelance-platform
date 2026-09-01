@@ -10,3 +10,5 @@ export * from './task-category.db-row';
 export * from './task-category.entity';
 export * from './task-client.type';
 export * from './task-state.type';
+export * from './task-view.type';
+export * from './task-format';
