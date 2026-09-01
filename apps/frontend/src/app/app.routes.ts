@@ -1,12 +1,11 @@
 import { Route } from '@angular/router';
-import { homeGuard } from './auth/session.guard';
+import { homeRedirect } from './auth/session.guard';
 
 export const appRoutes: Route[] = [
   {
     path: '',
     pathMatch: 'full',
-    canActivate: [homeGuard],
-    children: [],
+    redirectTo: homeRedirect,
   },
   {
     path: 'welcome',

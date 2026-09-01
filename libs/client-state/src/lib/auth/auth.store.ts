@@ -81,7 +81,6 @@ export const AuthStore = signalStore(
 
           patchState(store, {
             isLoading: false,
-            isSessionResolved: true,
             error: resolveHttpErrorMessage(
               error,
               'Не удалось загрузить профиль',
