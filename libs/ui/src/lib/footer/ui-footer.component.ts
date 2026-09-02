@@ -41,7 +41,7 @@ export class UiFooterComponent {
     {
       title: UiFooterText.ForCustomers,
       links: [
-        { label: UiFooterText.BrowseTasks, href: '#' },
+        { label: UiFooterText.BrowseTasks, href: '/tasks' },
         { label: UiFooterText.PostTask, href: '#' },
         { label: UiFooterText.HowItWorks, href: '#' },
       ],
