@@ -290,11 +290,19 @@ export class TaskCreateFormComponent {
   protected categoryError(): string | null {
     const control = this.form.controls.categoryId;
 
-    if (!control.touched || !control.errors?.['required']) {
+    if (!control.touched || !control.errors) {
       return null;
     }
 
-    return 'Выберите категорию';
+    if (control.errors['required']) {
+      return 'Выберите категорию';
+    }
+
+    if (control.errors['server']) {
+      return control.errors['server'];
+    }
+
+    return null;
   }
 
   protected budgetError(): string | null {

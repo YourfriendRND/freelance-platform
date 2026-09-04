@@ -50,7 +50,6 @@ describe('AuthStore testing', () => {
     store.ensureSession().subscribe((result) => {
       isAuthenticated = result;
     });
-    store.ensureSession().subscribe();
 
     expect(isAuthenticated).toBe(false);
     expect(store.user()).toBeNull();
