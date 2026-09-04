@@ -12,7 +12,11 @@ import {
 
 describe('TaskStore testing', () => {
   let store: InstanceType<typeof TaskStore>;
-  let taskApi: { findAll: ReturnType<typeof vi.fn>; findOne: ReturnType<typeof vi.fn> };
+  let taskApi: {
+    create: ReturnType<typeof vi.fn>;
+    findAll: ReturnType<typeof vi.fn>;
+    findOne: ReturnType<typeof vi.fn>;
+  };
   let taskCategoryApi: { findAll: ReturnType<typeof vi.fn> };
 
   const category: TaskCategoryResponse = {
@@ -37,7 +41,7 @@ describe('TaskStore testing', () => {
   };
 
   beforeEach(() => {
-    taskApi = { findAll: vi.fn(), findOne: vi.fn() };
+    taskApi = { create: vi.fn(), findAll: vi.fn(), findOne: vi.fn() };
     taskCategoryApi = { findAll: vi.fn() };
 
     TestBed.configureTestingModule({
@@ -133,6 +137,28 @@ describe('TaskStore testing', () => {
     expect(taskApi.findAll).toHaveBeenCalledTimes(1);
     expect(taskCategoryApi.findAll).toHaveBeenCalledTimes(1);
     expect(store.isListLoaded()).toBe(true);
+  });
+
+  it('should create a task and mark the loaded list stale', () => {
+    taskApi.findAll.mockReturnValue(of([task]));
+    taskApi.create.mockReturnValue(of(task));
+    taskCategoryApi.findAll.mockReturnValue(of([category]));
+
+    store.load();
+    store.create({
+      title: task.title,
+      description: task.description,
+      status: task.status,
+      budgetMin: task.budgetMin,
+      budgetMax: task.budgetMax,
+      executionType: task.executionType,
+      deadline: task.deadline,
+      categoryId: task.categoryId,
+    }).subscribe();
+
+    expect(taskApi.create).toHaveBeenCalledTimes(1);
+    expect(store.isListLoaded()).toBe(false);
+    expect(store.error()).toBeNull();
   });
 
   it('should load a task by id with categories', () => {

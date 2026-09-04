@@ -8,8 +8,8 @@ import {
 } from '@ngrx/signals';
 import { TaskApi, TaskCategoryApi } from '@freelance-platform/client-api';
 import { resolveHttpErrorMessage } from '@freelance-platform/http';
-import { TaskState } from '@freelance-platform/shared-types';
-import { combineLatest, of } from 'rxjs';
+import { CreateTaskRequest, TaskResponse, TaskState } from '@freelance-platform/shared-types';
+import { combineLatest, Observable, of, tap } from 'rxjs';
 
 const initialState: TaskState = {
   tasks: [],
@@ -100,6 +100,16 @@ export const TaskStore = signalStore(
             });
           },
         });
+      },
+      create(body: CreateTaskRequest): Observable<TaskResponse> {
+        return taskApi.create(body).pipe(
+          tap(() => {
+            patchState(store, {
+              isListLoaded: false,
+              error: null,
+            });
+          }),
+        );
       },
       clearSelected(): void {
         patchState(store, {

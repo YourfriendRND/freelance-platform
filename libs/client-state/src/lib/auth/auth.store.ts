@@ -49,14 +49,6 @@ export const AuthStore = signalStore(
     let sessionRequest: Observable<boolean> | null = null;
 
     const ensureSession = (): Observable<boolean> => {
-      if (store.user()) {
-        return of(true);
-      }
-
-      if (store.isSessionResolved()) {
-        return of(false);
-      }
-
       if (sessionRequest) {
         return sessionRequest;
       }
@@ -86,7 +78,8 @@ export const AuthStore = signalStore(
               'Не удалось загрузить профиль',
             ),
           });
-          return of(false);
+
+          return of(store.user() !== null);
         }),
         finalize(() => {
           sessionRequest = null;

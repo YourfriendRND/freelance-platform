@@ -50,7 +50,6 @@ describe('AuthStore testing', () => {
     store.ensureSession().subscribe((result) => {
       isAuthenticated = result;
     });
-    store.ensureSession().subscribe();
 
     expect(isAuthenticated).toBe(false);
     expect(store.user()).toBeNull();
@@ -58,13 +57,46 @@ describe('AuthStore testing', () => {
     expect(authApi.me).toHaveBeenCalledTimes(1);
   });
 
-  it('should not call /auth/me again after the session is resolved', () => {
+  it('should call /auth/me again after the previous session check completed', () => {
     authApi.me.mockReturnValue(of(user));
 
     store.ensureSession().subscribe();
     store.ensureSession().subscribe();
 
-    expect(authApi.me).toHaveBeenCalledTimes(1);
+    expect(authApi.me).toHaveBeenCalledTimes(2);
+  });
+
+  it('should replace stored user with the latest /auth/me response', () => {
+    const updatedUser: UserResponse = {
+      ...user,
+      firstName: 'Пётр',
+    };
+
+    authApi.me
+      .mockReturnValueOnce(of(user))
+      .mockReturnValueOnce(of(updatedUser));
+
+    store.ensureSession().subscribe();
+    store.ensureSession().subscribe();
+
+    expect(store.user()).toEqual(updatedUser);
+  });
+
+  it('should clear the user when a later /auth/me returns 401', () => {
+    authApi.me.mockReturnValueOnce(of(user));
+
+    store.ensureSession().subscribe();
+
+    expect(store.user()).toEqual(user);
+
+    authApi.me.mockReturnValue(
+      throwError(() => new HttpErrorResponse({ status: 401 })),
+    );
+
+    store.ensureSession().subscribe();
+
+    expect(store.user()).toBeNull();
+    expect(store.isAuthenticated()).toBe(false);
   });
 
   it('should share a single in-flight /auth/me request', () => {

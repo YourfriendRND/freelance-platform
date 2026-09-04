@@ -1,15 +1,5 @@
 <ui-page-wrapper>
-  <ui-header
-    uiPageHeader
-    [mode]="headerMode()"
-    [userName]="userName()"
-    [userRole]="userRoleLabel()"
-    homeHref="/welcome"
-    browseTasksHref="/tasks"
-    loginHref="/login"
-    getStartedHref="/register"
-    (logoutClick)="onLogout()"
-  />
+  <app-header uiPageHeader />
 
   <main class="welcome-page__content">
     <p class="welcome-page__title">Добро пожаловать</p>

@@ -1,0 +1,25 @@
+<ui-dashboard-wrapper>
+  <app-dashboard-sidebar
+    uiDashboardSidebar
+    activeItem="analytics"
+  />
+
+  <app-header
+    uiDashboardHeader
+    [showBrand]="false"
+    [embedded]="true"
+  />
+
+  <app-analytics-page-container>
+    <header class="analytics-page__header">
+      <div>
+        <h1 class="analytics-page__title">{{ greeting() }}</h1>
+        <p class="analytics-page__subtitle">
+          Вот что происходит с вашими задачами
+        </p>
+      </div>
+
+      <ui-button type="button" (clicked)="onCreateTask()">Новая задача</ui-button>
+    </header>
+  </app-analytics-page-container>
+</ui-dashboard-wrapper>

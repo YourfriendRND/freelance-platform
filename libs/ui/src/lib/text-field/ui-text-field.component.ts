@@ -7,6 +7,8 @@ import {
 } from '@angular/core';
 import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
 
+type UiTextFieldType = 'text' | 'email' | 'password' | 'number' | 'date';
+
 @Component({
   selector: 'ui-text-field',
   templateUrl: './ui-text-field.component.html',
@@ -22,11 +24,14 @@ import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
 })
 export class UiTextFieldComponent implements ControlValueAccessor {
   readonly label = input.required<string>();
-  readonly type = input<'text' | 'email' | 'password'>('text');
+  readonly type = input<UiTextFieldType>('text');
   readonly placeholder = input('');
   readonly autocomplete = input<string | undefined>(undefined);
   readonly error = input<string | null>(null);
+  readonly hint = input('');
   readonly inputId = input.required<string>();
+  readonly multiline = input(false);
+  readonly required = input(false);
 
   protected readonly value = signal('');
   protected readonly isDisabled = signal(false);
@@ -51,7 +56,7 @@ export class UiTextFieldComponent implements ControlValueAccessor {
   }
 
   protected onInput(event: Event): void {
-    const nextValue = (event.target as HTMLInputElement).value;
+    const nextValue = (event.target as HTMLInputElement | HTMLTextAreaElement).value;
     this.value.set(nextValue);
     this.onChange(nextValue);
   }

@@ -2,7 +2,7 @@ import { inject, Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { API_BASE_URL } from '@freelance-platform/http';
-import { TaskResponse } from '@freelance-platform/shared-types';
+import { CreateTaskRequest, TaskResponse } from '@freelance-platform/shared-types';
 
 @Injectable({ providedIn: 'root' })
 export class TaskApi {
@@ -15,5 +15,9 @@ export class TaskApi {
 
   findOne(id: string): Observable<TaskResponse> {
     return this.http.get<TaskResponse>(`${this.apiBaseUrl}/tasks/${id}`);
+  }
+
+  create(body: CreateTaskRequest): Observable<TaskResponse> {
+    return this.http.post<TaskResponse>(`${this.apiBaseUrl}/tasks`, body);
   }
 }

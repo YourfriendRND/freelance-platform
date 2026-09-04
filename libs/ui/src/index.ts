@@ -17,5 +17,6 @@ export { UiPageWrapperComponent } from './lib/page-wrapper';
 export { UiDashboardWrapperComponent } from './lib/dashboard-wrapper';
 export {
   UiDashboardSidebarComponent,
+  type UiDashboardNavIcon,
   type UiDashboardNavItem,
 } from './lib/dashboard-sidebar';

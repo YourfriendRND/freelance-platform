@@ -1,7 +1,7 @@
 <div class="ui-dashboard-sidebar">
   <a
     class="ui-dashboard-sidebar__brand"
-    [attr.href]="homeHref()"
+    [routerLink]="homeHref()"
     (click)="homeClick.emit($event)"
   >
     <span class="ui-dashboard-sidebar__logo" aria-hidden="true">
@@ -28,29 +28,51 @@
       <a
         class="ui-dashboard-sidebar__item"
         [class.ui-dashboard-sidebar__item--active]="item.active"
-        [attr.href]="item.href"
+        [routerLink]="item.href"
         [attr.aria-current]="item.active ? 'page' : null"
         (click)="itemClick.emit({ item, event: $event })"
       >
         <span class="ui-dashboard-sidebar__item-icon" aria-hidden="true">
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="18"
-            height="18"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-          >
-            <path d="M8 6h13"></path>
-            <path d="M8 12h13"></path>
-            <path d="M8 18h13"></path>
-            <path d="M3 6h.01"></path>
-            <path d="M3 12h.01"></path>
-            <path d="M3 18h.01"></path>
-          </svg>
+          @switch (item.icon) {
+            @case ('grid') {
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="18"
+                height="18"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <rect width="7" height="7" x="3" y="3" rx="1"></rect>
+                <rect width="7" height="7" x="14" y="3" rx="1"></rect>
+                <rect width="7" height="7" x="14" y="14" rx="1"></rect>
+                <rect width="7" height="7" x="3" y="14" rx="1"></rect>
+              </svg>
+            }
+            @default {
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="18"
+                height="18"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path d="M8 6h13"></path>
+                <path d="M8 12h13"></path>
+                <path d="M8 18h13"></path>
+                <path d="M3 6h.01"></path>
+                <path d="M3 12h.01"></path>
+                <path d="M3 18h.01"></path>
+              </svg>
+            }
+          }
         </span>
         <span>{{ item.label }}</span>
       </a>

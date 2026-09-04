@@ -17,7 +17,6 @@ describe('TasksPageComponent testing', () => {
   let authStore: {
     isAuthenticated: ReturnType<typeof signal<boolean>>;
     user: ReturnType<typeof signal<UserResponse | null>>;
-    bootstrap: ReturnType<typeof vi.fn>;
     logout: ReturnType<typeof vi.fn>;
   };
   let tasks: ReturnType<typeof signal<TaskResponse[]>>;
@@ -57,7 +56,6 @@ describe('TasksPageComponent testing', () => {
     authStore = {
       isAuthenticated: signal(false),
       user: signal<UserResponse | null>(null),
-      bootstrap: vi.fn(),
       logout: vi.fn(),
     };
     tasks = signal<TaskResponse[]>([]);
@@ -93,8 +91,7 @@ describe('TasksPageComponent testing', () => {
     return fixture.nativeElement as HTMLElement;
   }
 
-  it('should bootstrap auth and load tasks on init', () => {
-    expect(authStore.bootstrap).toHaveBeenCalledTimes(1);
+  it('should load tasks on init', () => {
     expect(load).toHaveBeenCalledTimes(1);
   });
 

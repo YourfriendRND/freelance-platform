@@ -1,21 +1,13 @@
 <ui-dashboard-wrapper>
-  <ui-dashboard-sidebar
+  <app-dashboard-sidebar
     uiDashboardSidebar
-    homeHref="/welcome"
-    [items]="sidebarItems"
+    activeItem="tasks"
   />
 
-  <ui-header
+  <app-header
     uiDashboardHeader
-    [mode]="headerMode()"
     [showBrand]="false"
     [embedded]="true"
-    pageTitle="Дашборд"
-    [userName]="userName()"
-    [userRole]="userRoleLabel()"
-    loginHref="/login"
-    getStartedHref="/register"
-    (logoutClick)="onLogout()"
   />
 
   <app-tasks-page-container>

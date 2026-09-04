@@ -5,16 +5,11 @@ import {
   inject,
   signal,
 } from '@angular/core';
-import { Router } from '@angular/router';
-import { AuthStore, TaskStore } from '@freelance-platform/client-state';
-import { TaskViewData, USER_ROLE_LABEL } from '@freelance-platform/shared-types';
-import {
-  UiDashboardNavItem,
-  UiDashboardSidebarComponent,
-  UiDashboardWrapperComponent,
-  UiHeaderComponent,
-  UiHeaderMode,
-} from '@freelance-platform/ui';
+import { TaskStore } from '@freelance-platform/client-state';
+import { TaskViewData } from '@freelance-platform/shared-types';
+import { UiDashboardWrapperComponent } from '@freelance-platform/ui';
+import { AppHeaderComponent } from '../../../app-header/app-header.component';
+import { DashboardSidebarComponent } from '../../../dashboard/dashboard-sidebar/dashboard-sidebar.component';
 import { TasksPageContainerComponent } from '../tasks-page-container/tasks-page-container.component';
 import { TaskItemComponent } from '../task-item/task-item.component';
 import { TasksFiltersComponent } from '../tasks-filters/tasks-filters.component';
@@ -28,9 +23,9 @@ const UNKNOWN_CATEGORY_TITLE = 'Без категории';
 @Component({
   selector: 'app-tasks-page',
   imports: [
-    UiHeaderComponent,
     UiDashboardWrapperComponent,
-    UiDashboardSidebarComponent,
+    AppHeaderComponent,
+    DashboardSidebarComponent,
     TasksPageContainerComponent,
     TaskItemComponent,
     TasksFiltersComponent,
@@ -41,9 +36,7 @@ const UNKNOWN_CATEGORY_TITLE = 'Без категории';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class TasksPageComponent {
-  private readonly authStore = inject(AuthStore);
   private readonly taskStore = inject(TaskStore);
-  private readonly router = inject(Router);
 
   protected readonly currentPage = signal(1);
   protected readonly categories = this.taskStore.categories;
@@ -95,50 +88,8 @@ export class TasksPageComponent {
     return this.tasks().slice(start, start + TASKS_PAGE_SIZE);
   });
 
-  protected readonly sidebarItems: readonly UiDashboardNavItem[] = [
-    {
-      label: 'Задачи',
-      href: '/tasks',
-      active: true,
-    },
-  ];
-
-  protected readonly headerMode = computed(() =>
-    this.authStore.isAuthenticated()
-      ? UiHeaderMode.Authenticated
-      : UiHeaderMode.Guest,
-  );
-
-  protected readonly userName = computed(() => {
-    const user = this.authStore.user();
-
-    if (!user) {
-      return '';
-    }
-
-    const { firstName, lastName } = user;
-
-    return [firstName, lastName].filter(Boolean).join(' ');
-  });
-
-  protected readonly userRoleLabel = computed(() => {
-    const user = this.authStore.user();
-
-    if (!user) {
-      return '';
-    }
-
-    return USER_ROLE_LABEL[user.role];
-  });
-
   constructor() {
-    this.authStore.bootstrap();
     this.taskStore.load();
-  }
-
-  protected onLogout(): void {
-    this.authStore.logout();
-    this.router.navigate(['/welcome']);
   }
 
   protected onPageChange(page: number): void {

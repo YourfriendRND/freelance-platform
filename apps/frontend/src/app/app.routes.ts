@@ -27,6 +27,13 @@ export const appRoutes: Route[] = [
       ),
   },
   {
+    path: 'analytics',
+    loadChildren: () =>
+      import('./features/analytics/analytics.routes').then(
+        (module) => module.analyticsRoutes,
+      ),
+  },
+  {
     path: 'tasks',
     loadChildren: () =>
       import('./features/tasks/tasks.routes').then((module) => module.tasksRoutes),
