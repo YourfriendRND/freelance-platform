@@ -31,6 +31,7 @@ export class UiSelectComponent<T extends string = string> implements ControlValu
   readonly options = input.required<readonly UiSelectOption<T>[]>();
   readonly error = input<string | null>(null);
   readonly placeholder = input('');
+  readonly required = input(false);
 
   protected readonly value = signal<T | null>(null);
   protected readonly isDisabled = signal(false);

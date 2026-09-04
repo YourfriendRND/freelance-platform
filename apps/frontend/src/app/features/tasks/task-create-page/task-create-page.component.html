@@ -1,0 +1,31 @@
+<ui-dashboard-wrapper>
+  <app-dashboard-sidebar
+    uiDashboardSidebar
+    activeItem="analytics"
+  />
+
+  <app-header
+    uiDashboardHeader
+    [showBrand]="false"
+    [embedded]="true"
+  />
+
+  <app-task-create-container>
+    <a routerLink="/analytics" class="task-create-page__back">
+      ← Назад к аналитике
+    </a>
+
+    <section class="task-create-page__card" aria-labelledby="task-create-title">
+      <header class="task-create-page__header">
+        <h1 id="task-create-title" class="task-create-page__title">
+          Новая задача
+        </h1>
+        <p class="task-create-page__subtitle">
+          Заполните детали, чтобы найти подходящего исполнителя для проекта
+        </p>
+      </header>
+
+      <app-task-create-form (cancel)="onCancel()" />
+    </section>
+  </app-task-create-container>
+</ui-dashboard-wrapper>

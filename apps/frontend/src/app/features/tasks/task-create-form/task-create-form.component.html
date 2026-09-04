@@ -1,0 +1,115 @@
+<form class="task-create-form" [formGroup]="form" (ngSubmit)="onSubmit()" novalidate>
+  <ui-text-field
+    formControlName="title"
+    inputId="task-create-title"
+    label="Название задачи"
+    placeholder="Например, разработка современного интернет-магазина"
+    hint="Напишите понятное и конкретное название"
+    [required]="true"
+    [error]="fieldError('title')"
+  />
+
+  <ui-text-field
+    formControlName="description"
+    inputId="task-create-description"
+    label="Описание"
+    placeholder="Опишите проект, требования, ожидаемый результат и важные детали"
+    hint="Минимум 100 символов. Расскажите о требованиях и ожиданиях подробнее"
+    [multiline]="true"
+    [required]="true"
+    [error]="fieldError('description')"
+  />
+
+  <ui-select
+    formControlName="categoryId"
+    inputId="task-create-category"
+    label="Категория"
+    placeholder="Выберите категорию"
+    [options]="categoryOptions()"
+    [required]="true"
+    [error]="categoryError()"
+  />
+
+  @if (categoryLoadError(); as errorMessage) {
+    <p class="task-create-form__field-note" role="alert">{{ errorMessage }}</p>
+  }
+
+  <fieldset class="task-create-form__fieldset">
+    <legend class="task-create-form__legend">
+      Бюджет
+      <span class="task-create-form__required" aria-hidden="true">*</span>
+    </legend>
+
+    <div class="task-create-form__row">
+      <ui-text-field
+        formControlName="budgetMin"
+        inputId="task-create-budget-min"
+        label="Минимум (₽)"
+        type="number"
+        placeholder="500"
+        [error]="fieldError('budgetMin')"
+      />
+
+      <ui-text-field
+        formControlName="budgetMax"
+        inputId="task-create-budget-max"
+        label="Максимум (₽)"
+        type="number"
+        placeholder="1500"
+        [error]="fieldError('budgetMax')"
+      />
+    </div>
+
+    @if (budgetError(); as errorMessage) {
+      <p class="task-create-form__field-note" role="alert">{{ errorMessage }}</p>
+    }
+  </fieldset>
+
+  <ui-text-field
+    formControlName="deadline"
+    inputId="task-create-deadline"
+    label="Срок исполнения до"
+    type="date"
+    [required]="true"
+    [error]="fieldError('deadline')"
+  />
+
+  <ui-select
+    formControlName="executionType"
+    inputId="task-create-execution-type"
+    label="Локация"
+    [options]="executionTypeOptions"
+    [error]="fieldError('executionType')"
+  />
+
+  <ui-select
+    formControlName="status"
+    inputId="task-create-status"
+    label="Статус"
+    [options]="statusOptions"
+    [error]="fieldError('status')"
+  />
+
+  @if (submitError(); as errorMessage) {
+    <p class="task-create-form__submit-error" role="alert">{{ errorMessage }}</p>
+  }
+
+  <div class="task-create-form__actions">
+    <ui-button
+      type="submit"
+      [fullWidth]="true"
+      [disabled]="submitting()"
+      (clicked)="onSubmit()"
+    >
+      {{ submitting() ? 'Создание...' : 'Создать задачу' }}
+    </ui-button>
+    <ui-button
+      type="button"
+      variant="secondary"
+      [disabled]="submitting()"
+      (clicked)="onCancel()"
+    >
+      Отмена
+    </ui-button>
+  </div>
+</form>

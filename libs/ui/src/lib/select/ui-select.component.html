@@ -1,5 +1,10 @@
 <div class="ui-select" [class.ui-select--invalid]="!!error()">
-  <label class="ui-select__label" [attr.for]="inputId()">{{ label() }}</label>
+  <label class="ui-select__label" [attr.for]="inputId()">
+    {{ label() }}
+    @if (required()) {
+      <span class="ui-select__required" aria-hidden="true">*</span>
+    }
+  </label>
 
   <div class="ui-select__control">
     <select

@@ -10,6 +10,10 @@
     line-height: 1.25rem;
   }
 
+  &__required {
+    color: var(--color-danger);
+  }
+
   &__input {
     width: 100%;
     min-height: 3rem;
@@ -37,16 +41,39 @@
       background: var(--color-surface-muted);
       cursor: not-allowed;
     }
+
+    &[type='number'] {
+      appearance: textfield;
+    }
+
+    &[type='number']::-webkit-inner-spin-button,
+    &[type='number']::-webkit-outer-spin-button {
+      margin: 0;
+      appearance: none;
+    }
+
+    &--textarea {
+      min-height: 10rem;
+      resize: vertical;
+    }
   }
 
   &--invalid &__input {
     border-color: var(--color-danger);
   }
 
+  &__hint,
   &__error {
     margin: 0;
-    color: var(--color-danger);
     font-size: 0.8125rem;
     line-height: 1.125rem;
+  }
+
+  &__hint {
+    color: var(--color-text-muted);
+  }
+
+  &__error {
+    color: var(--color-danger);
   }
 }
