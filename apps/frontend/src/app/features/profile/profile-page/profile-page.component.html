@@ -1,0 +1,27 @@
+<ui-dashboard-wrapper>
+  <app-dashboard-sidebar
+    uiDashboardSidebar
+    activeItem="profile"
+  />
+
+  <app-header
+    uiDashboardHeader
+    [showBrand]="false"
+    [embedded]="true"
+    pageTitle="Профиль"
+  />
+
+  <app-profile-page-container>
+    @let profileData = profile();
+
+    <div class="profile-page__content">
+      <app-profile-card
+        [displayName]="profileData.displayName"
+        [email]="profileData.email"
+        [roleLabel]="profileData.roleLabel"
+        [registrationLabel]="profileData.registrationLabel"
+      />
+      <app-profile-statistics />
+    </div>
+  </app-profile-page-container>
+</ui-dashboard-wrapper>

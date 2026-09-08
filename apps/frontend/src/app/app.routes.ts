@@ -34,6 +34,13 @@ export const appRoutes: Route[] = [
       ),
   },
   {
+    path: 'profile',
+    loadChildren: () =>
+      import('./features/profile/profile.routes').then(
+        (module) => module.profileRoutes,
+      ),
+  },
+  {
     path: 'tasks',
     loadChildren: () =>
       import('./features/tasks/tasks.routes').then((module) => module.tasksRoutes),

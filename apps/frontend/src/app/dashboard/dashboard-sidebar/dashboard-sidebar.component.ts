@@ -5,7 +5,13 @@ import {
   UiDashboardSidebarComponent,
 } from '@freelance-platform/ui';
 
-type DashboardSidebarActiveItem = 'analytics' | 'tasks';
+enum DashboardSidebarItem {
+  Analytics = 'analytics',
+  Tasks = 'tasks',
+  Profile = 'profile',
+}
+
+type DashboardSidebarActiveItem = Lowercase<keyof typeof DashboardSidebarItem>;
 
 @Component({
   selector: 'app-dashboard-sidebar',
@@ -20,24 +26,33 @@ export class DashboardSidebarComponent {
   private readonly authStore = inject(AuthStore);
 
   protected readonly sidebarItems = computed<readonly UiDashboardNavItem[]>(() => {
-    const items: UiDashboardNavItem[] = [];
-
-    if (this.authStore.isAuthenticated()) {
-      items.push({
-        label: 'Аналитика',
-        href: '/analytics',
-        icon: 'grid',
-        active: this.activeItem() === 'analytics',
-      });
-    }
-
-    items.push({
+    const activeItem = this.activeItem();
+    const isAuthenticated = this.authStore.isAuthenticated();
+    const tasksItem: UiDashboardNavItem = {
       label: 'Задачи',
       href: '/tasks',
       icon: 'list',
-      active: this.activeItem() === 'tasks',
-    });
+      active: activeItem === DashboardSidebarItem.Tasks,
+    };
 
-    return items;
+    if (isAuthenticated) {
+      return [
+        {
+          label: 'Аналитика',
+          href: '/analytics',
+          icon: 'grid',
+          active: activeItem === DashboardSidebarItem.Analytics,
+        },
+        tasksItem,
+        {
+          label: 'Профиль',
+          href: '/profile',
+          icon: 'user',
+          active: activeItem === DashboardSidebarItem.Profile,
+        },
+      ];
+    }
+
+    return [tasksItem];
   });
 }

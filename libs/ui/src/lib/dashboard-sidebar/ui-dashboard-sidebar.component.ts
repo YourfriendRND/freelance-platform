@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, input, output } from '@angular/core';
 import { RouterLink } from '@angular/router';
 
-export type UiDashboardNavIcon = 'list' | 'grid';
+export type UiDashboardNavIcon = 'list' | 'grid' | 'user';
 
 export type UiDashboardNavItem = {
   readonly label: string;

@@ -1,0 +1,69 @@
+<section class="profile-statistics" aria-label="Статистика профиля">
+  @for (statistic of statistics; track statistic.label) {
+    <article class="profile-statistics__item">
+      <div
+        class="profile-statistics__icon"
+        [class.profile-statistics__icon--projects]="
+          statistic.icon === profileStatisticIcon.Projects
+        "
+        [class.profile-statistics__icon--reviews]="
+          statistic.icon === profileStatisticIcon.Reviews
+        "
+        aria-hidden="true"
+      >
+        @switch (statistic.icon) {
+          @case (profileStatisticIcon.Rating) {
+            <svg
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.75"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path d="m12 2 3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2Z"></path>
+            </svg>
+          }
+          @case (profileStatisticIcon.Projects) {
+            <svg
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.75"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <rect width="18" height="14" x="3" y="7" rx="2"></rect>
+              <path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+              <path d="M12 12v4"></path>
+            </svg>
+          }
+          @case (profileStatisticIcon.Reviews) {
+            <svg
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.75"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <circle cx="12" cy="8" r="4"></circle>
+              <path d="M8.2 13.5 7 22l5-3 5 3-1.2-8.5"></path>
+            </svg>
+          }
+        }
+      </div>
+
+      <div>
+        <strong class="profile-statistics__value">{{ statistic.value }}</strong>
+        <p class="profile-statistics__label">{{ statistic.label }}</p>
+      </div>
+    </article>
+  }
+</section>
