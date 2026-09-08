@@ -1,0 +1,16 @@
+:host {
+  display: block;
+  width: 100%;
+}
+
+.profile-page-container {
+  width: min(100%, 76rem);
+  margin: 0 auto;
+  padding: 2rem;
+}
+
+@media (max-width: 640px) {
+  .profile-page-container {
+    padding: 1rem;
+  }
+}

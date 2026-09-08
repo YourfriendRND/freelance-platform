@@ -1,0 +1,91 @@
+<section class="profile-card" aria-labelledby="profile-card-title">
+  <div class="profile-card__cover">
+    <div
+      class="profile-card__avatar"
+      role="img"
+      aria-label="Аватар не добавлен"
+    ></div>
+  </div>
+
+  <div class="profile-card__content">
+    <div class="profile-card__header">
+      <div>
+        <h1 id="profile-card-title" class="profile-card__title">
+          {{ displayName() }}
+        </h1>
+
+        <div class="profile-card__meta">
+          <span class="profile-card__meta-item">
+            <svg
+              aria-hidden="true"
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.75"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <rect width="18" height="14" x="3" y="7" rx="2"></rect>
+              <path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+            </svg>
+            {{ roleLabel() }}
+          </span>
+
+          <span class="profile-card__meta-item">
+            <svg
+              aria-hidden="true"
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.75"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path d="M8 2v4"></path>
+              <path d="M16 2v4"></path>
+              <rect width="18" height="18" x="3" y="4" rx="2"></rect>
+              <path d="M3 10h18"></path>
+            </svg>
+            {{ registrationLabel() }}
+          </span>
+
+          <span class="profile-card__meta-item">
+            <svg
+              aria-hidden="true"
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.75"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <rect width="20" height="16" x="2" y="4" rx="2"></rect>
+              <path d="m22 7-10 6L2 7"></path>
+            </svg>
+            {{ email() }}
+          </span>
+        </div>
+      </div>
+
+      <ui-button type="button" [disabled]="true">Редактировать</ui-button>
+    </div>
+
+    <p class="profile-card__bio">О себе пока ничего не указано</p>
+
+    <div class="profile-card__rating" aria-label="Рейтинг: 0 из 5">
+      <span class="profile-card__stars" aria-hidden="true">☆☆☆☆☆</span>
+      <span>0.0</span>
+    </div>
+
+    <div class="profile-card__skills">
+      <h2 class="profile-card__skills-title">Навыки</h2>
+      <p class="profile-card__skills-empty">Навыки пока не указаны</p>
+    </div>
+  </div>
+</section>

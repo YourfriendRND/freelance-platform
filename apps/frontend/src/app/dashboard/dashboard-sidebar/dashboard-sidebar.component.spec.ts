@@ -35,13 +35,15 @@ describe('DashboardSidebarComponent testing', () => {
   it('should hide analytics for guests', () => {
     expect(root().textContent).toContain('Задачи');
     expect(root().textContent).not.toContain('Аналитика');
+    expect(root().textContent).not.toContain('Профиль');
   });
 
-  it('should show analytics for authenticated users', () => {
+  it('should show protected items for authenticated users', () => {
     authStore.isAuthenticated.set(true);
     fixture.detectChanges();
 
     expect(root().textContent).toContain('Аналитика');
+    expect(root().textContent).toContain('Профиль');
     expect(root().textContent).toContain('Задачи');
   });
 
@@ -53,5 +55,15 @@ describe('DashboardSidebarComponent testing', () => {
     const activeItem = root().querySelector('.ui-dashboard-sidebar__item--active');
 
     expect(activeItem?.textContent).toContain('Аналитика');
+  });
+
+  it('should mark profile as the active item', () => {
+    authStore.isAuthenticated.set(true);
+    fixture.componentRef.setInput('activeItem', 'profile');
+    fixture.detectChanges();
+
+    const activeItem = root().querySelector('.ui-dashboard-sidebar__item--active');
+
+    expect(activeItem?.textContent).toContain('Профиль');
   });
 });
