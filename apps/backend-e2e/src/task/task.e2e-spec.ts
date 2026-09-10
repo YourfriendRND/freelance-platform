@@ -1,6 +1,12 @@
 import axios from 'axios';
 import { CreateUserDto } from '@freelance-platform/shared-dto';
-import { TaskExecutionType, TaskStatus, UserRole } from '@freelance-platform/shared-types';
+import {
+  PAGINATION_MAX_LIMIT,
+  TaskExecutionType,
+  TaskSort,
+  TaskStatus,
+  UserRole,
+} from '@freelance-platform/shared-types';
 
 import { hasSessionCookie, toCookieHeader } from '../support/cookies';
 
@@ -118,13 +124,21 @@ describe('Task module e2e testing', () => {
       taskId = createRes.data.id;
     });
 
-    it('list: should contain the created task', async () => {
+    it('list: should return paginated public tasks without draft', async () => {
       const listRes = await axios.get('/api/tasks');
 
       expect(listRes.status).toBe(200);
-      expect(listRes.data).toEqual(
-        expect.arrayContaining([expect.objectContaining({ id: taskId })]),
-      );
+      expect(listRes.data).toMatchObject({
+        page: 1,
+        limit: 20,
+      });
+      expect(Array.isArray(listRes.data.items)).toBe(true);
+      expect(listRes.data.items.every(
+        (task: { status: TaskStatus }) => task.status !== TaskStatus.Draft,
+      )).toBe(true);
+      expect(
+        listRes.data.items.find((task: { id: string }) => task.id === taskId),
+      ).toBeUndefined();
     });
 
     it('get: should return the created task by id', async () => {
@@ -190,6 +204,125 @@ describe('Task module e2e testing', () => {
 
       expect(getRes.status).toBe(404);
       expect(getRes.data.message).toBe(`Задача с "${unknownId}" не найдена`);
+    });
+  });
+
+  describe('list: filters, sort and pagination', () => {
+    const itCategoryId = '7c2a8e14-5d93-4f1b-9b27-2e5d8c01f102';
+
+    it('list: should return paginated shape by default', async () => {
+      const listRes = await axios.get('/api/tasks');
+
+      expect(listRes.status).toBe(200);
+      expect(listRes.data).toMatchObject({
+        page: 1,
+        limit: 20,
+        total: expect.any(Number),
+      });
+      expect(Array.isArray(listRes.data.items)).toBe(true);
+      expect(listRes.data.total).toBeGreaterThanOrEqual(listRes.data.items.length);
+    });
+
+    it('list: should filter by categoryId', async () => {
+      const listRes = await axios.get(`/api/tasks?categoryId=${itCategoryId}`);
+
+      expect(listRes.status).toBe(200);
+      expect(
+        listRes.data.items.every(
+          (task: { categoryId: string }) => task.categoryId === itCategoryId,
+        ),
+      ).toBe(true);
+      expect(listRes.data.total).toBeGreaterThanOrEqual(listRes.data.items.length);
+    });
+
+    it('list: should return empty page for valid categoryId without tasks', async () => {
+      const emptyCategoryId = 'b4252672-a116-41ee-b78c-d694b236db32';
+      const listRes = await axios.get(`/api/tasks?categoryId=${emptyCategoryId}`);
+
+      expect(listRes.status).toBe(200);
+      expect(listRes.data).toMatchObject({
+        items: [],
+        total: 0,
+        page: 1,
+        limit: 20,
+      });
+    });
+
+    it('list: should filter by status open and closed', async () => {
+      const openRes = await axios.get(`/api/tasks?status=${TaskStatus.Open}`);
+      const closedRes = await axios.get(`/api/tasks?status=${TaskStatus.Closed}`);
+
+      expect(openRes.status).toBe(200);
+      expect(closedRes.status).toBe(200);
+      expect(
+        openRes.data.items.every(
+          (task: { status: TaskStatus }) => task.status === TaskStatus.Open,
+        ),
+      ).toBe(true);
+      expect(
+        closedRes.data.items.every(
+          (task: { status: TaskStatus }) => task.status === TaskStatus.Closed,
+        ),
+      ).toBe(true);
+    });
+
+    it('list: should reject draft status filter', async () => {
+      const listRes = await axios.get(`/api/tasks?status=${TaskStatus.Draft}`);
+
+      expect(listRes.status).toBe(400);
+    });
+
+    it('list: should filter by budget range', async () => {
+      const listRes = await axios.get('/api/tasks?budgetMin=10000&budgetMax=22000');
+
+      expect(listRes.status).toBe(200);
+      expect(
+        listRes.data.items.every(
+          (task: { budgetMin: number; budgetMax: number }) =>
+            task.budgetMin >= 10000 && task.budgetMax <= 22000,
+        ),
+      ).toBe(true);
+    });
+
+    it('list: should reject invalid budget range', async () => {
+      const listRes = await axios.get('/api/tasks?budgetMin=22000&budgetMax=10000');
+
+      expect(listRes.status).toBe(400);
+    });
+
+    it('list: should sort by budget descending', async () => {
+      const listRes = await axios.get(`/api/tasks?sort=${TaskSort.BudgetDesc}&limit=5`);
+
+      expect(listRes.status).toBe(200);
+      const { items } = listRes.data;
+      for (let index = 1; index < items.length; index += 1) {
+        expect(items[index - 1].budgetMax).toBeGreaterThanOrEqual(items[index].budgetMax);
+      }
+    });
+
+    it('list: should paginate with page and limit', async () => {
+      const firstRes = await axios.get('/api/tasks?page=1&limit=3');
+      const secondRes = await axios.get('/api/tasks?page=2&limit=3');
+
+      expect(firstRes.status).toBe(200);
+      expect(secondRes.status).toBe(200);
+      expect(firstRes.data.items).toHaveLength(3);
+      expect(secondRes.data.items).toHaveLength(3);
+      expect(firstRes.data.total).toBe(secondRes.data.total);
+      expect(secondRes.data.page).toBe(2);
+      expect(secondRes.data.limit).toBe(3);
+
+      const firstIds = firstRes.data.items.map((task: { id: string }) => task.id);
+      const secondIds = secondRes.data.items.map((task: { id: string }) => task.id);
+      expect(firstIds.some((id: string) => secondIds.includes(id))).toBe(false);
+    });
+
+    it('list: should accept max limit and reject over max', async () => {
+      const okRes = await axios.get(`/api/tasks?limit=${PAGINATION_MAX_LIMIT}`);
+      const badRes = await axios.get(`/api/tasks?limit=${PAGINATION_MAX_LIMIT + 1}`);
+
+      expect(okRes.status).toBe(200);
+      expect(badRes.status).toBe(400);
     });
   });
 

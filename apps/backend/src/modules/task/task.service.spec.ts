@@ -1,8 +1,10 @@
 import { NotFoundException } from '@nestjs/common';
+import { FindTasksQueryDto } from '@freelance-platform/shared-dto';
 import {
   AuthUserPayload,
   TaskEntity,
   TaskExecutionType,
+  TaskSort,
   TaskStatus,
   UserEntity,
   UserRole,
@@ -135,22 +137,54 @@ describe('TaskService testing', () => {
     expect(taskRepository.create).not.toHaveBeenCalled();
   });
 
-  it('should return tasks from repository', async () => {
-    const tasks = [task];
-    taskRepository.findAll.mockResolvedValue(tasks);
+  it('should pass query params to repository', async () => {
+    const query = Object.assign(new FindTasksQueryDto(), {
+      categoryId,
+      status: TaskStatus.Open,
+      budgetMin: 10000,
+      budgetMax: 50000,
+      sort: TaskSort.Newest,
+      page: 2,
+      limit: 10,
+    });
+    const paginated = {
+      items: [task],
+      total: 1,
+      page: 2,
+      limit: 10,
+    };
+    taskRepository.findAll.mockResolvedValue(paginated);
 
-    const result = await service.findAll();
+    const result = await service.findAll(query);
 
-    expect(result).toBe(tasks);
-    expect(taskRepository.findAll).toHaveBeenCalled();
+    expect(result).toBe(paginated);
+    expect(taskRepository.findAll).toHaveBeenCalledWith({
+      categoryId,
+      status: TaskStatus.Open,
+      budgetMin: 10000,
+      budgetMax: 50000,
+      sort: TaskSort.Newest,
+      page: 2,
+      limit: 10,
+    });
   });
 
-  it('should return an empty list when there are no tasks', async () => {
-    taskRepository.findAll.mockResolvedValue([]);
+  it('should return an empty page when there are no tasks', async () => {
+    taskRepository.findAll.mockResolvedValue({
+      items: [],
+      total: 0,
+      page: 1,
+      limit: 20,
+    });
 
-    const result = await service.findAll();
+    const result = await service.findAll(new FindTasksQueryDto());
 
-    expect(result).toEqual([]);
+    expect(result).toEqual({
+      items: [],
+      total: 0,
+      page: 1,
+      limit: 20,
+    });
   });
 
   it('should return a task by id', async () => {
