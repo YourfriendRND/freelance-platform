@@ -1,3 +1,4 @@
+import { PaginationResult } from '../common/pagination.type';
 import { TaskExecutionType } from './task-execution-type';
 import { TaskStatus } from './task-status';
 
@@ -26,6 +27,8 @@ export type TaskResponse = {
   createdAt: string;
   updatedAt: string;
 };
+
+export type TaskListResponse = PaginationResult<TaskResponse>;
 
 export type TaskCategoryResponse = {
   id: string;

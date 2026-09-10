@@ -18,6 +18,10 @@ export function IsGreaterThan(property: string, validationOptions?: ValidationOp
 
           const relatedValue = (args.object as Record<string, unknown>)[relatedPropertyName];
 
+          if (relatedValue === undefined) {
+            return true;
+          }
+
           return typeof value === 'number' && typeof relatedValue === 'number' && value > relatedValue;
         },
       },

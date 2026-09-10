@@ -1,7 +1,12 @@
 import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
-import { CreateTaskDto, UpdateTaskDto } from '@freelance-platform/shared-dto';
+import {
+  CreateTaskDto,
+  FindTasksQueryDto,
+  UpdateTaskDto,
+} from '@freelance-platform/shared-dto';
 import {
   AuthUserPayload,
+  PaginationResult,
   TaskEntity,
   TaskStatus,
   UserRole,
@@ -48,8 +53,18 @@ export class TaskService {
     });
   }
 
-  async findAll(): Promise<TaskEntity[]> {
-    return this.taskRepository.findAll();
+  async findAll(query: FindTasksQueryDto): Promise<PaginationResult<TaskEntity>> {
+    const { categoryId, status, budgetMin, budgetMax, sort, page, limit } = query;
+
+    return this.taskRepository.findAll({
+      categoryId,
+      status,
+      budgetMin,
+      budgetMax,
+      sort,
+      page,
+      limit,
+    });
   }
 
   async findOne(id: string): Promise<TaskEntity> {
