@@ -4,6 +4,13 @@ export enum TaskStatus {
   Draft = 'draft',
 }
 
+export const PUBLIC_TASK_STATUSES = [
+  TaskStatus.Open,
+  TaskStatus.Closed,
+] as const;
+
+export type PublicTaskStatus = (typeof PUBLIC_TASK_STATUSES)[number];
+
 export enum TaskStatusLabel {
   Open = 'Открыта',
   Closed = 'Закрыта',

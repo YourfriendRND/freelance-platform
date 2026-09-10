@@ -12,3 +12,5 @@ export * from './task-client.type';
 export * from './task-state.type';
 export * from './task-view.type';
 export * from './task-format';
+export * from './find-tasks-query.type';
+export * from './task-sort';

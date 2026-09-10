@@ -9,6 +9,7 @@ import {
   ParseUUIDPipe,
   Patch,
   Post,
+  Query,
 } from '@nestjs/common';
 import {
   ApiBadRequestResponse,
@@ -21,8 +22,16 @@ import {
   ApiTags,
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
-import { CreateTaskDto, UpdateTaskDto } from '@freelance-platform/shared-dto';
-import { CommonRdo, TaskRdo } from '@freelance-platform/shared-rdo';
+import {
+  CreateTaskDto,
+  FindTasksQueryDto,
+  UpdateTaskDto,
+} from '@freelance-platform/shared-dto';
+import {
+  CommonRdo,
+  TaskListRdo,
+  TaskRdo,
+} from '@freelance-platform/shared-rdo';
 import { AuthUserPayload } from '@freelance-platform/shared-types';
 import { fillRdo } from '../../common/fill-rdo';
 import { AuthCheck } from '../auth/decorators/auth-check.decorator';
@@ -39,14 +48,21 @@ export class TaskController {
     description: 'Получение списка задач',
   })
   @ApiOkResponse({
-    description: 'Список задач',
-    type: TaskRdo,
-    isArray: true,
+    description: 'Страница списка задач',
+    type: TaskListRdo,
   })
-  async findAll(): Promise<TaskRdo[]> {
-    const tasks = await this.taskService.findAll();
+  @ApiBadRequestResponse({
+    description: 'Некорректные параметры фильтрации',
+    example: {
+      statusCode: HttpStatus.BAD_REQUEST,
+      message: ['categoryId must be a UUID'],
+      error: 'Bad Request',
+    },
+  })
+  async findAll(@Query() query: FindTasksQueryDto): Promise<TaskListRdo> {
+    const taskList = await this.taskService.findAll(query);
 
-    return fillRdo(TaskRdo, tasks);
+    return fillRdo(TaskListRdo, taskList);
   }
 
   @Get(':id')

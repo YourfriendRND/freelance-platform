@@ -1,5 +1,16 @@
 import { Injectable } from '@nestjs/common';
-import { CreateTaskRecord, TaskDbRow, TaskEntity, UpdateTaskRecord } from '@freelance-platform/shared-types';
+import {
+  CreateTaskRecord,
+  FindTasksQuery,
+  PAGINATION_DEFAULT_LIMIT,
+  PAGINATION_DEFAULT_PAGE,
+  PaginationResult,
+  PUBLIC_TASK_STATUSES,
+  TaskDbRow,
+  TaskEntity,
+  TaskSort,
+  UpdateTaskRecord,
+} from '@freelance-platform/shared-types';
 import { DatabaseClient } from '../../database/database.client';
 
 const TASK_UPDATE_COLUMNS = {
@@ -14,6 +25,17 @@ const TASK_UPDATE_COLUMNS = {
 } as const;
 
 type TaskUpdateField = keyof typeof TASK_UPDATE_COLUMNS;
+
+type TaskCountRow = {
+  total: string;
+};
+
+const TASK_SORT_ORDER: Record<TaskSort, string> = {
+  [TaskSort.Newest]: 'created_at DESC, id DESC',
+  [TaskSort.Oldest]: 'created_at ASC, id ASC',
+  [TaskSort.BudgetDesc]: 'budget_max DESC, created_at DESC, id DESC',
+  [TaskSort.BudgetAsc]: 'budget_min ASC, created_at DESC, id DESC',
+};
 
 @Injectable()
 export class TaskRepository {
@@ -78,28 +100,98 @@ export class TaskRepository {
     return TaskEntity.fromDb(row);
   }
 
-  async findAll(): Promise<TaskEntity[]> {
-    const { rows } = await this.database.query<TaskDbRow>(
-      `
-        SELECT
-          id,
-          title,
-          description,
-          status,
-          budget_min,
-          budget_max,
-          execution_type,
-          deadline,
-          customer_id,
-          category_id,
-          created_at,
-          updated_at
-        FROM tasks
-        ORDER BY created_at DESC
-      `,
-    );
+  async findAll(query: FindTasksQuery): Promise<PaginationResult<TaskEntity>> {
+    const {
+      categoryId,
+      status,
+      budgetMin,
+      budgetMax,
+      sort,
+      page = PAGINATION_DEFAULT_PAGE,
+      limit = PAGINATION_DEFAULT_LIMIT,
+    } = query;
+    const conditions: string[] = [];
+    const values: unknown[] = [];
 
-    return rows.map((row) => TaskEntity.fromDb(row));
+    if (categoryId !== undefined) {
+      values.push(categoryId);
+      conditions.push(`category_id = $${values.length}`);
+    }
+
+    if (status !== undefined) {
+      values.push(status);
+      conditions.push(`status = $${values.length}`);
+    } else {
+      const statusPlaceholders = PUBLIC_TASK_STATUSES.map((publicStatus) => {
+        values.push(publicStatus);
+
+        return `$${values.length}`;
+      });
+
+      conditions.push(`status IN (${statusPlaceholders.join(', ')})`);
+    }
+
+    if (budgetMin !== undefined) {
+      values.push(budgetMin);
+      conditions.push(`budget_min >= $${values.length}`);
+    }
+
+    if (budgetMax !== undefined) {
+      values.push(budgetMax);
+      conditions.push(`budget_max <= $${values.length}`);
+    }
+
+    const whereClause = conditions.length
+      ? `WHERE ${conditions.join(' AND ')}`
+      : '';
+    const orderBy = TASK_SORT_ORDER[sort ?? TaskSort.Newest];
+    const offset = (page - 1) * limit;
+    const selectValues = [...values, limit, offset];
+    const limitPlaceholder = `$${selectValues.length - 1}`;
+    const offsetPlaceholder = `$${selectValues.length}`;
+
+    const [tasksResult, countResult] = await Promise.all([
+      this.database.query<TaskDbRow>(
+        `
+          SELECT
+            id,
+            title,
+            description,
+            status,
+            budget_min,
+            budget_max,
+            execution_type,
+            deadline,
+            customer_id,
+            category_id,
+            created_at,
+            updated_at
+          FROM tasks
+          ${whereClause}
+          ORDER BY ${orderBy}
+          LIMIT ${limitPlaceholder}
+          OFFSET ${offsetPlaceholder}
+        `,
+        selectValues,
+      ),
+      this.database.query<TaskCountRow>(
+        `
+          SELECT COUNT(*) AS total
+          FROM tasks
+          ${whereClause}
+        `,
+        values,
+      ),
+    ]);
+
+    const [countRow] = countResult.rows;
+
+    return {
+      items: tasksResult.rows.map((row: TaskDbRow) => TaskEntity.fromDb(row)),
+      total: Number(countRow?.total ?? 0),
+      page,
+      limit,
+    };
   }
 
   async findById(id: string): Promise<TaskEntity | null> {
