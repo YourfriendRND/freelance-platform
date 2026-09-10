@@ -9,6 +9,7 @@ import { API_BASE_URL } from '@freelance-platform/http';
 import {
   CreateTaskRequest,
   TaskExecutionType,
+  TaskListResponse,
   TaskResponse,
   TaskStatus,
 } from '@freelance-platform/shared-types';
@@ -36,6 +37,13 @@ describe('TaskApi testing', () => {
     updatedAt: '2026-08-20T09:00:00.000Z',
   };
 
+  const listResponse: TaskListResponse = {
+    items: [response],
+    total: 1,
+    page: 1,
+    limit: 20,
+  };
+
   beforeEach(() => {
     TestBed.configureTestingModule({
       providers: [
@@ -52,6 +60,22 @@ describe('TaskApi testing', () => {
 
   afterEach(() => {
     http.verify();
+  });
+
+  it('should request the task list', () => {
+    let result: TaskListResponse | null = null;
+
+    api.findAll().subscribe((taskList) => {
+      result = taskList;
+    });
+
+    const request = http.expectOne('/api/tasks');
+
+    expect(request.request.method).toBe('GET');
+
+    request.flush(listResponse);
+
+    expect(result).toEqual(listResponse);
   });
 
   it('should send a create task request', () => {

@@ -6,6 +6,7 @@ import { TaskStore } from '@freelance-platform/client-state';
 import {
   TaskCategoryResponse,
   TaskExecutionType,
+  TaskListResponse,
   TaskResponse,
   TaskStatus,
 } from '@freelance-platform/shared-types';
@@ -40,6 +41,13 @@ describe('TaskStore testing', () => {
     updatedAt: '2026-08-20T09:00:00.000Z',
   };
 
+  const taskList: TaskListResponse = {
+    items: [task],
+    total: 1,
+    page: 1,
+    limit: 20,
+  };
+
   beforeEach(() => {
     taskApi = { create: vi.fn(), findAll: vi.fn(), findOne: vi.fn() };
     taskCategoryApi = { findAll: vi.fn() };
@@ -67,7 +75,7 @@ describe('TaskStore testing', () => {
   });
 
   it('should load tasks and categories together', () => {
-    taskApi.findAll.mockReturnValue(of([task]));
+    taskApi.findAll.mockReturnValue(of(taskList));
     taskCategoryApi.findAll.mockReturnValue(of([category]));
 
     store.load();
@@ -80,7 +88,7 @@ describe('TaskStore testing', () => {
   });
 
   it('should keep a single in-flight request', () => {
-    const tasks = new Subject<TaskResponse[]>();
+    const tasks = new Subject<TaskListResponse>();
     taskApi.findAll.mockReturnValue(tasks.asObservable());
     taskCategoryApi.findAll.mockReturnValue(of([category]));
 
@@ -91,7 +99,7 @@ describe('TaskStore testing', () => {
     expect(taskCategoryApi.findAll).toHaveBeenCalledTimes(1);
     expect(store.isLoading()).toBe(true);
 
-    tasks.next([task]);
+    tasks.next(taskList);
     tasks.complete();
 
     expect(store.isLoading()).toBe(false);
@@ -118,7 +126,7 @@ describe('TaskStore testing', () => {
   });
 
   it('should fall back to a default error message', () => {
-    taskApi.findAll.mockReturnValue(of([task]));
+    taskApi.findAll.mockReturnValue(of(taskList));
     taskCategoryApi.findAll.mockReturnValue(throwError(() => new Error('network')));
 
     store.load();
@@ -128,7 +136,7 @@ describe('TaskStore testing', () => {
   });
 
   it('should not reload the list after a successful load', () => {
-    taskApi.findAll.mockReturnValue(of([task]));
+    taskApi.findAll.mockReturnValue(of(taskList));
     taskCategoryApi.findAll.mockReturnValue(of([category]));
 
     store.load();
@@ -140,7 +148,7 @@ describe('TaskStore testing', () => {
   });
 
   it('should create a task and mark the loaded list stale', () => {
-    taskApi.findAll.mockReturnValue(of([task]));
+    taskApi.findAll.mockReturnValue(of(taskList));
     taskApi.create.mockReturnValue(of(task));
     taskCategoryApi.findAll.mockReturnValue(of([category]));
 

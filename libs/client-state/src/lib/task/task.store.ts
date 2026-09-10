@@ -44,9 +44,9 @@ export const TaskStore = signalStore(
         patchState(store, { isLoading: true, error: null });
 
         combineLatest([taskApi.findAll(), taskCategoryApi.findAll()]).subscribe({
-          next: ([tasks, categories]) => {
+          next: ([{ items }, categories]) => {
             patchState(store, {
-              tasks,
+              tasks: items,
               categories,
               error: null,
               isLoading: false,
