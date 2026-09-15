@@ -1,21 +1,7 @@
 import axios from 'axios';
-import { CreateUserDto } from '@freelance-platform/shared-dto';
 import { UserRole } from '@freelance-platform/shared-types';
-
 import { hasSessionCookie, toCookieHeader } from '../support/cookies';
-
-function createJoinPayload(email: string): CreateUserDto {
-  return {
-    email,
-    firstName: 'E2E',
-    password: 'securePassword123',
-    role: UserRole.Client,
-  };
-}
-
-function uniqueEmail(label: string): string {
-  return `e2e-${label}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}@example.com`;
-}
+import { createJoinPayload, uniqueEmail } from '../support/users';
 
 describe('Auth e2e', () => {
   describe('positive: join - login - me - refresh - logout', () => {
