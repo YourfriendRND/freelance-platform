@@ -6,6 +6,7 @@ import { UserModule } from './user/user.module';
 import { AuthModule } from './auth/auth.module';
 import { TaskCategoryModule } from './task-category/task-category.module';
 import { TaskModule } from './task/task.module';
+import { TaskApplicationModule } from './task-application/task-application.module';
 
 @Module({
   imports: [
@@ -18,6 +19,7 @@ import { TaskModule } from './task/task.module';
     AuthModule,
     TaskCategoryModule,
     TaskModule,
+    TaskApplicationModule,
   ],
 })
 export class AppModule {}

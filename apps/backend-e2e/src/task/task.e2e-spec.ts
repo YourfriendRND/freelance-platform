@@ -1,5 +1,4 @@
 import axios from 'axios';
-import { CreateUserDto } from '@freelance-platform/shared-dto';
 import {
   PAGINATION_MAX_LIMIT,
   TaskExecutionType,
@@ -7,42 +6,8 @@ import {
   TaskStatus,
   UserRole,
 } from '@freelance-platform/shared-types';
-
 import { hasSessionCookie, toCookieHeader } from '../support/cookies';
-
-function createJoinPayload(email: string, role: UserRole = UserRole.Client): CreateUserDto {
-  return {
-    email,
-    firstName: 'E2E',
-    password: 'securePassword123',
-    role,
-  };
-}
-
-function uniqueEmail(label: string): string {
-  return `e2e-${label}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}@example.com`;
-}
-
-async function joinAndLogin(role: UserRole = UserRole.Client) {
-  const email = uniqueEmail(role);
-  const payload = createJoinPayload(email, role);
-  const joinRes = await axios.post('/api/auth/join', payload);
-
-  expect(joinRes.status).toBe(201);
-
-  const loginRes = await axios.post('/api/auth/login', {
-    email,
-    password: payload.password,
-  });
-
-  expect(loginRes.status).toBe(200);
-  expect(hasSessionCookie(loginRes.headers['set-cookie'])).toBe(true);
-
-  return {
-    userId: joinRes.data.id as string,
-    sessionCookie: toCookieHeader(loginRes.headers['set-cookie']),
-  };
-}
+import { createJoinPayload, joinAndLogin, uniqueEmail } from '../support/users';
 
 function createTaskBody(categoryId: string) {
   return {
