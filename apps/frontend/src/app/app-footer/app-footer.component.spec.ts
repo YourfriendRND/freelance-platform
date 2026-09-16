@@ -2,7 +2,11 @@ import { signal } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter, Router } from '@angular/router';
 import { AuthStore } from '@freelance-platform/client-state';
-import { UserResponse, UserRole } from '@freelance-platform/shared-types';
+import {
+  mockClientUserResponse,
+  mockFreelancerUserResponse,
+} from '@freelance-platform/shared-mock';
+import { UserResponse } from '@freelance-platform/shared-types';
 import { UiFooterText } from '@freelance-platform/ui';
 import { AppFooterComponent } from './app-footer.component';
 
@@ -13,20 +17,9 @@ describe('AppFooterComponent testing', () => {
     user: ReturnType<typeof signal<UserResponse | null>>;
   };
 
-  const client: UserResponse = {
-    id: 'b7e14a02-91c3-4d58-8a6f-1c2d3e4f5a61',
-    email: 'ivan.petrov@example.com',
-    firstName: 'Иван',
-    lastName: 'Петров',
-    role: UserRole.Client,
-    createdAt: '2026-08-01T00:00:00.000Z',
-  };
+  const client: UserResponse = mockClientUserResponse;
 
-  const freelancer: UserResponse = {
-    ...client,
-    id: 'c8f25b13-a2d4-5e69-b337-2d3e4f5a6b72',
-    role: UserRole.Freelancer,
-  };
+  const freelancer: UserResponse = mockFreelancerUserResponse;
 
   beforeEach(async () => {
     authStore = {

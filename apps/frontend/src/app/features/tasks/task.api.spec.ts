@@ -7,6 +7,11 @@ import { TestBed } from '@angular/core/testing';
 import { TaskApi } from '@freelance-platform/client-api';
 import { API_BASE_URL } from '@freelance-platform/http';
 import {
+  createMockTaskListResponse,
+  createMockTaskResponse,
+  MOCK_TASK_CATEGORY_ID,
+} from '@freelance-platform/shared-mock';
+import {
   CreateTaskRequest,
   TaskExecutionType,
   TaskListResponse,
@@ -26,23 +31,18 @@ describe('TaskApi testing', () => {
     budgetMax: 20000,
     executionType: TaskExecutionType.Remote,
     deadline: '2026-09-15',
-    categoryId: '7c2a8e14-5d93-4f1b-9b27-2e5d8c01f102',
+    categoryId: MOCK_TASK_CATEGORY_ID,
   };
 
-  const response: TaskResponse = {
-    id: '5c8e1a97-0a01-4b62-8d11-7e9f0a1b2c01',
+  const response: TaskResponse = createMockTaskResponse({
     ...body,
-    customerId: 'b7e14a02-91c3-4d58-8a6f-1c2d3e4f5a61',
-    createdAt: '2026-08-20T09:00:00.000Z',
-    updatedAt: '2026-08-20T09:00:00.000Z',
-  };
+    budgetMin: 10000,
+    budgetMax: 20000,
+  });
 
-  const listResponse: TaskListResponse = {
+  const listResponse: TaskListResponse = createMockTaskListResponse({
     items: [response],
-    total: 1,
-    page: 1,
-    limit: 20,
-  };
+  });
 
   beforeEach(() => {
     TestBed.configureTestingModule({

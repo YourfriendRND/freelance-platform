@@ -1,41 +1,25 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import {
   formatTaskDate,
-  TaskExecutionType,
   TaskStatus,
   TaskViewData,
-  UserResponse,
-  UserRole,
 } from '@freelance-platform/shared-types';
+import {
+  createMockTaskViewData,
+  mockAuthorUserResponse,
+  mockTaskViewData,
+} from '@freelance-platform/shared-mock';
 import { TaskDetailsComponent } from './task-details.component';
 
 describe('TaskDetailsComponent testing', () => {
   let fixture: ComponentFixture<TaskDetailsComponent>;
 
-  const task: TaskViewData = {
+  const task: TaskViewData = createMockTaskViewData({
     id: '5c8e1a97-0a01-4b62-8d11-7e9f0a1b2c01',
-    title: 'Разработка адаптивного лендинга',
-    description: 'Нужен адаптивный лендинг для запуска продукта',
-    status: TaskStatus.Open,
-    budgetMin: 25000,
-    budgetMax: 40000,
-    executionType: TaskExecutionType.Remote,
-    deadline: '2026-09-15',
     createdAt: '2026-05-29T12:00:00.000Z',
-    categoryTitle: 'Программирование и IT',
-    applicationsCount: 0,
-    viewsCount: 0,
-    author: null,
-  };
+  });
 
-  const author: UserResponse = {
-    id: '8caf25cf-d7b9-4950-a0c5-baea8505ff1d',
-    email: 'ivan.petrov@example.com',
-    firstName: 'Иван',
-    lastName: 'Петров',
-    role: UserRole.Client,
-    createdAt: '2026-08-01T00:00:00.000Z',
-  };
+  const author = mockAuthorUserResponse;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({

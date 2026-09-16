@@ -3,41 +3,21 @@ import { provideRouter } from '@angular/router';
 import {
   formatTaskBudget,
   formatTaskDate,
-  TaskExecutionType,
   TaskStatus,
   TaskViewData,
-  UserResponse,
-  UserRole,
 } from '@freelance-platform/shared-types';
+import {
+  mockAuthorUserResponse,
+  mockTaskViewData,
+} from '@freelance-platform/shared-mock';
 import { TaskItemComponent } from './task-item.component';
 
 describe('TaskItemComponent testing', () => {
   let fixture: ComponentFixture<TaskItemComponent>;
 
-  const task: TaskViewData = {
-    id: '58ba88f8-0336-41a3-84de-38fce101c289',
-    title: 'Разработка адаптивного лендинга',
-    description: 'Нужен адаптивный лендинг для запуска продукта',
-    status: TaskStatus.Open,
-    budgetMin: 25000,
-    budgetMax: 40000,
-    executionType: TaskExecutionType.Remote,
-    deadline: '2026-09-15',
-    createdAt: '2026-05-29T12:00:00.000Z',
-    categoryTitle: 'Программирование и IT',
-    applicationsCount: 0,
-    viewsCount: 0,
-    author: null,
-  };
+  const task: TaskViewData = mockTaskViewData;
 
-  const author: UserResponse = {
-    id: '8caf25cf-d7b9-4950-a0c5-baea8505ff1d',
-    email: 'ivan.petrov@example.com',
-    firstName: 'Иван',
-    lastName: 'Петров',
-    role: UserRole.Client,
-    createdAt: '2026-08-01T00:00:00.000Z',
-  };
+  const author = mockAuthorUserResponse;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({

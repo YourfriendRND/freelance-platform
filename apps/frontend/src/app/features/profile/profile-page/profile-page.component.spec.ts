@@ -3,7 +3,11 @@ import { By } from '@angular/platform-browser';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { AuthStore } from '@freelance-platform/client-state';
-import { UserResponse, UserRole } from '@freelance-platform/shared-types';
+import {
+  createMockUserResponse,
+  MOCK_USER_EMAIL,
+} from '@freelance-platform/shared-mock';
+import { UserResponse } from '@freelance-platform/shared-types';
 import { ProfileCardComponent } from '../profile-card/profile-card.component';
 import { ProfilePageComponent } from './profile-page.component';
 
@@ -15,14 +19,9 @@ describe('ProfilePageComponent testing', () => {
     logout: ReturnType<typeof vi.fn>;
   };
 
-  const user: UserResponse = {
-    id: 'b7e14a02-91c3-4d58-8a6f-1c2d3e4f5a61',
-    email: 'ivan.petrov@example.com',
-    firstName: 'Иван',
-    lastName: 'Петров',
-    role: UserRole.Client,
+  const user: UserResponse = createMockUserResponse({
     createdAt: '2026-09-04T10:00:00.000Z',
-  };
+  });
 
   beforeEach(async () => {
     authStore = {
@@ -63,7 +62,7 @@ describe('ProfilePageComponent testing', () => {
     const card = profileCard();
 
     expect(card.displayName()).toBe('Иван Петров');
-    expect(card.email()).toBe('ivan.petrov@example.com');
+    expect(card.email()).toBe(MOCK_USER_EMAIL);
     expect(card.roleLabel()).toBe('Заказчик');
     expect(card.registrationLabel()).toBe('На платформе с 04.09.2026');
   });

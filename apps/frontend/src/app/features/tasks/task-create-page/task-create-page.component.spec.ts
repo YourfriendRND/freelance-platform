@@ -5,7 +5,8 @@ import { provideRouter, Router } from '@angular/router';
 import { of } from 'rxjs';
 import { TaskCategoryApi } from '@freelance-platform/client-api';
 import { AuthStore, TaskStore } from '@freelance-platform/client-state';
-import { UserResponse, UserRole } from '@freelance-platform/shared-types';
+import { mockClientUserResponse } from '@freelance-platform/shared-mock';
+import { UserResponse } from '@freelance-platform/shared-types';
 import { TaskCreateFormComponent } from '../task-create-form/task-create-form.component';
 import { TaskCreatePageComponent } from './task-create-page.component';
 
@@ -17,14 +18,7 @@ describe('TaskCreatePageComponent testing', () => {
     logout: ReturnType<typeof vi.fn>;
   };
 
-  const user: UserResponse = {
-    id: 'b7e14a02-91c3-4d58-8a6f-1c2d3e4f5a61',
-    email: 'ivan.petrov@example.com',
-    firstName: 'Иван',
-    lastName: 'Петров',
-    role: UserRole.Client,
-    createdAt: '2026-08-01T00:00:00.000Z',
-  };
+  const user: UserResponse = mockClientUserResponse;
 
   beforeEach(async () => {
     authStore = {

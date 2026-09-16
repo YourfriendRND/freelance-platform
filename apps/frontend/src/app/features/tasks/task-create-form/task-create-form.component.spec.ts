@@ -5,8 +5,11 @@ import { of, Subject, throwError } from 'rxjs';
 import { TaskCategoryApi } from '@freelance-platform/client-api';
 import { TaskStore } from '@freelance-platform/client-state';
 import {
+  createMockTaskCategoryResponse,
+  createMockTaskResponse,
+} from '@freelance-platform/shared-mock';
+import {
   CreateTaskRequest,
-  TaskCategoryResponse,
   TaskExecutionType,
   TaskResponse,
   TaskStatus,
@@ -17,26 +20,13 @@ describe('TaskCreateFormComponent testing', () => {
   let fixture: ComponentFixture<TaskCreateFormComponent>;
   let create: ReturnType<typeof vi.fn>;
 
-  const category: TaskCategoryResponse = {
-    id: '7c2a8e14-5d93-4f1b-9b27-2e5d8c01f102',
-    title: 'Программирование и IT',
-    description: 'Разработка сайтов, приложений, настройка серверов, консультации',
-  };
+  const category = createMockTaskCategoryResponse();
 
-  const task: TaskResponse = {
-    id: '5c8e1a97-0a01-4b62-8d11-7e9f0a1b2c01',
-    title: 'Разработка адаптивного лендинга',
-    description: 'Нужен адаптивный лендинг для запуска продукта',
-    status: TaskStatus.Open,
+  const task: TaskResponse = createMockTaskResponse({
     budgetMin: 10000,
     budgetMax: 20000,
-    executionType: TaskExecutionType.Remote,
-    deadline: '2026-09-15',
-    customerId: 'b7e14a02-91c3-4d58-8a6f-1c2d3e4f5a61',
     categoryId: category.id,
-    createdAt: '2026-08-20T09:00:00.000Z',
-    updatedAt: '2026-08-20T09:00:00.000Z',
-  };
+  });
 
   beforeEach(async () => {
     create = vi.fn().mockReturnValue(of(task));

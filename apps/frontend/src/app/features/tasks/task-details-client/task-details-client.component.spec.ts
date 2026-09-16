@@ -1,18 +1,11 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { UserResponse, UserRole } from '@freelance-platform/shared-types';
+import { mockAuthorUserResponse } from '@freelance-platform/shared-mock';
 import { TaskDetailsClientComponent } from './task-details-client.component';
 
 describe('TaskDetailsClientComponent testing', () => {
   let fixture: ComponentFixture<TaskDetailsClientComponent>;
 
-  const author: UserResponse = {
-    id: '8caf25cf-d7b9-4950-a0c5-baea8505ff1d',
-    email: 'ivan.petrov@example.com',
-    firstName: 'Иван',
-    lastName: 'Петров',
-    role: UserRole.Client,
-    createdAt: '2026-08-01T00:00:00.000Z',
-  };
+  const author = mockAuthorUserResponse;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
