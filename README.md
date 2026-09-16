@@ -35,6 +35,7 @@ libs/
   http/                 # HttpClient, credentials, session refresh (@freelance-platform/http)
   client-api/           # API-клиенты доменов (@freelance-platform/client-api)
   client-state/         # SignalStore доменов (@freelance-platform/client-state)
+  shared-mock/          # фикстуры для unit-тестов (@freelance-platform/shared-mock)
   shared-config/        # валидация env (@freelance-platform/shared-config)
   shared-types/         # enums, interfaces
   shared-dto/           # request DTOs
@@ -204,6 +205,7 @@ yarn test            # unit backend + frontend
 import { UiButtonComponent } from '@freelance-platform/ui';
 import { AuthApi } from '@freelance-platform/client-api';
 import { AuthStore } from '@freelance-platform/client-state';
+import { mockClientUserResponse } from '@freelance-platform/shared-mock';
 import { UserRole } from '@freelance-platform/shared-types';
 import { CreateUserDto } from '@freelance-platform/shared-dto';
 import { UserRdo } from '@freelance-platform/shared-rdo';
