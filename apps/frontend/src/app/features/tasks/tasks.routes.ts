@@ -1,11 +1,10 @@
 import { Route } from '@angular/router';
-import { sessionGuard, sessionResolveGuard } from '../../auth/session.guard';
+import { sessionGuard } from '../../auth/session.guard';
 
 export const tasksRoutes: Route[] = [
   {
     path: '',
     pathMatch: 'full',
-    canActivate: [sessionResolveGuard],
     loadComponent: () =>
       import('./tasks-page/tasks-page.component').then(
         (module) => module.TasksPageComponent,
@@ -21,7 +20,6 @@ export const tasksRoutes: Route[] = [
   },
   {
     path: ':id',
-    canActivate: [sessionResolveGuard],
     loadComponent: () =>
       import('./task-details-page/task-details-page.component').then(
         (module) => module.TaskDetailsPageComponent,

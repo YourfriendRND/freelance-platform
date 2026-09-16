@@ -74,4 +74,18 @@ describe('AppHeaderComponent testing', () => {
     expect(authStore.logout).toHaveBeenCalledTimes(1);
     expect(navigate).toHaveBeenCalledWith(['/welcome']);
   });
+
+  it('should navigate to profile when user menu is clicked', () => {
+    authStore.isAuthenticated.set(true);
+    authStore.user.set(user);
+    fixture.detectChanges();
+
+    const router = TestBed.inject(Router);
+    const navigate = vi.spyOn(router, 'navigate').mockResolvedValue(true);
+
+    const profileButton = root().querySelector('.ui-header__user') as HTMLButtonElement;
+    profileButton.click();
+
+    expect(navigate).toHaveBeenCalledWith(['/profile']);
+  });
 });

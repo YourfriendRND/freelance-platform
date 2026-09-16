@@ -50,7 +50,7 @@ export class UiFooterComponent {
       title: UiFooterText.ForFreelancers,
       links: [
         { label: UiFooterText.FindWork, href: '#' },
-        { label: UiFooterText.SignUp, href: '#' },
+        { label: UiFooterText.SignUp, href: '/register' },
         { label: UiFooterText.SuccessStories, href: '#' },
       ],
     },

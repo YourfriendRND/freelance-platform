@@ -1,10 +1,10 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { AppFooterComponent } from '../../../app-footer/app-footer.component';
 import {
   UiAuthCardComponent,
   UiAuthContainerComponent,
   UiBrandHeaderComponent,
-  UiFooterComponent,
   UiHeaderComponent,
   UiPageWrapperComponent,
 } from '@freelance-platform/ui';
@@ -16,7 +16,7 @@ import { RegisterFormComponent } from '../register-form/register-form.component'
     RouterLink,
     UiPageWrapperComponent,
     UiHeaderComponent,
-    UiFooterComponent,
+    AppFooterComponent,
     UiAuthContainerComponent,
     UiBrandHeaderComponent,
     UiAuthCardComponent,
