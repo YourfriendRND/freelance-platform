@@ -20,6 +20,7 @@
       "@freelance-platform/shared-dto": ["libs/shared-dto/src/index.ts"],
       "@freelance-platform/shared-rdo": ["libs/shared-rdo/src/index.ts"],
       "@freelance-platform/shared-types": ["libs/shared-types/src/index.ts"],
+      "@freelance-platform/shared-mock": ["libs/shared-mock/src/index.ts"],
       "@freelance-platform/http": ["./libs/http/src/index.ts"],
       "@freelance-platform/client-api": ["./libs/client-api/src/index.ts"],
       "@freelance-platform/client-state": ["./libs/client-state/src/index.ts"],

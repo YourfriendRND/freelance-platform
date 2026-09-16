@@ -2,7 +2,8 @@ import { signal } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter, Router } from '@angular/router';
 import { AuthStore } from '@freelance-platform/client-state';
-import { UserResponse, UserRole } from '@freelance-platform/shared-types';
+import { createMockUserResponse } from '@freelance-platform/shared-mock';
+import { UserResponse } from '@freelance-platform/shared-types';
 import { AnalyticsPageComponent } from './analytics-page.component';
 
 describe('AnalyticsPageComponent testing', () => {
@@ -13,14 +14,9 @@ describe('AnalyticsPageComponent testing', () => {
     logout: ReturnType<typeof vi.fn>;
   };
 
-  const user: UserResponse = {
-    id: 'b7e14a02-91c3-4d58-8a6f-1c2d3e4f5a61',
-    email: 'ivan.petrov@example.com',
-    firstName: 'Иван',
-    lastName: 'Петров',
-    role: UserRole.Client,
+  const user: UserResponse = createMockUserResponse({
     createdAt: '2026-09-04T10:00:00.000Z',
-  };
+  });
 
   beforeEach(async () => {
     authStore = {

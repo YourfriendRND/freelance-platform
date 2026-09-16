@@ -3,12 +3,14 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter, Router } from '@angular/router';
 import { AuthStore, TaskStore } from '@freelance-platform/client-state';
 import {
+  createMockTaskCategoryResponse,
+  createMockTaskResponse,
+  mockClientUserResponse,
+} from '@freelance-platform/shared-mock';
+import {
   TaskCategoryResponse,
-  TaskExecutionType,
   TaskResponse,
-  TaskStatus,
   UserResponse,
-  UserRole,
 } from '@freelance-platform/shared-types';
 import { TasksPageComponent } from './tasks-page.component';
 
@@ -25,31 +27,21 @@ describe('TasksPageComponent testing', () => {
   let error: ReturnType<typeof signal<string | null>>;
   let load: ReturnType<typeof vi.fn>;
 
-  const category: TaskCategoryResponse = {
-    id: '7c2a8e14-5d93-4f1b-9b27-2e5d8c01f102',
-    title: 'Программирование и IT',
-    description: 'Разработка сайтов, приложений, настройка серверов, консультации',
-  };
+  const category: TaskCategoryResponse = createMockTaskCategoryResponse();
 
   function createTask(
     id: string,
     title: string,
     categoryId = category.id,
   ): TaskResponse {
-    return {
+    return createMockTaskResponse({
       id,
       title,
       description: 'Описание задачи',
-      status: TaskStatus.Open,
       budgetMin: 10000,
       budgetMax: 20000,
-      executionType: TaskExecutionType.Remote,
-      deadline: '2026-09-15',
-      customerId: 'b7e14a02-91c3-4d58-8a6f-1c2d3e4f5a61',
       categoryId,
-      createdAt: '2026-08-20T09:00:00.000Z',
-      updatedAt: '2026-08-20T09:00:00.000Z',
-    };
+    });
   }
 
   beforeEach(async () => {
@@ -163,17 +155,8 @@ describe('TasksPageComponent testing', () => {
   });
 
   it('should navigate to welcome on logout', () => {
-    const user: UserResponse = {
-      id: 'b7e14a02-91c3-4d58-8a6f-1c2d3e4f5a61',
-      email: 'ivan.petrov@example.com',
-      firstName: 'Иван',
-      lastName: 'Петров',
-      role: UserRole.Client,
-      createdAt: '2026-08-01T00:00:00.000Z',
-    };
-
     authStore.isAuthenticated.set(true);
-    authStore.user.set(user);
+    authStore.user.set(mockClientUserResponse);
     fixture.detectChanges();
 
     const router = TestBed.inject(Router);

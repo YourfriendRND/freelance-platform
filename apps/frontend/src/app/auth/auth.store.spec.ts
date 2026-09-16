@@ -3,20 +3,17 @@ import { TestBed } from '@angular/core/testing';
 import { of, Subject, throwError } from 'rxjs';
 import { AuthApi } from '@freelance-platform/client-api';
 import { AuthStore } from '@freelance-platform/client-state';
-import { UserResponse, UserRole } from '@freelance-platform/shared-types';
+import {
+  createMockUserResponse,
+  mockClientUserResponse,
+} from '@freelance-platform/shared-mock';
+import { UserResponse } from '@freelance-platform/shared-types';
 
 describe('AuthStore testing', () => {
   let store: InstanceType<typeof AuthStore>;
   let authApi: { me: ReturnType<typeof vi.fn> };
 
-  const user: UserResponse = {
-    id: 'b7e14a02-91c3-4d58-8a6f-1c2d3e4f5a61',
-    email: 'ivan.petrov@example.com',
-    firstName: 'Иван',
-    lastName: 'Петров',
-    role: UserRole.Client,
-    createdAt: '2026-08-01T00:00:00.000Z',
-  };
+  const user: UserResponse = mockClientUserResponse;
 
   beforeEach(() => {
     authApi = { me: vi.fn() };
@@ -67,10 +64,9 @@ describe('AuthStore testing', () => {
   });
 
   it('should replace stored user with the latest /auth/me response', () => {
-    const updatedUser: UserResponse = {
-      ...user,
+    const updatedUser: UserResponse = createMockUserResponse({
       firstName: 'Пётр',
-    };
+    });
 
     authApi.me
       .mockReturnValueOnce(of(user))

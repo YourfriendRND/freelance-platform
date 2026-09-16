@@ -54,4 +54,8 @@ export class AppHeaderComponent {
     this.authStore.logout();
     this.router.navigate(['/welcome']);
   }
+
+  protected onProfileClick(): void {
+    this.router.navigate(['/profile']);
+  }
 }

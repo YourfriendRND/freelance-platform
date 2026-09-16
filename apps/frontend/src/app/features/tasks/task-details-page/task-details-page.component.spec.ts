@@ -4,12 +4,14 @@ import { ActivatedRoute, convertToParamMap, provideRouter, Router } from '@angul
 import { of } from 'rxjs';
 import { AuthStore, TaskStore } from '@freelance-platform/client-state';
 import {
+  createMockTaskCategoryResponse,
+  createMockTaskResponse,
+  mockClientUserResponse,
+} from '@freelance-platform/shared-mock';
+import {
   TaskCategoryResponse,
-  TaskExecutionType,
   TaskResponse,
-  TaskStatus,
   UserResponse,
-  UserRole,
 } from '@freelance-platform/shared-types';
 import { TaskDetailsPageComponent } from './task-details-page.component';
 
@@ -27,35 +29,13 @@ describe('TaskDetailsPageComponent testing', () => {
   let loadById: ReturnType<typeof vi.fn>;
   let clearSelected: ReturnType<typeof vi.fn>;
 
-  const category: TaskCategoryResponse = {
-    id: '7c2a8e14-5d93-4f1b-9b27-2e5d8c01f102',
-    title: 'Программирование и IT',
-    description: 'Разработка сайтов, приложений, настройка серверов, консультации',
-  };
+  const category: TaskCategoryResponse = createMockTaskCategoryResponse();
 
-  const task: TaskResponse = {
-    id: '5c8e1a97-0a01-4b62-8d11-7e9f0a1b2c01',
-    title: 'Разработка адаптивного лендинга',
-    description: 'Нужен адаптивный лендинг для запуска продукта',
-    status: TaskStatus.Open,
-    budgetMin: 25000,
-    budgetMax: 40000,
-    executionType: TaskExecutionType.Remote,
-    deadline: '2026-09-15',
-    customerId: 'b7e14a02-91c3-4d58-8a6f-1c2d3e4f5a61',
+  const task: TaskResponse = createMockTaskResponse({
     categoryId: category.id,
-    createdAt: '2026-08-20T09:00:00.000Z',
-    updatedAt: '2026-08-20T09:00:00.000Z',
-  };
+  });
 
-  const user: UserResponse = {
-    id: 'b7e14a02-91c3-4d58-8a6f-1c2d3e4f5a61',
-    email: 'ivan.petrov@example.com',
-    firstName: 'Иван',
-    lastName: 'Петров',
-    role: UserRole.Client,
-    createdAt: '2026-08-01T00:00:00.000Z',
-  };
+  const user: UserResponse = mockClientUserResponse;
 
   beforeEach(async () => {
     authStore = {

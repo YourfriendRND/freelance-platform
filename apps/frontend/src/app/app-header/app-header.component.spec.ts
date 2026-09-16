@@ -2,7 +2,8 @@ import { signal } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter, Router } from '@angular/router';
 import { AuthStore } from '@freelance-platform/client-state';
-import { UserResponse, UserRole } from '@freelance-platform/shared-types';
+import { mockClientUserResponse } from '@freelance-platform/shared-mock';
+import { UserResponse } from '@freelance-platform/shared-types';
 import { AppHeaderComponent } from './app-header.component';
 
 describe('AppHeaderComponent testing', () => {
@@ -13,14 +14,7 @@ describe('AppHeaderComponent testing', () => {
     logout: ReturnType<typeof vi.fn>;
   };
 
-  const user: UserResponse = {
-    id: 'b7e14a02-91c3-4d58-8a6f-1c2d3e4f5a61',
-    email: 'ivan.petrov@example.com',
-    firstName: 'Иван',
-    lastName: 'Петров',
-    role: UserRole.Client,
-    createdAt: '2026-08-01T00:00:00.000Z',
-  };
+  const user: UserResponse = mockClientUserResponse;
 
   beforeEach(async () => {
     authStore = {
@@ -73,5 +67,19 @@ describe('AppHeaderComponent testing', () => {
 
     expect(authStore.logout).toHaveBeenCalledTimes(1);
     expect(navigate).toHaveBeenCalledWith(['/welcome']);
+  });
+
+  it('should navigate to profile when user menu is clicked', () => {
+    authStore.isAuthenticated.set(true);
+    authStore.user.set(user);
+    fixture.detectChanges();
+
+    const router = TestBed.inject(Router);
+    const navigate = vi.spyOn(router, 'navigate').mockResolvedValue(true);
+
+    const profileButton = root().querySelector('.ui-header__user') as HTMLButtonElement;
+    profileButton.click();
+
+    expect(navigate).toHaveBeenCalledWith(['/profile']);
   });
 });
