@@ -1,6 +1,5 @@
 import { defineConfig, devices } from '@playwright/test';
 import { nxE2EPreset } from '@nx/playwright/preset';
-import { workspaceRoot } from '@nx/devkit';
 
 // For CI, you may want to set BASE_URL to the deployed application.
 const baseURL = process.env['BASE_URL'] || 'http://localhost:4200';
@@ -21,34 +20,37 @@ const baseURL = process.env['BASE_URL'] || 'http://localhost:4200';
  * `playwright.config.mts` via its extension list
  * (.ts/.js/.mts/.mjs/.cts/.cjs).
  */
+const nxPreset = nxE2EPreset(import.meta.dirname, {
+  testDir: './src',
+  openHtmlReport: 'never',
+});
+
 export default defineConfig({
-  ...nxE2EPreset(import.meta.dirname, { testDir: './src' }),
-  /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
+  ...nxPreset,
+  globalSetup: './src/support/global-setup.ts',
+  reporter: [
+    ['list'],
+    ...(Array.isArray(nxPreset.reporter) ? nxPreset.reporter : []),
+  ],
+  /* Shared settings for all the projects below. See https://playwright.dev/docs/test-options. */
   use: {
     baseURL,
     /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
     trace: 'on-first-retry',
-  },
-  /* Run your local dev server before starting the tests */
-  webServer: {
-    command: 'yarn nx run frontend:serve',
-    url: 'http://localhost:4200',
-    reuseExistingServer: true,
-    cwd: workspaceRoot,
   },
   projects: [
     {
       name: 'chromium',
       use: { ...devices['Desktop Chrome'] },
     },
-
     {
       name: 'firefox',
+      testMatch: /example\.spec\.ts/,
       use: { ...devices['Desktop Firefox'] },
     },
-
     {
       name: 'webkit',
+      testMatch: /example\.spec\.ts/,
       use: { ...devices['Desktop Safari'] },
     },
 

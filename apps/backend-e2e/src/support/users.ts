@@ -1,22 +1,16 @@
 import axios from 'axios';
+import { createE2eUser, uniqueEmail } from '@freelance-platform/shared-mock';
 import { CreateUserDto } from '@freelance-platform/shared-dto';
 import { UserRole } from '@freelance-platform/shared-types';
 import { hasSessionCookie, toCookieHeader } from './cookies';
 
-export function uniqueEmail(label: string): string {
-  return `e2e-${label}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}@example.com`;
-}
+export { uniqueEmail };
 
 export function createJoinPayload(
   email: string,
   role: UserRole = UserRole.Client,
 ): CreateUserDto {
-  return {
-    email,
-    firstName: 'E2E',
-    password: 'securePassword123',
-    role,
-  };
+  return createE2eUser({ email, role });
 }
 
 export async function joinAndLogin(role: UserRole = UserRole.Client) {
