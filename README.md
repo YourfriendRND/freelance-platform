@@ -35,7 +35,7 @@ libs/
   http/                 # HttpClient, credentials, session refresh (@freelance-platform/http)
   client-api/           # API-клиенты доменов (@freelance-platform/client-api)
   client-state/         # SignalStore доменов (@freelance-platform/client-state)
-  shared-mock/          # фикстуры для unit-тестов (@freelance-platform/shared-mock)
+  shared-mock/          # фикстуры для unit и e2e (@freelance-platform/shared-mock)
   shared-config/        # валидация env (@freelance-platform/shared-config)
   shared-types/         # enums, interfaces
   shared-dto/           # request DTOs
@@ -177,21 +177,24 @@ yarn seed               # применить новые сиды
 - **Unit backend** - Vitest, specs рядом с кодом (`apps/backend/src/**/*.spec.ts`)
 - **E2E backend** - отдельное приложение `apps/backend-e2e`, Vitest + axios против живого API (`*.e2e-spec.ts`): auth, tasks, task-applications
 - **Unit frontend** - Vitest через Angular (`yarn frontend:test`)
-- **E2E frontend** - Playwright (`apps/frontend-e2e`)
+- **E2E frontend** - Playwright (`apps/frontend-e2e`): живое Angular-приложение, auth-сценарии через UI
 
 E2E backend поднимает `backend:serve` через Nx; нужен доступный PostgreSQL и применённые миграции.
+
+E2E frontend поднимает `backend:serve` и `frontend:serve`, после прогона останавливает их. Нужен PostgreSQL, миграции и браузеры Playwright (`yarn playwright install`). Auth-спеки идут только в Chromium.
 
 ```bash
 yarn backend:test    # unit backend
 yarn backend:e2e     # e2e backend
 yarn frontend:test   # unit frontend
+yarn frontend:e2e    # e2e frontend
 yarn test            # unit backend + frontend
 ```
 
 ## Скрипты
 
 - `yarn backend` / `yarn frontend` — dev-серверы
-- `yarn backend:test` / `yarn frontend:test` / `yarn backend:e2e` — тесты
+- `yarn backend:test` / `yarn frontend:test` / `yarn backend:e2e` / `yarn frontend:e2e` - тесты
 - `yarn test` - unit backend + frontend
 - `yarn build` - сборка всех проектов
 - `yarn lint` - линтинг

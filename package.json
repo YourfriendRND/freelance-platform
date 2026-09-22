@@ -12,6 +12,7 @@
     "backend:test": "nx test backend",
     "backend:e2e": "nx e2e backend-e2e",
     "frontend:test": "nx test frontend",
+    "frontend:e2e": "nx e2e frontend-e2e --output-style=stream",
     "lint": "nx run-many -t lint",
     "format": "prettier --write \"**/*.{ts,html,scss,json,md}\"",
     "format:check": "prettier --check \"**/*.{ts,html,scss,json,md}\"",
