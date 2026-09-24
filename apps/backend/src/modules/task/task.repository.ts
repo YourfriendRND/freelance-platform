@@ -30,6 +30,18 @@ type TaskCountRow = {
   total: string;
 };
 
+type TaskStatusCountRow = {
+  status: string;
+  task_count: string;
+};
+
+type TaskBudgetStatsRow = {
+  min_budget: string;
+  max_budget: string;
+  avg_budget_min: string;
+  avg_budget_max: string;
+};
+
 const TASK_SORT_ORDER: Record<TaskSort, string> = {
   [TaskSort.Newest]: 'created_at DESC, id DESC',
   [TaskSort.Oldest]: 'created_at ASC, id ASC',
@@ -288,5 +300,49 @@ export class TaskRepository {
     );
 
     return (rowCount ?? 0) > 0;
+  }
+
+  /**
+   * Количество задач заказчика по каждому статусу.
+   * Группы без задач у этого customer_id в выборку не попадают.
+   */
+  async countTasksByStatus(userId: string): Promise<TaskStatusCountRow[]> {
+    const { rows } = await this.database.query<TaskStatusCountRow>(
+      `
+        SELECT 
+          status, 
+          COUNT(*) AS task_count 
+        FROM tasks
+        WHERE customer_id = $1
+        GROUP BY status 
+        ORDER BY status
+      `,
+      [userId],
+    );
+
+    return rows;
+  }
+
+  /**
+   * MIN/MAX/AVG бюджета задач заказчика (одна строка).
+   * Если задач нет, агрегаты приходят как 0 за счёт COALESCE.
+   */
+  async getBudgetStats(userId: string): Promise<TaskBudgetStatsRow | null> {
+    const { rows } = await this.database.query<TaskBudgetStatsRow>(
+      `
+        SELECT 
+          COALESCE(ROUND(MIN(budget_min), 2), 0) AS min_budget, 
+          COALESCE(ROUND(MAX(budget_max), 2), 0) AS max_budget,
+          COALESCE(ROUND(AVG(budget_min), 2), 0) AS avg_budget_min, 
+          COALESCE(ROUND(AVG(budget_max), 2), 0) AS avg_budget_max 
+        FROM tasks
+        WHERE customer_id = $1
+      `,
+      [userId],
+    );
+
+    const [row] = rows;
+
+    return row ?? null;
   }
 }
