@@ -18,13 +18,17 @@ async function loadCategoryId(): Promise<string> {
   return category.id as string;
 }
 
-async function createOpenTask(sessionCookie: string, categoryId: string): Promise<string> {
+async function createTask(
+  sessionCookie: string,
+  categoryId: string,
+  status: TaskStatus,
+): Promise<string> {
   const createRes = await axios.post(
     '/api/tasks',
     {
       title: `E2E отклик ${Date.now()}`,
       description: 'Описание e2e задачи для отклика',
-      status: TaskStatus.Open,
+      status,
       budgetMin: 10000,
       budgetMax: 25000,
       executionType: TaskExecutionType.Remote,
@@ -35,9 +39,13 @@ async function createOpenTask(sessionCookie: string, categoryId: string): Promis
   );
 
   expect(createRes.status).toBe(201);
-  expect(createRes.data.status).toBe(TaskStatus.Open);
+  expect(createRes.data.status).toBe(status);
 
   return createRes.data.id as string;
+}
+
+async function createOpenTask(sessionCookie: string, categoryId: string): Promise<string> {
+  return createTask(sessionCookie, categoryId, TaskStatus.Open);
 }
 
 describe('Task application module e2e testing', () => {
@@ -203,18 +211,57 @@ describe('Task application module e2e testing', () => {
       categoryId = await loadCategoryId();
     });
 
-    it('create: client should get 403', async () => {
+    it('create: client should get 403 on own task', async () => {
       const client = await joinAndLogin(UserRole.Client);
       const taskId = await createOpenTask(client.sessionCookie, categoryId);
 
       const createRes = await axios.post(
         '/api/task-applications',
-        { taskId, message: 'Отклик заказчика' },
+        { taskId, message: 'Отклик на свою задачу' },
         { headers: { Cookie: client.sessionCookie } },
       );
 
       expect(createRes.status).toBe(403);
       expect(createRes.data.message).toBe('Откликаться на задачу может только исполнитель');
+    });
+
+    it('create: freelancer should get 403 on draft task', async () => {
+      const client = await joinAndLogin(UserRole.Client);
+      const freelancer = await joinAndLogin(UserRole.Freelancer);
+      const taskId = await createTask(client.sessionCookie, categoryId, TaskStatus.Draft);
+
+      const createRes = await axios.post(
+        '/api/task-applications',
+        { taskId, message: 'Отклик на черновик' },
+        { headers: { Cookie: freelancer.sessionCookie } },
+      );
+
+      expect(createRes.status).toBe(403);
+      expect(createRes.data.message).toBe('Откликнуться можно только на открытую задачу');
+    });
+
+    it('create: freelancer should get 403 on closed task', async () => {
+      const client = await joinAndLogin(UserRole.Client);
+      const freelancer = await joinAndLogin(UserRole.Freelancer);
+      const taskId = await createOpenTask(client.sessionCookie, categoryId);
+
+      const closeRes = await axios.patch(
+        `/api/tasks/${taskId}`,
+        { status: TaskStatus.Closed },
+        { headers: { Cookie: client.sessionCookie } },
+      );
+
+      expect(closeRes.status).toBe(200);
+      expect(closeRes.data.status).toBe(TaskStatus.Closed);
+
+      const createRes = await axios.post(
+        '/api/task-applications',
+        { taskId, message: 'Отклик на закрытую задачу' },
+        { headers: { Cookie: freelancer.sessionCookie } },
+      );
+
+      expect(createRes.status).toBe(403);
+      expect(createRes.data.message).toBe('Откликнуться можно только на открытую задачу');
     });
 
     it('create: freelancer should get 409 on duplicate', async () => {
@@ -314,6 +361,33 @@ describe('Task application module e2e testing', () => {
 
       expect(updateRes.status).toBe(403);
       expect(updateRes.data.message).toBe('Изменить можно только отклик на рассмотрении');
+    });
+
+    it('update: client should decline the application', async () => {
+      const client = await joinAndLogin(UserRole.Client);
+      const freelancer = await joinAndLogin(UserRole.Freelancer);
+      const taskId = await createOpenTask(client.sessionCookie, categoryId);
+
+      const createRes = await axios.post(
+        '/api/task-applications',
+        { taskId, message: 'Отклик' },
+        { headers: { Cookie: freelancer.sessionCookie } },
+      );
+
+      expect(createRes.status).toBe(201);
+      const { id: applicationId } = createRes.data;
+
+      const updateRes = await axios.patch(
+        `/api/task-applications/${applicationId}`,
+        { status: TaskApplicationStatus.Decline },
+        { headers: { Cookie: client.sessionCookie } },
+      );
+
+      expect(updateRes.status).toBe(200);
+      expect(updateRes.data).toMatchObject({
+        id: applicationId,
+        status: TaskApplicationStatus.Decline,
+      });
     });
 
     it('update: other client should get 403', async () => {

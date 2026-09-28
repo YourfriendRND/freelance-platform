@@ -76,7 +76,7 @@ REFRESH_AFTER_SECONDS=3600
 
 ```bash
 yarn backend    # API: http://localhost:3000/api
-yarn frontend   # SPA: http://localhost:4200 (`/` => /welcome для гостя, /tasks при сессии)
+yarn frontend   # SPA: http://127.0.0.1:4200 (`/` => /welcome для гостя, /tasks при сессии)
 ```
 
 Swagger UI: http://localhost:3000/docs
@@ -179,9 +179,9 @@ yarn seed               # применить новые сиды
 - **Unit frontend** - Vitest через Angular (`yarn frontend:test`)
 - **E2E frontend** - Playwright (`apps/frontend-e2e`): живое Angular-приложение, auth-сценарии через UI
 
-E2E backend поднимает `backend:serve` через Nx; нужен доступный PostgreSQL и применённые миграции.
+E2E backend поднимает `backend:serve` через Nx; нужен доступный PostgreSQL и применённые миграции. Ожидание API и axios идут на `127.0.0.1`, чтобы на Windows не ловить отказ IPv6 у `localhost`.
 
-E2E frontend поднимает `backend:serve` и `frontend:serve`, после прогона останавливает их. Нужен PostgreSQL, миграции и браузеры Playwright (`yarn playwright install`). Auth-спеки идут только в Chromium.
+E2E frontend поднимает `backend:serve` и `frontend:serve`, после прогона останавливает их. Нужен PostgreSQL, миграции и браузеры Playwright (`yarn playwright install`). Dev-сервер фронта и прокси API слушают `127.0.0.1`. Auth-спеки идут только в Chromium.
 
 ```bash
 yarn backend:test    # unit backend

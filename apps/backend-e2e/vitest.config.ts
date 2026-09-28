@@ -20,6 +20,10 @@ export default defineConfig({
         __dirname,
         '../../libs/shared-dto/src/index.ts',
       ),
+      '@freelance-platform/shared-mock': resolve(
+        __dirname,
+        '../../libs/shared-mock/src/index.ts',
+      ),
       '@freelance-platform/shared-types': resolve(
         __dirname,
         '../../libs/shared-types/src/index.ts',
