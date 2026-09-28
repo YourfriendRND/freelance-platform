@@ -1,10 +1,8 @@
-import { waitForPortOpen } from '@nx/node/utils';
-
 const frontendPort = process.env['FRONTEND_PORT']
   ? Number(process.env['FRONTEND_PORT'])
   : 4200;
 const backendPort = process.env['PORT'] ? Number(process.env['PORT']) : 3000;
-const host = process.env['HOST'] ?? 'localhost';
+const host = process.env['HOST'] ?? '127.0.0.1';
 const frontendUrl = `http://${host}:${frontendPort}`;
 const apiMeUrl = `http://${host}:${backendPort}/api/auth/me`;
 const httpReadyTimeoutMs = 60_000;
@@ -54,8 +52,6 @@ async function waitForApi(): Promise<void> {
 }
 
 export default async function globalSetup(): Promise<void> {
-  await waitForPortOpen(backendPort, { host });
-  await waitForPortOpen(frontendPort, { host });
   await waitForHttpOk(frontendUrl);
   await waitForApi();
 }
