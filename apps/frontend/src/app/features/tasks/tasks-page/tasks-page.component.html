@@ -14,14 +14,15 @@
     <header class="tasks-page__header">
       <h1 class="tasks-page__title">Задачи</h1>
       <p class="tasks-page__subtitle">
-        Найдите подходящую задачу среди {{ availableCount() }} доступных
+        Найдите подходящую задачу среди {{ totalCount() }} доступных
       </p>
     </header>
 
     <app-tasks-filters
       [categories]="categories()"
-      [shownCount]="pagedTasks().length"
-      [totalCount]="availableCount()"
+      [shownCount]="shownCount()"
+      [totalCount]="totalCount()"
+      (filtersChange)="onFiltersChange($event)"
     />
 
     @switch (view()) {
@@ -30,7 +31,7 @@
       }
       @case ('empty') {
         <div class="tasks-page__empty">
-          <p class="tasks-page__empty-title">Список задач пуст</p>
+          <p class="tasks-page__empty-title">{{ emptyTitle() }}</p>
         </div>
       }
       @case ('error') {
@@ -40,7 +41,7 @@
       }
       @case ('list') {
         <ul class="tasks-page__list">
-          @for (task of pagedTasks(); track task.id) {
+          @for (task of tasks(); track task.id) {
             <li>
               <app-task-item [task]="task" />
             </li>

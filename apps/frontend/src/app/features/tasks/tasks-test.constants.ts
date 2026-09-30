@@ -1,0 +1,2 @@
+export const TASKS_TEST_BUDGET_MIN = 10000;
+export const TASKS_TEST_BUDGET_MAX = 20000;
