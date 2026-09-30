@@ -13,11 +13,16 @@ import {
 } from '@freelance-platform/shared-mock';
 import {
   CreateTaskRequest,
+  FindTasksQuery,
+  PAGINATION_DEFAULT_LIMIT,
+  PAGINATION_DEFAULT_PAGE,
   TaskExecutionType,
   TaskListResponse,
   TaskResponse,
+  TaskSort,
   TaskStatus,
 } from '@freelance-platform/shared-types';
+import { TASKS_TEST_BUDGET_MAX, TASKS_TEST_BUDGET_MIN } from './tasks-test.constants';
 
 describe('TaskApi testing', () => {
   let api: TaskApi;
@@ -27,8 +32,8 @@ describe('TaskApi testing', () => {
     title: 'Разработка адаптивного лендинга',
     description: 'Нужен адаптивный лендинг для запуска продукта',
     status: TaskStatus.Open,
-    budgetMin: 10000,
-    budgetMax: 20000,
+    budgetMin: TASKS_TEST_BUDGET_MIN,
+    budgetMax: TASKS_TEST_BUDGET_MAX,
     executionType: TaskExecutionType.Remote,
     deadline: '2026-09-15',
     categoryId: MOCK_TASK_CATEGORY_ID,
@@ -36,8 +41,8 @@ describe('TaskApi testing', () => {
 
   const response: TaskResponse = createMockTaskResponse({
     ...body,
-    budgetMin: 10000,
-    budgetMax: 20000,
+    budgetMin: TASKS_TEST_BUDGET_MIN,
+    budgetMax: TASKS_TEST_BUDGET_MAX,
   });
 
   const listResponse: TaskListResponse = createMockTaskListResponse({
@@ -76,6 +81,72 @@ describe('TaskApi testing', () => {
     request.flush(listResponse);
 
     expect(result).toEqual(listResponse);
+  });
+
+  it('should request the task list with page and limit', () => {
+    let result: TaskListResponse | null = null;
+    const query: FindTasksQuery = {
+      page: PAGINATION_DEFAULT_PAGE,
+      limit: PAGINATION_DEFAULT_LIMIT,
+    };
+
+    api.findAll(query).subscribe((taskList) => {
+      result = taskList;
+    });
+
+    const request = http.expectOne(
+      (httpRequest) =>
+        httpRequest.method === 'GET' &&
+        httpRequest.url === '/api/tasks' &&
+        httpRequest.params.get('page') === String(PAGINATION_DEFAULT_PAGE) &&
+        httpRequest.params.get('limit') === String(PAGINATION_DEFAULT_LIMIT),
+    );
+
+    request.flush(listResponse);
+
+    expect(result).toEqual(listResponse);
+  });
+
+  it('should request the task list with filters', () => {
+    const query: FindTasksQuery = {
+      page: PAGINATION_DEFAULT_PAGE,
+      limit: PAGINATION_DEFAULT_LIMIT,
+      categoryId: MOCK_TASK_CATEGORY_ID,
+      status: TaskStatus.Open,
+      budgetMin: TASKS_TEST_BUDGET_MIN,
+      budgetMax: TASKS_TEST_BUDGET_MAX,
+    };
+
+    api.findAll(query).subscribe();
+
+    const request = http.expectOne(
+      (httpRequest) =>
+        httpRequest.method === 'GET' &&
+        httpRequest.url === '/api/tasks' &&
+        httpRequest.params.get('categoryId') === MOCK_TASK_CATEGORY_ID &&
+        httpRequest.params.get('status') === TaskStatus.Open &&
+        httpRequest.params.get('budgetMin') === String(TASKS_TEST_BUDGET_MIN) &&
+        httpRequest.params.get('budgetMax') === String(TASKS_TEST_BUDGET_MAX),
+    );
+
+    request.flush(listResponse);
+  });
+
+  it('should request the task list with sort', () => {
+    api.findAll({
+      page: PAGINATION_DEFAULT_PAGE,
+      limit: PAGINATION_DEFAULT_LIMIT,
+      sort: TaskSort.BudgetDesc,
+    }).subscribe();
+
+    const request = http.expectOne(
+      (httpRequest) =>
+        httpRequest.method === 'GET' &&
+        httpRequest.url === '/api/tasks' &&
+        httpRequest.params.get('sort') === TaskSort.BudgetDesc,
+    );
+
+    request.flush(listResponse);
   });
 
   it('should send a create task request', () => {

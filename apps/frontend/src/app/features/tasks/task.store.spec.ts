@@ -8,7 +8,15 @@ import {
   createMockTaskListResponse,
   createMockTaskResponse,
 } from '@freelance-platform/shared-mock';
-import { TaskListResponse, TaskResponse } from '@freelance-platform/shared-types';
+import {
+  PAGINATION_DEFAULT_LIMIT,
+  PAGINATION_DEFAULT_PAGE,
+  TaskListResponse,
+  TaskResponse,
+  TaskSort,
+  TaskStatus,
+} from '@freelance-platform/shared-types';
+import { TASKS_TEST_BUDGET_MAX, TASKS_TEST_BUDGET_MIN } from './tasks-test.constants';
 
 describe('TaskStore testing', () => {
   let store: InstanceType<typeof TaskStore>;
@@ -46,6 +54,13 @@ describe('TaskStore testing', () => {
     expect(store.tasks()).toEqual([]);
     expect(store.categories()).toEqual([]);
     expect(store.selectedTask()).toBeNull();
+    expect(store.total()).toBe(0);
+    expect(store.page()).toBe(PAGINATION_DEFAULT_PAGE);
+    expect(store.limit()).toBe(PAGINATION_DEFAULT_LIMIT);
+    expect(store.listQuery()).toEqual({
+      page: PAGINATION_DEFAULT_PAGE,
+      limit: PAGINATION_DEFAULT_LIMIT,
+    });
     expect(store.isLoading()).toBe(false);
     expect(store.isSelectedLoading()).toBe(false);
     expect(store.isListLoaded()).toBe(false);
@@ -62,8 +77,19 @@ describe('TaskStore testing', () => {
     expect(store.isLoading()).toBe(false);
     expect(store.error()).toBeNull();
     expect(store.tasks()).toEqual([task]);
+    expect(store.total()).toBe(taskList.total);
+    expect(store.page()).toBe(taskList.page);
+    expect(store.limit()).toBe(taskList.limit);
     expect(store.categories()).toEqual([category]);
     expect(store.categoryTitleById().get(category.id)).toBe(category.title);
+    expect(taskApi.findAll).toHaveBeenCalledWith({
+      page: PAGINATION_DEFAULT_PAGE,
+      limit: PAGINATION_DEFAULT_LIMIT,
+    });
+    expect(store.listQuery()).toEqual({
+      page: PAGINATION_DEFAULT_PAGE,
+      limit: PAGINATION_DEFAULT_LIMIT,
+    });
   });
 
   it('should keep a single in-flight request', () => {
@@ -124,6 +150,148 @@ describe('TaskStore testing', () => {
     expect(taskApi.findAll).toHaveBeenCalledTimes(1);
     expect(taskCategoryApi.findAll).toHaveBeenCalledTimes(1);
     expect(store.isListLoaded()).toBe(true);
+  });
+
+  it('should load the next page without refetching categories', () => {
+    const secondPageTask = createMockTaskResponse({
+      id: '2c8e1a97-0a01-4b62-8d11-7e9f0a1b2c02',
+      categoryId: category.id,
+    });
+    const secondPage: TaskListResponse = createMockTaskListResponse({
+      items: [secondPageTask],
+      total: 21,
+      page: 2,
+      limit: PAGINATION_DEFAULT_LIMIT,
+    });
+
+    taskApi.findAll
+      .mockReturnValueOnce(of(taskList))
+      .mockReturnValueOnce(of(secondPage));
+    taskCategoryApi.findAll.mockReturnValue(of([category]));
+
+    store.load();
+    store.load({
+      ...store.listQuery(),
+      page: 2,
+    });
+
+    expect(taskApi.findAll).toHaveBeenNthCalledWith(1, {
+      page: PAGINATION_DEFAULT_PAGE,
+      limit: PAGINATION_DEFAULT_LIMIT,
+    });
+    expect(taskApi.findAll).toHaveBeenNthCalledWith(2, {
+      page: 2,
+      limit: PAGINATION_DEFAULT_LIMIT,
+    });
+    expect(taskCategoryApi.findAll).toHaveBeenCalledTimes(1);
+    expect(store.tasks()).toEqual([secondPageTask]);
+    expect(store.total()).toBe(21);
+    expect(store.page()).toBe(2);
+    expect(store.limit()).toBe(PAGINATION_DEFAULT_LIMIT);
+  });
+
+  it('should reload the list when filters change', () => {
+    const filteredList: TaskListResponse = createMockTaskListResponse({
+      items: [task],
+      total: 1,
+    });
+
+    taskApi.findAll
+      .mockReturnValueOnce(of(taskList))
+      .mockReturnValueOnce(of(filteredList));
+    taskCategoryApi.findAll.mockReturnValue(of([category]));
+
+    store.load();
+    store.load({
+      page: PAGINATION_DEFAULT_PAGE,
+      limit: PAGINATION_DEFAULT_LIMIT,
+      categoryId: category.id,
+      status: TaskStatus.Open,
+      budgetMin: TASKS_TEST_BUDGET_MIN,
+      budgetMax: TASKS_TEST_BUDGET_MAX,
+    });
+
+    expect(taskApi.findAll).toHaveBeenNthCalledWith(2, {
+      page: PAGINATION_DEFAULT_PAGE,
+      limit: PAGINATION_DEFAULT_LIMIT,
+      categoryId: category.id,
+      status: TaskStatus.Open,
+      budgetMin: TASKS_TEST_BUDGET_MIN,
+      budgetMax: TASKS_TEST_BUDGET_MAX,
+    });
+    expect(store.listQuery()).toEqual({
+      page: PAGINATION_DEFAULT_PAGE,
+      limit: PAGINATION_DEFAULT_LIMIT,
+      categoryId: category.id,
+      status: TaskStatus.Open,
+      budgetMin: TASKS_TEST_BUDGET_MIN,
+      budgetMax: TASKS_TEST_BUDGET_MAX,
+    });
+  });
+
+  it('should keep filters when loading the next page', () => {
+    taskApi.findAll.mockReturnValue(of(taskList));
+    taskCategoryApi.findAll.mockReturnValue(of([category]));
+
+    store.load({
+      page: PAGINATION_DEFAULT_PAGE,
+      limit: PAGINATION_DEFAULT_LIMIT,
+      categoryId: category.id,
+    });
+    store.load({
+      ...store.listQuery(),
+      page: 2,
+    });
+
+    expect(taskApi.findAll).toHaveBeenNthCalledWith(2, {
+      page: 2,
+      limit: PAGINATION_DEFAULT_LIMIT,
+      categoryId: category.id,
+    });
+  });
+
+  it('should reload the list when sort changes', () => {
+    taskApi.findAll.mockReturnValue(of(taskList));
+    taskCategoryApi.findAll.mockReturnValue(of([category]));
+
+    store.load();
+    store.load({
+      page: PAGINATION_DEFAULT_PAGE,
+      limit: PAGINATION_DEFAULT_LIMIT,
+      sort: TaskSort.Oldest,
+    });
+
+    expect(taskApi.findAll).toHaveBeenNthCalledWith(2, {
+      page: PAGINATION_DEFAULT_PAGE,
+      limit: PAGINATION_DEFAULT_LIMIT,
+      sort: TaskSort.Oldest,
+    });
+    expect(store.listQuery()).toEqual({
+      page: PAGINATION_DEFAULT_PAGE,
+      limit: PAGINATION_DEFAULT_LIMIT,
+      sort: TaskSort.Oldest,
+    });
+  });
+
+  it('should keep sort when loading the next page', () => {
+    taskApi.findAll.mockReturnValue(of(taskList));
+    taskCategoryApi.findAll.mockReturnValue(of([category]));
+
+    store.load({
+      page: PAGINATION_DEFAULT_PAGE,
+      limit: PAGINATION_DEFAULT_LIMIT,
+      sort: TaskSort.BudgetAsc,
+    });
+    store.load({
+      ...store.listQuery(),
+      page: 2,
+    });
+
+    expect(taskApi.findAll).toHaveBeenNthCalledWith(2, {
+      page: 2,
+      limit: PAGINATION_DEFAULT_LIMIT,
+      sort: TaskSort.BudgetAsc,
+    });
   });
 
   it('should create a task and mark the loaded list stale', () => {
