@@ -3,10 +3,13 @@ import {
   Component,
   computed,
   inject,
-  signal,
 } from '@angular/core';
 import { TaskStore } from '@freelance-platform/client-state';
-import { TaskViewData } from '@freelance-platform/shared-types';
+import {
+  FindTasksQuery,
+  PAGINATION_DEFAULT_PAGE,
+  TaskViewData,
+} from '@freelance-platform/shared-types';
 import { UiDashboardWrapperComponent } from '@freelance-platform/ui';
 import { AppHeaderComponent } from '../../../app-header/app-header.component';
 import { DashboardSidebarComponent } from '../../../dashboard/dashboard-sidebar/dashboard-sidebar.component';
@@ -17,8 +20,18 @@ import { TasksPaginationComponent } from '../tasks-pagination/tasks-pagination.c
 
 type TasksPageView = 'loading' | 'empty' | 'error' | 'list';
 
-const TASKS_PAGE_SIZE = 3;
 const UNKNOWN_CATEGORY_TITLE = 'Без категории';
+const EMPTY_LIST_TITLE = 'Список задач пуст';
+const EMPTY_FILTERS_TITLE = 'По заданным фильтрам ничего не найдено';
+
+function hasAppliedListFilters(query: FindTasksQuery): boolean {
+  return (
+    query.categoryId !== undefined ||
+    query.status !== undefined ||
+    query.budgetMin !== undefined ||
+    query.budgetMax !== undefined
+  );
+}
 
 @Component({
   selector: 'app-tasks-page',
@@ -38,9 +51,9 @@ const UNKNOWN_CATEGORY_TITLE = 'Без категории';
 export class TasksPageComponent {
   private readonly taskStore = inject(TaskStore);
 
-  protected readonly currentPage = signal(1);
   protected readonly categories = this.taskStore.categories;
   protected readonly errorMessage = this.taskStore.error;
+  protected readonly currentPage = this.taskStore.page;
 
   protected readonly tasks = computed<readonly TaskViewData[]>(() => {
     const categoryTitleById = this.taskStore.categoryTitleById();
@@ -64,7 +77,19 @@ export class TasksPageComponent {
     }));
   });
 
-  protected readonly availableCount = computed(() => this.tasks().length);
+  protected readonly shownCount = computed(() => this.tasks().length);
+
+  protected readonly totalCount = computed(() => this.taskStore.total());
+
+  protected readonly emptyTitle = computed(() =>
+    hasAppliedListFilters(this.taskStore.listQuery())
+      ? EMPTY_FILTERS_TITLE
+      : EMPTY_LIST_TITLE,
+  );
+
+  protected readonly totalPages = computed(() =>
+    Math.max(1, Math.ceil(this.taskStore.total() / this.taskStore.limit())),
+  );
 
   protected readonly view = computed<TasksPageView>(() => {
     if (this.taskStore.isLoading()) {
@@ -75,17 +100,7 @@ export class TasksPageComponent {
       return 'error';
     }
 
-    return this.tasks().length === 0 ? 'empty' : 'list';
-  });
-
-  protected readonly totalPages = computed(() =>
-    Math.max(1, Math.ceil(this.tasks().length / TASKS_PAGE_SIZE)),
-  );
-
-  protected readonly pagedTasks = computed(() => {
-    const start = (this.currentPage() - 1) * TASKS_PAGE_SIZE;
-
-    return this.tasks().slice(start, start + TASKS_PAGE_SIZE);
+    return this.taskStore.total() === 0 ? 'empty' : 'list';
   });
 
   constructor() {
@@ -95,6 +110,17 @@ export class TasksPageComponent {
   protected onPageChange(page: number): void {
     const nextPage = Math.min(Math.max(page, 1), this.totalPages());
 
-    this.currentPage.set(nextPage);
+    this.taskStore.load({
+      ...this.taskStore.listQuery(),
+      page: nextPage,
+    });
+  }
+
+  protected onFiltersChange(filters: FindTasksQuery): void {
+    this.taskStore.load({
+      page: PAGINATION_DEFAULT_PAGE,
+      limit: this.taskStore.limit(),
+      ...filters,
+    });
   }
 }
