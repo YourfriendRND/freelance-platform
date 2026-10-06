@@ -11,6 +11,7 @@ export class UiButtonComponent {
   readonly variant = input<'primary' | 'secondary'>('primary');
   readonly disabled = input(false);
   readonly fullWidth = input(false);
+  readonly compact = input(false);
 
   readonly clicked = output<MouseEvent>();
 

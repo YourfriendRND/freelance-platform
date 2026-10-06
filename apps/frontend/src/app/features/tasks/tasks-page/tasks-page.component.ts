@@ -16,6 +16,10 @@ import { DashboardSidebarComponent } from '../../../dashboard/dashboard-sidebar/
 import { TasksPageContainerComponent } from '../tasks-page-container/tasks-page-container.component';
 import { TaskItemComponent } from '../task-item/task-item.component';
 import { TasksFiltersComponent } from '../tasks-filters/tasks-filters.component';
+import {
+  TasksFiltersSelection,
+  toPublicTasksQuery,
+} from '../tasks-filters/tasks-filters.model';
 import { TasksPaginationComponent } from '../tasks-pagination/tasks-pagination.component';
 
 type TasksPageView = 'loading' | 'empty' | 'error' | 'list';
@@ -116,11 +120,11 @@ export class TasksPageComponent {
     });
   }
 
-  protected onFiltersChange(filters: FindTasksQuery): void {
+  protected onFiltersChange(filters: TasksFiltersSelection): void {
     this.taskStore.load({
       page: PAGINATION_DEFAULT_PAGE,
       limit: this.taskStore.limit(),
-      ...filters,
+      ...toPublicTasksQuery(filters),
     });
   }
 }

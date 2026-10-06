@@ -1,5 +1,5 @@
 export {
   UiDashboardSidebarComponent,
-  type UiDashboardNavIcon,
+  UiDashboardNavIcon,
   type UiDashboardNavItem,
 } from './ui-dashboard-sidebar.component';

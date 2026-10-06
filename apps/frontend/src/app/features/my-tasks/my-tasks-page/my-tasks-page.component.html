@@ -1,0 +1,52 @@
+<ui-dashboard-wrapper>
+  <app-dashboard-sidebar
+    uiDashboardSidebar
+    activeItem="my-tasks"
+  />
+
+  <app-header
+    uiDashboardHeader
+    [showBrand]="false"
+    [embedded]="true"
+  />
+
+  <app-tasks-page-container>
+    <header class="my-tasks-page__header">
+      <h1 class="my-tasks-page__title">Мои задачи</h1>
+      <p class="my-tasks-page__subtitle">
+        Управляйте опубликованными задачами и дорабатывайте черновики
+      </p>
+    </header>
+
+    <app-tasks-filters
+      [categories]="categories()"
+      [shownCount]="shownCount()"
+      [totalCount]="totalCount()"
+      [includeDraft]="true"
+      (filtersChange)="onFiltersChange($event)"
+    />
+
+    @switch (view()) {
+      @case (ApplicationsPageView.Loading) {
+        <p class="my-tasks-page__status">Загрузка</p>
+      }
+      @case (ApplicationsPageView.Error) {
+        <p class="my-tasks-page__status">
+          {{ errorMessage() ?? 'Не удалось загрузить задачи' }}
+        </p>
+      }
+      @case (ApplicationsPageView.Empty) {
+        <p class="my-tasks-page__empty">{{ emptyTitle() }}</p>
+      }
+      @case (ApplicationsPageView.Content) {
+        <ul class="my-tasks-page__list">
+          @for (task of tasks(); track task.id) {
+            <li>
+              <app-task-item [task]="task" />
+            </li>
+          }
+        </ul>
+      }
+    }
+  </app-tasks-page-container>
+</ui-dashboard-wrapper>

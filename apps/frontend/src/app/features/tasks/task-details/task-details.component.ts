@@ -1,10 +1,10 @@
 import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
 import {
-  formatTaskDate,
   TASK_EXECUTION_TYPE_LABEL,
   TASK_STATUS_LABEL,
   TaskViewData,
 } from '@freelance-platform/shared-types';
+import { formatTaskDate } from '../../../format';
 import { TaskDetailsClientComponent } from '../task-details-client/task-details-client.component';
 
 @Component({

@@ -1,0 +1,49 @@
+:host {
+  display: block;
+}
+
+.application-details-page__back {
+  display: inline-block;
+  margin-bottom: 1.5rem;
+  color: var(--color-text-muted);
+  font-size: 0.875rem;
+  line-height: 1.5;
+  text-decoration: none;
+
+  &:hover {
+    color: var(--color-primary);
+  }
+}
+
+.application-details-page__status {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: 0.9375rem;
+  line-height: 1.5;
+}
+
+.application-details-page__content {
+  width: 100%;
+  max-width: 80rem;
+  margin-inline: auto;
+}
+
+.application-details-page__layout {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(16rem, 1fr);
+  gap: 1.5rem;
+  align-items: start;
+}
+
+.application-details-page__aside {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  min-width: 0;
+}
+
+@media (max-width: 960px) {
+  .application-details-page__layout {
+    grid-template-columns: 1fr;
+  }
+}

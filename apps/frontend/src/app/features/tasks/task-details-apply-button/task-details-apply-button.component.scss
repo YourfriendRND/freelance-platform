@@ -1,0 +1,46 @@
+:host {
+  display: block;
+}
+
+.task-details-apply-button__icon {
+  display: inline-flex;
+}
+
+.task-details-apply-button__status {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 1.75rem 1.5rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  background: var(--color-surface);
+  text-align: center;
+}
+
+.task-details-apply-button__badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  margin-bottom: 0.375rem;
+  border-radius: 999px;
+  background: #dcfce7;
+  color: #16a34a;
+}
+
+.task-details-apply-button__title {
+  margin: 0;
+  color: var(--color-text);
+  font-size: 0.9375rem;
+  font-weight: 600;
+  line-height: 1.25rem;
+}
+
+.task-details-apply-button__hint {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: 0.8125rem;
+  line-height: 1.25rem;
+}

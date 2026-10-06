@@ -14,20 +14,37 @@
     <a routerLink="/tasks" class="task-details-page__back">← Назад к задачам</a>
 
     @switch (view()) {
-      @case ('loading') {
+      @case (ApplicationsPageView.Loading) {
         <p class="task-details-page__status">Загрузка</p>
       }
-      @case ('error') {
+      @case (ApplicationsPageView.Error) {
         <p class="task-details-page__status">
           {{ errorMessage() ?? 'Не удалось загрузить задачу' }}
         </p>
       }
-      @case ('content') {
+      @case (ApplicationsPageView.Content) {
         @if (task(); as details) {
           <div class="task-details-page__layout">
             <app-task-details [task]="details" />
-            <app-task-details-aside [task]="details" />
+            <div class="task-details-page__aside">
+              <app-task-details-aside [task]="details" />
+              <app-task-details-apply-button
+                [status]="details.status"
+                [taskId]="details.id"
+                (apply)="onOpenApplyForm()"
+              />
+            </div>
           </div>
+
+          @if (isApplyFormOpen()) {
+            <app-task-details-apply-form
+              [taskId]="details.id"
+              [taskTitle]="details.title"
+              [budgetMin]="details.budgetMin"
+              [budgetMax]="details.budgetMax"
+              (closed)="onCloseApplyForm()"
+            />
+          }
         }
       }
     }

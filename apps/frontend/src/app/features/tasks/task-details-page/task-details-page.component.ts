@@ -4,6 +4,7 @@ import {
   computed,
   DestroyRef,
   inject,
+  signal,
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, RouterLink } from '@angular/router';
@@ -12,11 +13,12 @@ import { TaskViewData } from '@freelance-platform/shared-types';
 import { UiDashboardWrapperComponent } from '@freelance-platform/ui';
 import { AppHeaderComponent } from '../../../app-header/app-header.component';
 import { DashboardSidebarComponent } from '../../../dashboard/dashboard-sidebar/dashboard-sidebar.component';
+import { TaskDetailsApplyButtonComponent } from '../task-details-apply-button/task-details-apply-button.component';
+import { TaskDetailsApplyFormComponent } from '../task-details-apply-form/task-details-apply-form.component';
 import { TaskDetailsAsideComponent } from '../task-details-aside/task-details-aside.component';
 import { TaskDetailsComponent } from '../task-details/task-details.component';
 import { TasksPageContainerComponent } from '../tasks-page-container/tasks-page-container.component';
-
-type TaskDetailsPageView = 'loading' | 'error' | 'content';
+import { ApplicationsPageView } from '../../applications/applications-list.model';
 
 const UNKNOWN_CATEGORY_TITLE = 'Без категории';
 
@@ -30,6 +32,8 @@ const UNKNOWN_CATEGORY_TITLE = 'Без категории';
     TasksPageContainerComponent,
     TaskDetailsComponent,
     TaskDetailsAsideComponent,
+    TaskDetailsApplyButtonComponent,
+    TaskDetailsApplyFormComponent,
   ],
   templateUrl: './task-details-page.component.html',
   styleUrl: './task-details-page.component.scss',
@@ -40,6 +44,9 @@ export class TaskDetailsPageComponent {
   private readonly route = inject(ActivatedRoute);
   private readonly destroyRef = inject(DestroyRef);
 
+  protected readonly isApplyFormOpen = signal(false);
+
+  protected readonly ApplicationsPageView = ApplicationsPageView;
   protected readonly errorMessage = this.taskStore.selectedError;
 
   protected readonly task = computed<TaskViewData | null>(() => {
@@ -70,16 +77,16 @@ export class TaskDetailsPageComponent {
     };
   });
 
-  protected readonly view = computed<TaskDetailsPageView>(() => {
+  protected readonly view = computed(() => {
     if (this.taskStore.isSelectedLoading()) {
-      return 'loading';
+      return ApplicationsPageView.Loading;
     }
 
     if (this.errorMessage()) {
-      return 'error';
+      return ApplicationsPageView.Error;
     }
 
-    return this.task() ? 'content' : 'loading';
+    return this.task() ? ApplicationsPageView.Content : ApplicationsPageView.Loading;
   });
 
   constructor() {
@@ -98,4 +105,11 @@ export class TaskDetailsPageComponent {
     });
   }
 
+  protected onOpenApplyForm(): void {
+    this.isApplyFormOpen.set(true);
+  }
+
+  protected onCloseApplyForm(): void {
+    this.isApplyFormOpen.set(false);
+  }
 }

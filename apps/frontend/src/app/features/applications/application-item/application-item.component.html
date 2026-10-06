@@ -1,0 +1,29 @@
+<a class="application-item" [routerLink]="['/applications', application().id]">
+  <div class="application-item__main">
+    <header class="application-item__header">
+      <h2 class="application-item__title">{{ application().taskTitle }}</h2>
+      <span class="application-item__status" [attr.data-status]="application().status">
+        {{ statusLabel() }}
+      </span>
+    </header>
+
+    <p class="application-item__client">
+      <span class="application-item__avatar" aria-hidden="true">{{ clientInitial() }}</span>
+      <span>{{ application().clientName }} · {{ application().clientDetails }}</span>
+    </p>
+
+    <p class="application-item__message">{{ application().message }}</p>
+  </div>
+
+  <aside class="application-item__aside">
+    <div class="application-item__metric">
+      <span class="application-item__metric-label">Ваш отклик</span>
+      <span class="application-item__metric-value">{{ priceLabel() }}</span>
+    </div>
+    <div class="application-item__metric">
+      <span class="application-item__metric-label">Срок</span>
+      <span class="application-item__metric-value">{{ application().timelineLabel }}</span>
+    </div>
+    <p class="application-item__date">Отправлено {{ submittedAtLabel() }}</p>
+  </aside>
+</a>

@@ -45,4 +45,16 @@ export const appRoutes: Route[] = [
     loadChildren: () =>
       import('./features/tasks/tasks.routes').then((module) => module.tasksRoutes),
   },
+  {
+    path: 'my-tasks',
+    loadChildren: () =>
+      import('./features/my-tasks/my-tasks.routes').then((module) => module.myTasksRoutes),
+  },
+  {
+    path: 'applications',
+    loadChildren: () =>
+      import('./features/applications/applications.routes').then(
+        (module) => module.applicationsRoutes,
+      ),
+  },
 ];

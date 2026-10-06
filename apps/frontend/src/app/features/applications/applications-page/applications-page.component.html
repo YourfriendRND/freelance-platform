@@ -1,0 +1,67 @@
+<ui-dashboard-wrapper>
+  <app-dashboard-sidebar
+    uiDashboardSidebar
+    activeItem="applications"
+  />
+
+  <app-header
+    uiDashboardHeader
+    [showBrand]="false"
+    [embedded]="true"
+  />
+
+  <app-applications-page-container>
+    <header class="applications-page__header">
+      <div>
+        <h1 class="applications-page__title">Мои отклики</h1>
+        <p class="applications-page__subtitle">
+          Следите за каждым откликом и узнавайте, когда ответит заказчик
+        </p>
+      </div>
+
+      <ui-button type="button" [compact]="true" (clicked)="onFindTasks()">
+        Найти задачи
+      </ui-button>
+    </header>
+
+    <app-applications-summary
+      [totalCount]="totalCount()"
+      [pendingCount]="pendingCount()"
+      [acceptedCount]="acceptedCount()"
+    />
+
+    @switch (view()) {
+      @case (ApplicationsPageView.Loading) {
+        <p class="applications-page__empty">Загрузка</p>
+      }
+      @case (ApplicationsPageView.Error) {
+        <p class="applications-page__empty">
+          {{ errorMessage() ?? 'Не удалось загрузить отклики' }}
+        </p>
+      }
+      @case (ApplicationsPageView.Empty) {
+        <p class="applications-page__empty">У вас пока нет откликов</p>
+      }
+      @case (ApplicationsPageView.Content) {
+        <app-applications-toolbar
+          [activeTab]="activeTab()"
+          [search]="search()"
+          (tabChange)="onTabChange($event)"
+          (searchChange)="onSearchChange($event)"
+        />
+
+        @if (applications().length === 0) {
+          <p class="applications-page__empty">Отклики не найдены</p>
+        } @else {
+          <ul class="applications-page__list">
+            @for (application of applications(); track application.id) {
+              <li>
+                <app-application-item [application]="application" />
+              </li>
+            }
+          </ul>
+        }
+      }
+    }
+  </app-applications-page-container>
+</ui-dashboard-wrapper>

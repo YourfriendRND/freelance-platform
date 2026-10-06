@@ -29,6 +29,13 @@
   align-items: start;
 }
 
+.task-details-page__aside {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  min-width: 0;
+}
+
 @media (max-width: 960px) {
   .task-details-page__layout {
     grid-template-columns: 1fr;

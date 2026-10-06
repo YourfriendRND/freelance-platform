@@ -1,7 +1,13 @@
 import { ChangeDetectionStrategy, Component, input, output } from '@angular/core';
 import { RouterLink } from '@angular/router';
 
-export type UiDashboardNavIcon = 'list' | 'grid' | 'user';
+export enum UiDashboardNavIcon {
+  List = 'list',
+  Grid = 'grid',
+  User = 'user',
+  File = 'file',
+  Clipboard = 'clipboard',
+}
 
 export type UiDashboardNavItem = {
   readonly label: string;
@@ -18,6 +24,8 @@ export type UiDashboardNavItem = {
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class UiDashboardSidebarComponent {
+  protected readonly UiDashboardNavIcon = UiDashboardNavIcon;
+
   readonly brandName = input('TaskFlow');
   readonly homeHref = input('/welcome');
   readonly items = input<readonly UiDashboardNavItem[]>([]);

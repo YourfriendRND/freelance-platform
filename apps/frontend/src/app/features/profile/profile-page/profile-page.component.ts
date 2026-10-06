@@ -1,9 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
 import { AuthStore } from '@freelance-platform/client-state';
-import {
-  formatTaskDate,
-  USER_ROLE_LABEL,
-} from '@freelance-platform/shared-types';
+import { USER_ROLE_LABEL } from '@freelance-platform/shared-types';
+import { formatTaskDate, formatUserName } from '../../../format';
 import { UiDashboardWrapperComponent } from '@freelance-platform/ui';
 import { AppHeaderComponent } from '../../../app-header/app-header.component';
 import { DashboardSidebarComponent } from '../../../dashboard/dashboard-sidebar/dashboard-sidebar.component';
@@ -47,14 +45,11 @@ export class ProfilePageComponent {
       };
     }
 
-    const displayName = [user.firstName, user.lastName]
-      .filter(Boolean)
-      .join(' ');
     const registrationDate = new Date(user.createdAt);
     const hasValidRegistrationDate = !Number.isNaN(registrationDate.getTime());
 
     return {
-      displayName: displayName || 'Имя не указано',
+      displayName: formatUserName(user) || 'Имя не указано',
       email: user.email || 'Email не указан',
       roleLabel: USER_ROLE_LABEL[user.role],
       registrationLabel: hasValidRegistrationDate

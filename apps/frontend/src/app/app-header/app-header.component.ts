@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component, computed, inject, input } from '@an
 import { Router } from '@angular/router';
 import { AuthStore } from '@freelance-platform/client-state';
 import { USER_ROLE_LABEL } from '@freelance-platform/shared-types';
+import { formatUserName } from '../format';
 import { UiHeaderComponent, UiHeaderMode } from '@freelance-platform/ui';
 
 @Component({
@@ -31,13 +32,7 @@ export class AppHeaderComponent {
   protected readonly userName = computed(() => {
     const user = this.authStore.user();
 
-    if (!user) {
-      return '';
-    }
-
-    const { firstName, lastName } = user;
-
-    return [firstName, lastName].filter(Boolean).join(' ');
+    return user ? formatUserName(user) : '';
   });
 
   protected readonly userRoleLabel = computed(() => {

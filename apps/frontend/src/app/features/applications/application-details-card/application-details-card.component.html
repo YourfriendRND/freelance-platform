@@ -1,0 +1,49 @@
+<article class="application-details-card">
+  <header class="application-details-card__header">
+    <div>
+      <p class="application-details-card__eyebrow">Отклик</p>
+      <h1 class="application-details-card__title">{{ application().taskTitle }}</h1>
+      <p class="application-details-card__date">Отправлено {{ submittedAtLabel() }}</p>
+    </div>
+    <span class="application-details-card__status" [attr.data-status]="application().status">
+      {{ statusLabel() }}
+    </span>
+  </header>
+
+  <dl class="application-details-card__metrics">
+    <div>
+      <dt>Ваш отклик</dt>
+      <dd>{{ priceLabel() }}</dd>
+    </div>
+    <div>
+      <dt>Срок</dt>
+      <dd>{{ application().timelineLabel }}</dd>
+    </div>
+    <div>
+      <dt>Бюджет задачи</dt>
+      <dd>{{ application().taskBudgetLabel }}</dd>
+    </div>
+  </dl>
+
+  <section class="application-details-card__proposal">
+    <h2>Ваше предложение</h2>
+    <p>{{ application().message }}</p>
+  </section>
+
+  <p class="application-details-card__banner" [attr.data-status]="application().status">
+    @switch (application().status) {
+      @case (TaskApplicationStatus.Accept) {
+        <strong>Отклик принят</strong>
+        <span>Заказчик принял ваше предложение.</span>
+      }
+      @case (TaskApplicationStatus.Decline) {
+        <strong>Отклик отклонён</strong>
+        <span>Заказчик отклонил это предложение.</span>
+      }
+      @default {
+        <strong>Ждём ответа заказчика</strong>
+        <span>Ваш отклик в очереди у заказчика. Мы сообщим, как только он ответит.</span>
+      }
+    }
+  </p>
+</article>

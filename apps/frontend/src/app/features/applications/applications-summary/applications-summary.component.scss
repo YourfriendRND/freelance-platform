@@ -1,0 +1,52 @@
+:host {
+  display: block;
+}
+
+.applications-summary {
+  display: grid;
+  gap: 1rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+
+  @media (min-width: 720px) {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+.applications-summary__card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding: 1.25rem 1.5rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  background: var(--color-surface);
+}
+
+.applications-summary__icon {
+  display: inline-flex;
+  margin-bottom: 0.5rem;
+  color: var(--color-text-muted);
+
+  &--pending {
+    color: #d97706;
+  }
+
+  &--accepted {
+    color: #16a34a;
+  }
+}
+
+.applications-summary__value {
+  color: var(--color-text);
+  font-size: 1.5rem;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.applications-summary__label {
+  color: var(--color-text-muted);
+  font-size: 0.8125rem;
+  line-height: 1.25rem;
+}

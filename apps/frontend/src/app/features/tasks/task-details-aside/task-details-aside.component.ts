@@ -1,9 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
-import {
-  formatTaskBudget,
-  formatTaskDate,
-  TaskViewData,
-} from '@freelance-platform/shared-types';
+import { TaskViewData } from '@freelance-platform/shared-types';
+import { formatTaskBudget, formatTaskDate } from '../../../format';
 
 @Component({
   selector: 'app-task-details-aside',
