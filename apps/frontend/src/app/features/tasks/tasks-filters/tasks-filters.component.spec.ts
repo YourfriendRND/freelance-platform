@@ -1,13 +1,17 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { createMockTaskCategoryResponse } from '@freelance-platform/shared-mock';
-import { FindTasksQuery, TaskSort, TaskStatus } from '@freelance-platform/shared-types';
+import { TaskSort, TaskStatus } from '@freelance-platform/shared-types';
 import { TasksFiltersComponent } from './tasks-filters.component';
-import { toFindTasksQuery, TASKS_ALL_FILTER_VALUE } from './tasks-filters.model';
+import {
+  TASKS_ALL_FILTER_VALUE,
+  TasksFiltersSelection,
+  toFindTasksQuery,
+} from './tasks-filters.model';
 import { TASKS_TEST_BUDGET_MAX, TASKS_TEST_BUDGET_MIN } from '../tasks-test.constants';
 
 describe('TasksFiltersComponent testing', () => {
   let fixture: ComponentFixture<TasksFiltersComponent>;
-  let emitted: FindTasksQuery[];
+  let emitted: TasksFiltersSelection[];
 
   const category = createMockTaskCategoryResponse();
 
@@ -35,6 +39,13 @@ describe('TasksFiltersComponent testing', () => {
 
   it('should not include draft status', () => {
     expect(root().textContent).not.toContain('Черновик');
+  });
+
+  it('should include draft status for my tasks', () => {
+    fixture.componentRef.setInput('includeDraft', true);
+    fixture.detectChanges();
+
+    expect(root().textContent).toContain('Черновик');
   });
 
   it('should map numeric budget values from number inputs', () => {

@@ -1,11 +1,10 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import {
-  formatTaskBudget,
-  formatTaskDate,
   TaskExecutionType,
   TaskStatus,
   TaskViewData,
 } from '@freelance-platform/shared-types';
+import { formatTaskBudget, formatTaskDate } from '../../../format';
 import { TaskDetailsAsideComponent } from './task-details-aside.component';
 
 describe('TaskDetailsAsideComponent testing', () => {

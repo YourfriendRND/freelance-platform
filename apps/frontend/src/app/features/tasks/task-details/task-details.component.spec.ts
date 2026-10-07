@@ -1,9 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import {
-  formatTaskDate,
-  TaskStatus,
-  TaskViewData,
-} from '@freelance-platform/shared-types';
+import { TaskStatus, TaskViewData } from '@freelance-platform/shared-types';
+import { formatTaskDate } from '../../../format';
 import {
   createMockTaskViewData,
   mockAuthorUserResponse,

@@ -2,11 +2,12 @@ import { signal } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ActivatedRoute, convertToParamMap, provideRouter, Router } from '@angular/router';
 import { of } from 'rxjs';
-import { AuthStore, TaskStore } from '@freelance-platform/client-state';
+import { AuthStore, TaskApplicationStore, TaskStore } from '@freelance-platform/client-state';
 import {
   createMockTaskCategoryResponse,
   createMockTaskResponse,
   mockClientUserResponse,
+  mockFreelancerUserResponse,
 } from '@freelance-platform/shared-mock';
 import {
   TaskCategoryResponse,
@@ -73,6 +74,17 @@ describe('TaskDetailsPageComponent testing', () => {
         },
         { provide: AuthStore, useValue: authStore },
         { provide: TaskStore, useValue: taskStore },
+        {
+          provide: TaskApplicationStore,
+          useValue: {
+            load: vi.fn(),
+            create: vi.fn(),
+            hasApplied: () => false,
+            clearSubmitError: vi.fn(),
+            isSubmitting: signal(false),
+            submitError: signal<string | null>(null),
+          },
+        },
       ],
     }).compileComponents();
 
@@ -113,6 +125,35 @@ describe('TaskDetailsPageComponent testing', () => {
     expect(root().textContent).toContain('Программирование и IT');
     expect(root().textContent).toContain('Описание');
     expect(root().querySelector('app-task-details-client')).toBeNull();
+    expect(root().textContent).toContain('Откликнуться на заявку');
+  });
+
+  it('should hide the apply button for a client', () => {
+    authStore.isAuthenticated.set(true);
+    authStore.user.set(user);
+    categories.set([category]);
+    selectedTask.set(task);
+    fixture.detectChanges();
+
+    expect(root().textContent).not.toContain('Откликнуться на заявку');
+  });
+
+  it('should open the apply form for a freelancer', () => {
+    authStore.isAuthenticated.set(true);
+    authStore.user.set(mockFreelancerUserResponse);
+    categories.set([category]);
+    selectedTask.set(task);
+    fixture.detectChanges();
+
+    const applyButton = Array.from(root().querySelectorAll('button')).find((button) =>
+      button.textContent?.includes('Откликнуться на заявку'),
+    ) as HTMLButtonElement;
+
+    applyButton.click();
+    fixture.detectChanges();
+
+    expect(root().textContent).toContain('Откликнуться на эту задачу');
+    expect(root().querySelector('app-task-details-apply-form')).not.toBeNull();
   });
 
   it('should fall back to a default category title', () => {
