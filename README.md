@@ -27,7 +27,8 @@ apps/
   frontend/
     src/
       app/
-        features/       # feature-first: welcome, login, register, tasks, analytics, profile
+        features/       # feature-first
+        format/         # вспомогательные функции форматирования 
         app.routes.ts   # lazy load feature-маршрутов
   frontend-e2e/         # e2e frontend (Playwright)
 libs/
