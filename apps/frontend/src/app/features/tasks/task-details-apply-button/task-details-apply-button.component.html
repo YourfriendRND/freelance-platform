@@ -1,0 +1,44 @@
+@if (isVisible()) {
+  @if (hasApplied()) {
+    <article class="task-details-apply-button__status">
+      <span class="task-details-apply-button__badge" aria-hidden="true">
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="22"
+          height="22"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <circle cx="12" cy="12" r="10"></circle>
+          <path d="m9 12 2 2 4-4"></path>
+        </svg>
+      </span>
+      <p class="task-details-apply-button__title">Отклик отправлен</p>
+      <p class="task-details-apply-button__hint">Вы уже откликались на эту задачу</p>
+    </article>
+  } @else {
+    <ui-button type="button" [fullWidth]="true" (clicked)="onApply()">
+      <span class="task-details-apply-button__icon" aria-hidden="true">
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="16"
+          height="16"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <path d="M14.536 21.686a.5.5 0 0 0 .937-.024l6.5-19a.496.496 0 0 0-.635-.635l-19 6.5a.5.5 0 0 0-.024.937l7.93 3.18a2 2 0 0 1 1.112 1.11z"></path>
+          <path d="m21.854 2.147-10.94 10.939"></path>
+        </svg>
+      </span>
+      Откликнуться на заявку
+    </ui-button>
+  }
+}

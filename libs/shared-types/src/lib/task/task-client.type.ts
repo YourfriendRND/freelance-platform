@@ -26,6 +26,7 @@ export type TaskResponse = {
   categoryId: string;
   createdAt: string;
   updatedAt: string;
+  // TODO: бэкенд должен отдавать признак hasApplied вместе с задачей, чтобы не загружать список откликов и не сопоставлять его на клиенте
 };
 
 export type TaskListResponse = PaginationResult<TaskResponse>;

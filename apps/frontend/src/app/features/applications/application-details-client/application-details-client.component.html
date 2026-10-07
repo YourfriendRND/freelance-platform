@@ -1,0 +1,13 @@
+<article class="application-details-client">
+  <h2>Заказчик</h2>
+
+  <p class="application-details-client__profile">
+    <span class="application-details-client__avatar" aria-hidden="true">{{ initial() }}</span>
+    <span>
+      <span class="application-details-client__name">{{ client().name }}</span>
+      <span class="application-details-client__rating">{{ client().ratingLabel }}</span>
+    </span>
+  </p>
+
+  <ui-button type="button" [disabled]="true">Написать клиенту</ui-button>
+</article>

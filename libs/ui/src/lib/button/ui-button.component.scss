@@ -27,6 +27,12 @@
     width: 100%;
   }
 
+  &--compact {
+    min-height: 2.5rem;
+    padding: 0.5rem 1.125rem;
+    font-size: 0.875rem;
+  }
+
   &--primary {
     background: var(--color-primary);
     color: var(--color-on-primary);

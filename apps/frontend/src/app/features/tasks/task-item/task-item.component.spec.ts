@@ -1,11 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
-import {
-  formatTaskBudget,
-  formatTaskDate,
-  TaskStatus,
-  TaskViewData,
-} from '@freelance-platform/shared-types';
+import { TaskStatus, TaskViewData } from '@freelance-platform/shared-types';
+import { formatTaskBudget, formatTaskDate } from '../../../format';
 import {
   mockAuthorUserResponse,
   mockTaskViewData,

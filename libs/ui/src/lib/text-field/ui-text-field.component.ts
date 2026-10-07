@@ -32,6 +32,7 @@ export class UiTextFieldComponent implements ControlValueAccessor {
   readonly inputId = input.required<string>();
   readonly multiline = input(false);
   readonly required = input(false);
+  readonly maxLength = input<number | undefined>(undefined);
 
   protected readonly value = signal('');
   protected readonly isDisabled = signal(false);

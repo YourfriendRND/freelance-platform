@@ -2,6 +2,7 @@ import { signal } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { AuthStore } from '@freelance-platform/client-state';
+import { mockClientUserResponse, mockFreelancerUserResponse } from '@freelance-platform/shared-mock';
 import { UserResponse } from '@freelance-platform/shared-types';
 import { DashboardSidebarComponent } from './dashboard-sidebar.component';
 
@@ -45,6 +46,41 @@ describe('DashboardSidebarComponent testing', () => {
     expect(root().textContent).toContain('Аналитика');
     expect(root().textContent).toContain('Профиль');
     expect(root().textContent).toContain('Задачи');
+    expect(root().textContent).not.toContain('Мои отклики');
+    expect(root().textContent).not.toContain('Мои задачи');
+  });
+
+  it('should show my applications for a freelancer', () => {
+    authStore.isAuthenticated.set(true);
+    authStore.user.set(mockFreelancerUserResponse);
+    fixture.detectChanges();
+
+    const link = Array.from(root().querySelectorAll('a')).find((item) =>
+      item.textContent?.includes('Мои отклики'),
+    );
+
+    expect(link?.getAttribute('href')).toBe('/applications');
+    expect(root().textContent).not.toContain('Мои задачи');
+  });
+
+  it('should hide my applications for a client', () => {
+    authStore.isAuthenticated.set(true);
+    authStore.user.set(mockClientUserResponse);
+    fixture.detectChanges();
+
+    expect(root().textContent).not.toContain('Мои отклики');
+  });
+
+  it('should show my tasks for a client', () => {
+    authStore.isAuthenticated.set(true);
+    authStore.user.set(mockClientUserResponse);
+    fixture.detectChanges();
+
+    const link = Array.from(root().querySelectorAll('a')).find((item) =>
+      item.textContent?.includes('Мои задачи'),
+    );
+
+    expect(link?.getAttribute('href')).toBe('/my-tasks');
   });
 
   it('should mark the active item', () => {

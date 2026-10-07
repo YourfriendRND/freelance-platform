@@ -1,13 +1,12 @@
 import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import {
-  formatTaskBudget,
-  formatTaskDate,
   TASK_EXECUTION_TYPE_LABEL,
   TASK_STATUS_LABEL,
   TaskViewData,
   USER_ROLE_LABEL,
 } from '@freelance-platform/shared-types';
+import { formatTaskBudget, formatTaskDate, formatUserName } from '../../../format';
 
 @Component({
   selector: 'app-task-item',
@@ -44,11 +43,7 @@ export class TaskItemComponent {
   protected readonly authorName = computed(() => {
     const author = this.author();
 
-    if (!author) {
-      return '';
-    }
-
-    return [author.firstName, author.lastName].filter(Boolean).join(' ');
+    return author ? formatUserName(author) : '';
   });
 
   protected readonly authorRoleLabel = computed(() => {

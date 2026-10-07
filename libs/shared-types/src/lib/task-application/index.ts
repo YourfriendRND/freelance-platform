@@ -6,3 +6,5 @@ export * from './task-application-with-task-customer';
 export * from './task-application-with-task-customer.db-row';
 export * from './create-task-application.record';
 export * from './update-task-application.record';
+export * from './task-application-client.type';
+export * from './task-application-state.type';

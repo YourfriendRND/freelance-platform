@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { AuthStore } from '@freelance-platform/client-state';
+import { formatUserName } from '../../../format';
 import { UiButtonComponent, UiDashboardWrapperComponent } from '@freelance-platform/ui';
 import { AppHeaderComponent } from '../../../app-header/app-header.component';
 import { DashboardSidebarComponent } from '../../../dashboard/dashboard-sidebar/dashboard-sidebar.component';
@@ -26,13 +27,7 @@ export class AnalyticsPageComponent {
   protected readonly userName = computed(() => {
     const user = this.authStore.user();
 
-    if (!user) {
-      return '';
-    }
-
-    const { firstName, lastName } = user;
-
-    return [firstName, lastName].filter(Boolean).join(' ');
+    return user ? formatUserName(user) : '';
   });
 
   protected readonly greeting = computed(() => {

@@ -1,0 +1,16 @@
+<article class="application-details-overview">
+  <h2>Обзор задачи</h2>
+
+  <p class="application-details-overview__row">
+    <span>Срок</span>
+    <strong>{{ task().deadlineLabel }}</strong>
+  </p>
+  <p class="application-details-overview__row">
+    <span>Формат</span>
+    <strong>{{ executionLabel() }}</strong>
+  </p>
+
+  <a class="application-details-overview__link" [routerLink]="['/tasks', task().id]">
+    К исходной задаче
+  </a>
+</article>

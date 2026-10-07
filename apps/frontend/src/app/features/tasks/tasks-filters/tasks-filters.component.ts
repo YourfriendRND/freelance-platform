@@ -8,17 +8,23 @@ import {
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { NonNullableFormBuilder, ReactiveFormsModule } from '@angular/forms';
-import { FindTasksQuery, TaskCategoryResponse, TaskSort } from '@freelance-platform/shared-types';
+import {
+  TASK_STATUS_LABEL,
+  TaskCategoryResponse,
+  TaskSort,
+  TaskStatus,
+} from '@freelance-platform/shared-types';
 import { UiSelectComponent, UiSelectOption } from '@freelance-platform/ui';
 import { debounceTime, filter, map } from 'rxjs';
 import {
-  isSameTasksFilterQuery,
+  isSameTasksFiltersSelection,
   TASKS_ALL_CATEGORIES_OPTION,
   TASKS_ALL_FILTER_VALUE,
   TASKS_SORT_OPTIONS,
   TASKS_STATUS_OPTIONS,
   TasksFiltersFormValue,
-  toFindTasksQuery,
+  TasksFiltersSelection,
+  toTasksFiltersSelection,
 } from './tasks-filters.model';
 
 @Component({
@@ -34,11 +40,22 @@ export class TasksFiltersComponent {
   readonly categories = input<readonly TaskCategoryResponse[]>([]);
   readonly shownCount = input(0);
   readonly totalCount = input(0);
+  readonly includeDraft = input(false);
 
-  readonly filtersChange = output<FindTasksQuery>();
+  readonly filtersChange = output<TasksFiltersSelection>();
 
-  protected readonly statusOptions = TASKS_STATUS_OPTIONS;
   protected readonly sortOptions = TASKS_SORT_OPTIONS;
+
+  protected readonly statusOptions = computed<readonly UiSelectOption[]>(() => {
+    if (!this.includeDraft()) {
+      return TASKS_STATUS_OPTIONS;
+    }
+
+    return [
+      ...TASKS_STATUS_OPTIONS,
+      { value: TaskStatus.Draft, label: TASK_STATUS_LABEL[TaskStatus.Draft] },
+    ];
+  });
 
   protected readonly categoryOptions = computed<readonly UiSelectOption[]>(
     () => [
@@ -62,13 +79,13 @@ export class TasksFiltersComponent {
   });
 
   constructor() {
-    let lastQuery = toFindTasksQuery(this.form.getRawValue());
+    let lastQuery = toTasksFiltersSelection(this.form.getRawValue());
 
     this.form.valueChanges
       .pipe(
         debounceTime(300),
-        map(() => toFindTasksQuery(this.form.getRawValue())),
-        filter((query) => !isSameTasksFilterQuery(query, lastQuery)),
+        map(() => toTasksFiltersSelection(this.form.getRawValue())),
+        filter((query) => !isSameTasksFiltersSelection(query, lastQuery)),
         takeUntilDestroyed(),
       )
       .subscribe((query) => {

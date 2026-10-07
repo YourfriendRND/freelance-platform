@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
 import { USER_ROLE_LABEL, UserResponse } from '@freelance-platform/shared-types';
+import { formatUserName } from '../../../format';
 
 @Component({
   selector: 'app-task-details-client',
@@ -10,11 +11,7 @@ import { USER_ROLE_LABEL, UserResponse } from '@freelance-platform/shared-types'
 export class TaskDetailsClientComponent {
   readonly author = input.required<UserResponse>();
 
-  protected readonly authorName = computed(() => {
-    const { firstName, lastName } = this.author();
-
-    return [firstName, lastName].filter(Boolean).join(' ');
-  });
+  protected readonly authorName = computed(() => formatUserName(this.author()));
 
   protected readonly authorRoleLabel = computed(
     () => USER_ROLE_LABEL[this.author().role],

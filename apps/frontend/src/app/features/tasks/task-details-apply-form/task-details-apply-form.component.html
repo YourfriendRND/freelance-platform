@@ -1,0 +1,96 @@
+<ui-modal ariaLabel="Отклик на задачу" (closed)="onClosed()">
+  <form
+    class="task-details-apply-form"
+    [formGroup]="form"
+    (ngSubmit)="onSubmit()"
+    novalidate
+  >
+    <header class="task-details-apply-form__header">
+      <p class="task-details-apply-form__eyebrow">Новый отклик</p>
+      <h2 class="task-details-apply-form__title">Откликнуться на эту задачу</h2>
+      <p class="task-details-apply-form__lead">
+        Представьте свой подход к задаче «{{ taskTitle() }}». Отклик виден только
+        заказчику.
+      </p>
+    </header>
+
+    <div class="task-details-apply-form__fields">
+      <div class="task-details-apply-form__row">
+        <ui-text-field
+          formControlName="proposedPrice"
+          inputId="task-apply-price"
+          type="number"
+          label="Ваша цена"
+          placeholder="2500"
+          [required]="true"
+          [hint]="budgetHint()"
+          [error]="fieldError('proposedPrice')"
+        />
+
+        <!-- TODO: отправлять срок выполнения, когда бэкенд начнёт его принимать -->
+        <ui-text-field
+          formControlName="timeline"
+          inputId="task-apply-timeline"
+          label="Срок выполнения"
+          placeholder="Например, 2 недели"
+          hint="Укажите реалистичный срок"
+        />
+      </div>
+
+      <div class="task-details-apply-form__message">
+        <ui-text-field
+          formControlName="message"
+          inputId="task-apply-message"
+          label="Сопроводительное письмо"
+          placeholder="Расскажите, как вы подойдёте к задаче, почему вы подходите и чего ожидать заказчику"
+          [multiline]="true"
+          [required]="true"
+          [maxLength]="messageMaxLength"
+          [error]="fieldError('message')"
+        />
+        <p class="task-details-apply-form__counter">{{ messageCounterLabel() }}</p>
+      </div>
+    </div>
+
+    @if (submitError(); as errorMessage) {
+      <p class="task-details-apply-form__submit-error" role="alert">{{ errorMessage }}</p>
+    }
+
+    <div class="task-details-apply-form__footer">
+      <p class="task-details-apply-form__footnote">
+        Заказчик получит это как новый отклик.
+      </p>
+
+      <div class="task-details-apply-form__actions">
+        <button
+          class="task-details-apply-form__cancel"
+          type="button"
+          (click)="onClosed()"
+        >
+          Отмена
+        </button>
+        <ui-button type="submit" [compact]="true" [disabled]="isSubmitting()">
+          <span class="task-details-apply-form__submit-icon" aria-hidden="true">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path
+                d="M14.536 21.686a.5.5 0 0 0 .937-.024l6.5-19a.496.496 0 0 0-.635-.635l-19 6.5a.5.5 0 0 0-.024.937l7.93 3.18a2 2 0 0 1 1.112 1.11z"
+              ></path>
+              <path d="m21.854 2.147-10.94 10.939"></path>
+            </svg>
+          </span>
+          {{ isSubmitting() ? 'Отправка...' : 'Отправить отклик' }}
+        </ui-button>
+      </div>
+    </div>
+  </form>
+</ui-modal>

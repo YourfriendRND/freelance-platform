@@ -1,0 +1,41 @@
+<ui-dashboard-wrapper>
+  <app-dashboard-sidebar
+    uiDashboardSidebar
+    activeItem="applications"
+  />
+
+  <app-header
+    uiDashboardHeader
+    [showBrand]="false"
+    [embedded]="true"
+  />
+
+  <app-applications-page-container>
+    <div class="application-details-page__content">
+      <a routerLink="/applications" class="application-details-page__back">← Назад к откликам</a>
+
+      @switch (view()) {
+        @case (ApplicationsPageView.Loading) {
+          <p class="application-details-page__status">Загрузка</p>
+        }
+        @case (ApplicationsPageView.Error) {
+          <p class="application-details-page__status">
+            {{ errorMessage() ?? 'Не удалось загрузить отклик' }}
+          </p>
+        }
+        @case (ApplicationsPageView.Content) {
+          @if (application(); as details) {
+            <div class="application-details-page__layout">
+              <app-application-details-card [application]="details" />
+
+              <aside class="application-details-page__aside">
+                <app-application-details-client [client]="details.client" />
+                <app-application-details-overview [task]="details.task" />
+              </aside>
+            </div>
+          }
+        }
+      }
+    </div>
+  </app-applications-page-container>
+</ui-dashboard-wrapper>

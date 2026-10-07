@@ -1,0 +1,64 @@
+<ul class="applications-summary">
+  <li class="applications-summary__card">
+    <span class="applications-summary__icon" aria-hidden="true">
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        width="18"
+        height="18"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+      >
+        <path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"></path>
+        <path d="M14 2v4a2 2 0 0 0 2 2h4"></path>
+      </svg>
+    </span>
+    <span class="applications-summary__value">{{ totalCount() }}</span>
+    <span class="applications-summary__label">Всего</span>
+  </li>
+
+  <li class="applications-summary__card">
+    <span class="applications-summary__icon applications-summary__icon--pending" aria-hidden="true">
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        width="18"
+        height="18"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+      >
+        <circle cx="12" cy="12" r="10"></circle>
+        <path d="M12 6v6l4 2"></path>
+      </svg>
+    </span>
+    <span class="applications-summary__value">{{ pendingCount() }}</span>
+    <span class="applications-summary__label">Ждут ответа</span>
+  </li>
+
+  <li class="applications-summary__card">
+    <span class="applications-summary__icon applications-summary__icon--accepted" aria-hidden="true">
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        width="18"
+        height="18"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+      >
+        <circle cx="12" cy="12" r="10"></circle>
+        <path d="m9 12 2 2 4-4"></path>
+      </svg>
+    </span>
+    <span class="applications-summary__value">{{ acceptedCount() }}</span>
+    <span class="applications-summary__label">Принято</span>
+  </li>
+</ul>
