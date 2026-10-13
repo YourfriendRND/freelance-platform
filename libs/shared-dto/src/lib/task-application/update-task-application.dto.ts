@@ -1,8 +1,10 @@
 import {
   IsEnum,
   IsInt,
+  IsNotEmpty,
   IsOptional,
   IsString,
+  MaxLength,
   Min,
 } from 'class-validator';
 import { ApiPropertyOptional } from '@nestjs/swagger';
@@ -26,6 +28,16 @@ export class UpdateTaskApplicationDto {
   @IsInt()
   @Min(1)
   proposedPrice?: number;
+
+  @ApiPropertyOptional({
+    description: 'Срок выполнения текстом',
+    example: '2 недели',
+    maxLength: 100,
+  })
+  @IsOptional()
+  @IsString()
+  @MaxLength(100)
+  timeline?: string;
 
   @ApiPropertyOptional({
     description: 'Статус отклика (для заказчика: accept или decline)',

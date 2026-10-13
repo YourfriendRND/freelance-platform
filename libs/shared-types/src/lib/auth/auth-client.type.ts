@@ -20,4 +20,6 @@ export type UserResponse = {
   lastName?: string;
   role: UserRole;
   createdAt: string;
+  rating: number;
+  reviewsCount: number;
 };

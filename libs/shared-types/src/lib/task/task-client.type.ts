@@ -1,3 +1,4 @@
+import { UserResponse } from '../auth/auth-client.type';
 import { PaginationResult } from '../common/pagination.type';
 import { TaskExecutionType } from './task-execution-type';
 import { TaskStatus } from './task-status';
@@ -26,7 +27,10 @@ export type TaskResponse = {
   categoryId: string;
   createdAt: string;
   updatedAt: string;
-  // TODO: бэкенд должен отдавать признак hasApplied вместе с задачей, чтобы не загружать список откликов и не сопоставлять его на клиенте
+  applicationsCount: number;
+  viewsCount: number;
+  author: UserResponse;
+  hasApplied?: boolean;
 };
 
 export type TaskListResponse = PaginationResult<TaskResponse>;

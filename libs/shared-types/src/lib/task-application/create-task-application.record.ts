@@ -5,5 +5,6 @@ export interface CreateTaskApplicationRecord {
   performerId: string;
   message: string;
   proposedPrice?: number | null;
+  timeline?: string | null;
   status?: TaskApplicationStatus;
 }

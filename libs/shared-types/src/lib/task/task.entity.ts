@@ -1,4 +1,6 @@
 import { Entity } from '../abstract';
+import { UserEntity } from '../user/user.entity';
+import { UserRole } from '../user/user-role';
 import { ITask } from './task';
 import { TaskDbRow } from './task.db-row';
 import { TaskExecutionType } from './task-execution-type';
@@ -14,13 +16,17 @@ export class TaskEntity extends Entity<ITask> {
   deadline!: Date;
   customerId!: string;
   categoryId!: string;
+  hasApplied?: boolean;
+  applicationsCount?: number;
+  viewsCount!: number;
+  author?: UserEntity;
 
   constructor(props?: Partial<ITask>) {
     super(props);
   }
 
   static fromDb(row: Partial<TaskDbRow>): TaskEntity {
-    return new TaskEntity({
+    const task = new TaskEntity({
       ...(row.id !== undefined && { id: row.id }),
       ...(row.title !== undefined && { title: row.title }),
       ...(row.description !== undefined && { description: row.description }),
@@ -36,6 +42,36 @@ export class TaskEntity extends Entity<ITask> {
       ...(row.created_at !== undefined && { createdAt: row.created_at }),
       ...(row.updated_at !== undefined && { updatedAt: row.updated_at }),
     });
+
+    if (row.has_applied !== undefined) {
+      task.hasApplied = row.has_applied;
+    }
+
+    if (row.applications_count !== undefined) {
+      task.applicationsCount = Number(row.applications_count);
+    }
+
+    if (
+      row.author_id !== undefined &&
+      row.author_email !== undefined &&
+      row.author_first_name !== undefined &&
+      row.author_role !== undefined &&
+      row.author_created_at !== undefined
+    ) {
+      task.author = new UserEntity({
+        id: row.author_id,
+        email: row.author_email,
+        firstName: row.author_first_name,
+        ...(row.author_last_name != null && { lastName: row.author_last_name }),
+        role: row.author_role as UserRole,
+        createdAt: row.author_created_at,
+      });
+    }
+
+    // TODO: Добавить учёт просмотров задачи
+    task.viewsCount = 0;
+
+    return task;
   }
 
   toDb(): Partial<TaskDbRow> {

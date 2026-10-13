@@ -24,6 +24,7 @@ import {
 } from '@nestjs/swagger';
 import {
   CreateTaskDto,
+  FindMyTasksQueryDto,
   FindTasksQueryDto,
   UpdateTaskDto,
 } from '@freelance-platform/shared-dto';
@@ -35,7 +36,8 @@ import {
 import { AuthUserPayload } from '@freelance-platform/shared-types';
 import { fillRdo } from '../../common/fill-rdo';
 import { AuthCheck } from '../auth/decorators/auth-check.decorator';
-import { CurrentUser } from '../auth/decorators/current-user.decorator';
+import { CurrentUser, OptionalCurrentUser } from '../auth/decorators/current-user.decorator';
+import { OptionalAuthCheck } from '../auth/decorators/optional-auth-check.decorator';
 import { TaskService } from './task.service';
 
 @ApiTags('Задачи')
@@ -44,8 +46,11 @@ export class TaskController {
   constructor(private readonly taskService: TaskService) {}
 
   @Get()
+  @OptionalAuthCheck()
   @ApiOperation({
-    description: 'Получение списка задач',
+    summary: 'Список задач',
+    description:
+      'Публичный список задач без черновиков. В задаче есть автор, число откликов и viewsCount. Для авторизованного исполнителя есть hasApplied',
   })
   @ApiOkResponse({
     description: 'Страница списка задач',
@@ -59,15 +64,65 @@ export class TaskController {
       error: 'Bad Request',
     },
   })
-  async findAll(@Query() query: FindTasksQueryDto): Promise<TaskListRdo> {
-    const taskList = await this.taskService.findAll(query);
+  async findAll(
+    @Query() query: FindTasksQueryDto,
+    @OptionalCurrentUser() authUser?: AuthUserPayload,
+  ): Promise<TaskListRdo> {
+    const taskList = await this.taskService.findAll(query, authUser);
+
+    return fillRdo(TaskListRdo, taskList);
+  }
+
+  @Get('my')
+  @AuthCheck()
+  @ApiOperation({
+    summary: 'Мои задачи',
+    description:
+      'Список задач текущего заказчика, включая черновики. В задаче есть автор, число откликов и viewsCount. Поле hasApplied не возвращается',
+  })
+  @ApiOkResponse({
+    description: 'Страница списка задач заказчика',
+    type: TaskListRdo,
+  })
+  @ApiBadRequestResponse({
+    description: 'Некорректные параметры фильтрации',
+    example: {
+      statusCode: HttpStatus.BAD_REQUEST,
+      message: ['categoryId must be a UUID'],
+      error: 'Bad Request',
+    },
+  })
+  @ApiUnauthorizedResponse({
+    description: 'Сессия не найдена, cookie отсутствует или сессия просрочена',
+    example: {
+      statusCode: 401,
+      message: 'Пользователь не авторизован. Cookie не найден',
+      error: 'Unauthorized',
+    },
+  })
+  @ApiForbiddenResponse({
+    description: 'Смотреть свои задачи может только заказчик',
+    example: {
+      statusCode: 403,
+      message: 'Смотреть свои задачи может только заказчик',
+      error: 'Forbidden',
+    },
+  })
+  async findMine(
+    @Query() query: FindMyTasksQueryDto,
+    @CurrentUser() authUser: AuthUserPayload,
+  ): Promise<TaskListRdo> {
+    const taskList = await this.taskService.findAllByCustomer(query, authUser);
 
     return fillRdo(TaskListRdo, taskList);
   }
 
   @Get(':id')
+  @OptionalAuthCheck()
   @ApiOperation({
-    description: 'Получение задачи по id',
+    summary: 'Задача по id',
+    description:
+      'Получение задачи по id. В задаче есть автор, число откликов и viewsCount. Для авторизованного исполнителя есть hasApplied',
   })
   @ApiOkResponse({
     description: 'Данные задачи',
@@ -83,8 +138,9 @@ export class TaskController {
   })
   async findOne(
     @Param('id', ParseUUIDPipe) id: string,
+    @OptionalCurrentUser() authUser?: AuthUserPayload,
   ): Promise<TaskRdo> {
-    const task = await this.taskService.findOne(id);
+    const task = await this.taskService.findOne(id, authUser);
 
     return fillRdo(TaskRdo, task);
   }
@@ -93,7 +149,8 @@ export class TaskController {
   @HttpCode(HttpStatus.CREATED)
   @AuthCheck()
   @ApiOperation({
-    description: 'Создание новой задачи',
+    summary: 'Создание задачи',
+    description: 'Создание новой задачи. В ответе есть автор, число откликов и viewsCount',
   })
   @ApiBody({ type: CreateTaskDto })
   @ApiCreatedResponse({
@@ -144,7 +201,8 @@ export class TaskController {
   @Patch(':id')
   @AuthCheck()
   @ApiOperation({
-    description: 'Обновление задачи',
+    summary: 'Обновление задачи',
+    description: 'Обновление задачи. В ответе есть автор, число откликов и viewsCount',
   })
   @ApiBody({ type: UpdateTaskDto })
   @ApiOkResponse({

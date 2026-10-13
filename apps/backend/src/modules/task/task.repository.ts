@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import {
   CreateTaskRecord,
+  FindMyTasksQuery,
   FindTasksQuery,
   PAGINATION_DEFAULT_LIMIT,
   PAGINATION_DEFAULT_PAGE,
@@ -43,10 +44,23 @@ type TaskBudgetStatsRow = {
 };
 
 const TASK_SORT_ORDER: Record<TaskSort, string> = {
-  [TaskSort.Newest]: 'created_at DESC, id DESC',
-  [TaskSort.Oldest]: 'created_at ASC, id ASC',
-  [TaskSort.BudgetDesc]: 'budget_max DESC, created_at DESC, id DESC',
-  [TaskSort.BudgetAsc]: 'budget_min ASC, created_at DESC, id DESC',
+  [TaskSort.Newest]: 'tasks.created_at DESC, tasks.id DESC',
+  [TaskSort.Oldest]: 'tasks.created_at ASC, tasks.id ASC',
+  [TaskSort.BudgetDesc]: 'tasks.budget_max DESC, tasks.created_at DESC, tasks.id DESC',
+  [TaskSort.BudgetAsc]: 'tasks.budget_min ASC, tasks.created_at DESC, tasks.id DESC',
+};
+
+type TaskPageQuery = {
+  customerId?: string;
+  categoryId?: string;
+  status?: string;
+  budgetMin?: number;
+  budgetMax?: number;
+  sort?: TaskSort;
+  page?: number;
+  limit?: number;
+  limitToPublicStatuses: boolean;
+  performerId?: string;
 };
 
 @Injectable()
@@ -68,31 +82,59 @@ export class TaskRepository {
 
     const { rows } = await this.database.query<TaskDbRow>(
       `
-        INSERT INTO tasks (
-          title,
-          description,
-          status,
-          budget_min,
-          budget_max,
-          execution_type,
-          deadline,
-          customer_id,
-          category_id
+        WITH inserted AS (
+          INSERT INTO tasks (
+            title,
+            description,
+            status,
+            budget_min,
+            budget_max,
+            execution_type,
+            deadline,
+            customer_id,
+            category_id
+          )
+          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+          RETURNING
+            id,
+            title,
+            description,
+            status,
+            budget_min,
+            budget_max,
+            execution_type,
+            deadline,
+            customer_id,
+            category_id,
+            created_at,
+            updated_at
         )
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
-        RETURNING
-          id,
-          title,
-          description,
-          status,
-          budget_min,
-          budget_max,
-          execution_type,
-          deadline,
-          customer_id,
-          category_id,
-          created_at,
-          updated_at
+        SELECT
+          inserted.id AS id,
+          inserted.title AS title,
+          inserted.description AS description,
+          inserted.status AS status,
+          inserted.budget_min AS budget_min,
+          inserted.budget_max AS budget_max,
+          inserted.execution_type AS execution_type,
+          inserted.deadline AS deadline,
+          inserted.customer_id AS customer_id,
+          inserted.category_id AS category_id,
+          inserted.created_at AS created_at,
+          inserted.updated_at AS updated_at,
+          (
+            SELECT COUNT(*)
+            FROM task_applications
+            WHERE task_applications.task_id = inserted.id
+          ) AS applications_count,
+          u.id AS author_id,
+          u.email AS author_email,
+          u.first_name AS author_first_name,
+          u.last_name AS author_last_name,
+          u.role AS author_role,
+          u.created_at AS author_created_at
+        FROM inserted
+        INNER JOIN users AS u ON u.id = inserted.customer_id
       `,
       [
         title,
@@ -112,8 +154,31 @@ export class TaskRepository {
     return TaskEntity.fromDb(row);
   }
 
-  async findAll(query: FindTasksQuery): Promise<PaginationResult<TaskEntity>> {
+  async findAll(
+    query: FindTasksQuery,
+    performerId?: string,
+  ): Promise<PaginationResult<TaskEntity>> {
+    return this.findPage({
+      ...query,
+      limitToPublicStatuses: true,
+      ...(performerId !== undefined && { performerId }),
+    });
+  }
+
+  async findAllByCustomer(
+    customerId: string,
+    query: FindMyTasksQuery,
+  ): Promise<PaginationResult<TaskEntity>> {
+    return this.findPage({
+      customerId,
+      ...query,
+      limitToPublicStatuses: false,
+    });
+  }
+
+  private async findPage(query: TaskPageQuery): Promise<PaginationResult<TaskEntity>> {
     const {
+      customerId,
       categoryId,
       status,
       budgetMin,
@@ -121,9 +186,16 @@ export class TaskRepository {
       sort,
       page = PAGINATION_DEFAULT_PAGE,
       limit = PAGINATION_DEFAULT_LIMIT,
+      limitToPublicStatuses,
+      performerId,
     } = query;
     const conditions: string[] = [];
     const values: unknown[] = [];
+
+    if (customerId !== undefined) {
+      values.push(customerId);
+      conditions.push(`customer_id = $${values.length}`);
+    }
 
     if (categoryId !== undefined) {
       values.push(categoryId);
@@ -133,7 +205,7 @@ export class TaskRepository {
     if (status !== undefined) {
       values.push(status);
       conditions.push(`status = $${values.length}`);
-    } else {
+    } else if (limitToPublicStatuses) {
       const statusPlaceholders = PUBLIC_TASK_STATUSES.map((publicStatus) => {
         values.push(publicStatus);
 
@@ -158,7 +230,20 @@ export class TaskRepository {
       : '';
     const orderBy = TASK_SORT_ORDER[sort ?? TaskSort.Newest];
     const offset = (page - 1) * limit;
-    const selectValues = [...values, limit, offset];
+    const selectValues = [...values];
+    let hasAppliedSql = '';
+
+    if (performerId !== undefined) {
+      selectValues.push(performerId);
+      hasAppliedSql = `
+            tasks.id IN (
+              SELECT task_id
+              FROM task_applications
+              WHERE performer_id = $${selectValues.length}
+            ) AS has_applied`;
+    }
+
+    selectValues.push(limit, offset);
     const limitPlaceholder = `$${selectValues.length - 1}`;
     const offsetPlaceholder = `$${selectValues.length}`;
 
@@ -166,19 +251,31 @@ export class TaskRepository {
       this.database.query<TaskDbRow>(
         `
           SELECT
-            id,
-            title,
-            description,
-            status,
-            budget_min,
-            budget_max,
-            execution_type,
-            deadline,
-            customer_id,
-            category_id,
-            created_at,
-            updated_at
+            tasks.id AS id,
+            tasks.title AS title,
+            tasks.description AS description,
+            tasks.status AS status,
+            tasks.budget_min AS budget_min,
+            tasks.budget_max AS budget_max,
+            tasks.execution_type AS execution_type,
+            tasks.deadline AS deadline,
+            tasks.customer_id AS customer_id,
+            tasks.category_id AS category_id,
+            tasks.created_at AS created_at,
+            tasks.updated_at AS updated_at,
+            (
+              SELECT COUNT(*)
+              FROM task_applications
+              WHERE task_applications.task_id = tasks.id
+            ) AS applications_count,
+            u.id AS author_id,
+            u.email AS author_email,
+            u.first_name AS author_first_name,
+            u.last_name AS author_last_name,
+            u.role AS author_role,
+            u.created_at AS author_created_at${hasAppliedSql ? `,${hasAppliedSql}` : ''}
           FROM tasks
+          INNER JOIN users AS u ON u.id = tasks.customer_id
           ${whereClause}
           ORDER BY ${orderBy}
           LIMIT ${limitPlaceholder}
@@ -206,26 +303,51 @@ export class TaskRepository {
     };
   }
 
-  async findById(id: string): Promise<TaskEntity | null> {
+  async findById(id: string, performerId?: string): Promise<TaskEntity | null> {
+    const values: unknown[] = [id];
+    let hasAppliedSql = '';
+
+    if (performerId !== undefined) {
+      values.push(performerId);
+      hasAppliedSql = `
+          tasks.id IN (
+            SELECT task_id
+            FROM task_applications
+            WHERE performer_id = $${values.length}
+          ) AS has_applied`;
+    }
+
     const { rows } = await this.database.query<TaskDbRow>(
       `
         SELECT
-          id,
-          title,
-          description,
-          status,
-          budget_min,
-          budget_max,
-          execution_type,
-          deadline,
-          customer_id,
-          category_id,
-          created_at,
-          updated_at
+          tasks.id AS id,
+          tasks.title AS title,
+          tasks.description AS description,
+          tasks.status AS status,
+          tasks.budget_min AS budget_min,
+          tasks.budget_max AS budget_max,
+          tasks.execution_type AS execution_type,
+          tasks.deadline AS deadline,
+          tasks.customer_id AS customer_id,
+          tasks.category_id AS category_id,
+          tasks.created_at AS created_at,
+          tasks.updated_at AS updated_at,
+          (
+            SELECT COUNT(*)
+            FROM task_applications
+            WHERE task_applications.task_id = tasks.id
+          ) AS applications_count,
+          u.id AS author_id,
+          u.email AS author_email,
+          u.first_name AS author_first_name,
+          u.last_name AS author_last_name,
+          u.role AS author_role,
+          u.created_at AS author_created_at${hasAppliedSql ? `,${hasAppliedSql}` : ''}
         FROM tasks
-        WHERE id = $1
+        INNER JOIN users AS u ON u.id = tasks.customer_id
+        WHERE tasks.id = $1
       `,
-      [id],
+      values,
     );
 
     const [row] = rows;
@@ -261,22 +383,50 @@ export class TaskRepository {
 
     const { rows } = await this.database.query<TaskDbRow>(
       `
-        UPDATE tasks
-        SET ${assignments.join(', ')}, updated_at = now()
-        WHERE id = ${idPlaceholder}
-        RETURNING
-          id,
-          title,
-          description,
-          status,
-          budget_min,
-          budget_max,
-          execution_type,
-          deadline,
-          customer_id,
-          category_id,
-          created_at,
-          updated_at
+        WITH updated AS (
+          UPDATE tasks
+          SET ${assignments.join(', ')}, updated_at = now()
+          WHERE id = ${idPlaceholder}
+          RETURNING
+            id,
+            title,
+            description,
+            status,
+            budget_min,
+            budget_max,
+            execution_type,
+            deadline,
+            customer_id,
+            category_id,
+            created_at,
+            updated_at
+        )
+        SELECT
+          updated.id AS id,
+          updated.title AS title,
+          updated.description AS description,
+          updated.status AS status,
+          updated.budget_min AS budget_min,
+          updated.budget_max AS budget_max,
+          updated.execution_type AS execution_type,
+          updated.deadline AS deadline,
+          updated.customer_id AS customer_id,
+          updated.category_id AS category_id,
+          updated.created_at AS created_at,
+          updated.updated_at AS updated_at,
+          (
+            SELECT COUNT(*)
+            FROM task_applications
+            WHERE task_applications.task_id = updated.id
+          ) AS applications_count,
+          u.id AS author_id,
+          u.email AS author_email,
+          u.first_name AS author_first_name,
+          u.last_name AS author_last_name,
+          u.role AS author_role,
+          u.created_at AS author_created_at
+        FROM updated
+        INNER JOIN users AS u ON u.id = updated.customer_id
       `,
       values,
     );

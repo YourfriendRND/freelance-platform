@@ -3,6 +3,8 @@ import {
   CreateTaskApplicationRecord,
   TaskApplicationDbRow,
   TaskApplicationEntity,
+  TaskApplicationStats,
+  TaskApplicationStatsDbRow,
   TaskApplicationStatus,
   TaskApplicationWithTaskCustomer,
   TaskApplicationWithTaskCustomerDbRow,
@@ -24,30 +26,53 @@ export class TaskApplicationRepository {
       performerId,
       message,
       proposedPrice = null,
+      timeline = null,
       status = TaskApplicationStatus.Pending,
     } = record;
 
     try {
       const { rows } = await this.database.query<TaskApplicationDbRow>(
         `
-        INSERT INTO task_applications (
-            task_id,
-            performer_id,
-            message,
-            proposed_price,
-            status
-        ) VALUES ($1, $2, $3, $4, $5)
-        RETURNING
-            id,
-            task_id,
-            performer_id,
-            message,
-            proposed_price,
-            status,
-            created_at,
-            updated_at
+        WITH inserted AS (
+            INSERT INTO task_applications AS ta (
+                task_id,
+                performer_id,
+                message,
+                proposed_price,
+                timeline,
+                status
+            ) VALUES ($1, $2, $3, $4, $5, $6)
+            RETURNING
+                id,
+                task_id,
+                performer_id,
+                message,
+                proposed_price,
+                timeline,
+                status,
+                created_at,
+                updated_at
+        )
+        SELECT
+            inserted.id AS id,
+            inserted.task_id AS task_id,
+            inserted.performer_id AS performer_id,
+            inserted.message AS message,
+            inserted.proposed_price AS proposed_price,
+            inserted.timeline AS timeline,
+            inserted.status AS status,
+            inserted.created_at AS created_at,
+            inserted.updated_at AS updated_at,
+            u.id AS user_id,
+            u.email AS user_email,
+            u.first_name AS user_first_name,
+            u.last_name AS user_last_name,
+            u.role AS user_role,
+            u.created_at AS user_created_at
+        FROM inserted
+        INNER JOIN users AS u ON u.id = inserted.performer_id
         `,
-        [taskId, performerId, message, proposedPrice, status],
+        [taskId, performerId, message, proposedPrice, timeline, status],
       );
 
       const [row] = rows;
@@ -66,16 +91,24 @@ export class TaskApplicationRepository {
     const { rows } = await this.database.query<TaskApplicationDbRow>(
       `
         SELECT
-            id,
-            task_id,
-            performer_id,
-            message,
-            proposed_price,
-            status,
-            created_at,
-            updated_at
-        FROM task_applications
-        WHERE id = $1
+            ta.id AS id,
+            ta.task_id AS task_id,
+            ta.performer_id AS performer_id,
+            ta.message AS message,
+            ta.proposed_price AS proposed_price,
+            ta.timeline AS timeline,
+            ta.status AS status,
+            ta.created_at AS created_at,
+            ta.updated_at AS updated_at,
+            u.id AS user_id,
+            u.email AS user_email,
+            u.first_name AS user_first_name,
+            u.last_name AS user_last_name,
+            u.role AS user_role,
+            u.created_at AS user_created_at
+        FROM task_applications AS ta
+        INNER JOIN users AS u ON u.id = ta.performer_id
+        WHERE ta.id = $1
       `,
       [id],
     );
@@ -95,18 +128,26 @@ export class TaskApplicationRepository {
     const { rows } = await this.database.query<TaskApplicationWithTaskCustomerDbRow>(
       `
         SELECT
-            task_applications.id AS id,
-            task_applications.task_id AS task_id,
-            task_applications.performer_id AS performer_id,
-            task_applications.message AS message,
-            task_applications.proposed_price AS proposed_price,
-            task_applications.status AS status,
-            task_applications.created_at AS created_at,
-            task_applications.updated_at AS updated_at,
-            tasks.customer_id AS task_customer_id
-        FROM task_applications
-        INNER JOIN tasks ON task_applications.task_id = tasks.id
-        WHERE task_applications.id = $1
+            ta.id AS id,
+            ta.task_id AS task_id,
+            ta.performer_id AS performer_id,
+            ta.message AS message,
+            ta.proposed_price AS proposed_price,
+            ta.timeline AS timeline,
+            ta.status AS status,
+            ta.created_at AS created_at,
+            ta.updated_at AS updated_at,
+            tasks.customer_id AS task_customer_id,
+            u.id AS user_id,
+            u.email AS user_email,
+            u.first_name AS user_first_name,
+            u.last_name AS user_last_name,
+            u.role AS user_role,
+            u.created_at AS user_created_at
+        FROM task_applications AS ta
+        INNER JOIN tasks ON ta.task_id = tasks.id
+        INNER JOIN users AS u ON u.id = ta.performer_id
+        WHERE ta.id = $1
       `,
       [id],
     );
@@ -129,17 +170,25 @@ export class TaskApplicationRepository {
     const { rows } = await this.database.query<TaskApplicationDbRow>(
       `
         SELECT
-            id,
-            task_id,
-            performer_id,
-            message,
-            proposed_price,
-            status,
-            created_at,
-            updated_at
-        FROM task_applications
-        WHERE performer_id = $1
-        ORDER BY created_at DESC, id DESC
+            ta.id AS id,
+            ta.task_id AS task_id,
+            ta.performer_id AS performer_id,
+            ta.message AS message,
+            ta.proposed_price AS proposed_price,
+            ta.timeline AS timeline,
+            ta.status AS status,
+            ta.created_at AS created_at,
+            ta.updated_at AS updated_at,
+            u.id AS user_id,
+            u.email AS user_email,
+            u.first_name AS user_first_name,
+            u.last_name AS user_last_name,
+            u.role AS user_role,
+            u.created_at AS user_created_at
+        FROM task_applications AS ta
+        INNER JOIN users AS u ON u.id = ta.performer_id
+        WHERE ta.performer_id = $1
+        ORDER BY ta.created_at DESC, ta.id DESC
       `,
       [performerId],
     );
@@ -151,18 +200,26 @@ export class TaskApplicationRepository {
     const { rows } = await this.database.query<TaskApplicationDbRow>(
       `
         SELECT
-            task_applications.id AS id,
-            task_applications.task_id AS task_id,
-            task_applications.performer_id AS performer_id,
-            task_applications.message AS message,
-            task_applications.proposed_price AS proposed_price,
-            task_applications.status AS status,
-            task_applications.created_at AS created_at,
-            task_applications.updated_at AS updated_at
-        FROM task_applications
-        INNER JOIN tasks ON task_applications.task_id = tasks.id
+            ta.id AS id,
+            ta.task_id AS task_id,
+            ta.performer_id AS performer_id,
+            ta.message AS message,
+            ta.proposed_price AS proposed_price,
+            ta.timeline AS timeline,
+            ta.status AS status,
+            ta.created_at AS created_at,
+            ta.updated_at AS updated_at,
+            u.id AS user_id,
+            u.email AS user_email,
+            u.first_name AS user_first_name,
+            u.last_name AS user_last_name,
+            u.role AS user_role,
+            u.created_at AS user_created_at
+        FROM task_applications AS ta
+        INNER JOIN tasks ON ta.task_id = tasks.id
+        INNER JOIN users AS u ON u.id = ta.performer_id
         WHERE tasks.customer_id = $1
-        ORDER BY task_applications.created_at DESC, task_applications.id DESC
+        ORDER BY ta.created_at DESC, ta.id DESC
       `,
       [customerId],
     );
@@ -177,23 +234,76 @@ export class TaskApplicationRepository {
     const { rows } = await this.database.query<TaskApplicationDbRow>(
       `
         SELECT
-            task_applications.id AS id,
-            task_applications.task_id AS task_id,
-            task_applications.performer_id AS performer_id,
-            task_applications.message AS message,
-            task_applications.proposed_price AS proposed_price,
-            task_applications.status AS status,
-            task_applications.created_at AS created_at,
-            task_applications.updated_at AS updated_at
-        FROM task_applications
-        INNER JOIN tasks ON task_applications.task_id = tasks.id
-        WHERE tasks.customer_id = $1 AND task_applications.task_id = $2
-        ORDER BY task_applications.created_at DESC, task_applications.id DESC
+            ta.id AS id,
+            ta.task_id AS task_id,
+            ta.performer_id AS performer_id,
+            ta.message AS message,
+            ta.proposed_price AS proposed_price,
+            ta.timeline AS timeline,
+            ta.status AS status,
+            ta.created_at AS created_at,
+            ta.updated_at AS updated_at,
+            u.id AS user_id,
+            u.email AS user_email,
+            u.first_name AS user_first_name,
+            u.last_name AS user_last_name,
+            u.role AS user_role,
+            u.created_at AS user_created_at
+        FROM task_applications AS ta
+        INNER JOIN tasks ON ta.task_id = tasks.id
+        INNER JOIN users AS u ON u.id = ta.performer_id
+        WHERE tasks.customer_id = $1 AND ta.task_id = $2
+        ORDER BY ta.created_at DESC, ta.id DESC
       `,
       [customerId, taskId],
     );
 
     return rows.map((row: TaskApplicationDbRow) => TaskApplicationEntity.fromDb(row));
+  }
+
+  async countByPerformerId(performerId: string): Promise<TaskApplicationStats> {
+    const { rows } = await this.database.query<TaskApplicationStatsDbRow>(
+      `
+        SELECT
+            COUNT(*) AS total,
+            COUNT(*) FILTER (WHERE ta.status = $2) AS pending,
+            COUNT(*) FILTER (WHERE ta.status = $3) AS accepted
+        FROM task_applications AS ta
+        WHERE ta.performer_id = $1
+      `,
+      [performerId, TaskApplicationStatus.Pending, TaskApplicationStatus.Accept],
+    );
+
+    const [row] = rows;
+
+    return {
+      total: Number(row?.total ?? 0),
+      pending: Number(row?.pending ?? 0),
+      accepted: Number(row?.accepted ?? 0),
+    };
+  }
+
+  async countByCustomerId(customerId: string): Promise<TaskApplicationStats> {
+    const { rows } = await this.database.query<TaskApplicationStatsDbRow>(
+      `
+        SELECT
+            COUNT(*) AS total,
+            COUNT(*) FILTER (WHERE ta.status = $2) AS pending,
+            COUNT(*) FILTER (WHERE ta.status = $3) AS accepted
+        FROM task_applications AS ta
+        INNER JOIN tasks ON ta.task_id = tasks.id
+        WHERE tasks.customer_id = $1
+      `,
+      [customerId, TaskApplicationStatus.Pending, TaskApplicationStatus.Accept],
+    );
+
+    const [row] = rows;
+
+    return {
+      total: Number(row?.total ?? 0),
+      pending: Number(row?.pending ?? 0),
+      accepted: Number(row?.accepted ?? 0),
+    };
   }
 
   async customerOwnsTask(customerId: string, taskId: string): Promise<boolean> {
@@ -219,6 +329,7 @@ export class TaskApplicationRepository {
     const updateColumns = {
       message: 'message',
       proposedPrice: 'proposed_price',
+      timeline: 'timeline',
       status: 'status',
     } as const;
 
@@ -247,19 +358,40 @@ export class TaskApplicationRepository {
 
     const { rows } = await this.database.query<TaskApplicationDbRow>(
       `
-        UPDATE task_applications SET
-        ${assignments.join(', ')},
-        updated_at = now()
-        WHERE id = ${idPlaceholder}
-        RETURNING
-            id,
-            task_id,
-            performer_id,
-            message,
-            proposed_price,
-            status,
-            created_at,
-            updated_at
+        WITH updated AS (
+            UPDATE task_applications AS ta SET
+            ${assignments.join(', ')},
+            updated_at = now()
+            WHERE ta.id = ${idPlaceholder}
+            RETURNING
+                id,
+                task_id,
+                performer_id,
+                message,
+                proposed_price,
+                timeline,
+                status,
+                created_at,
+                updated_at
+        )
+        SELECT
+            updated.id AS id,
+            updated.task_id AS task_id,
+            updated.performer_id AS performer_id,
+            updated.message AS message,
+            updated.proposed_price AS proposed_price,
+            updated.timeline AS timeline,
+            updated.status AS status,
+            updated.created_at AS created_at,
+            updated.updated_at AS updated_at,
+            u.id AS user_id,
+            u.email AS user_email,
+            u.first_name AS user_first_name,
+            u.last_name AS user_last_name,
+            u.role AS user_role,
+            u.created_at AS user_created_at
+        FROM updated
+        INNER JOIN users AS u ON u.id = updated.performer_id
       `,
       values,
     );

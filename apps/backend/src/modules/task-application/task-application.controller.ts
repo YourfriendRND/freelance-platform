@@ -30,6 +30,7 @@ import {
 import {
   TaskApplicationListRdo,
   TaskApplicationRdo,
+  TaskApplicationStatsRdo,
 } from '@freelance-platform/shared-rdo';
 import { AuthUserPayload } from '@freelance-platform/shared-types';
 import { fillRdo } from '../../common/fill-rdo';
@@ -55,8 +56,9 @@ export class TaskApplicationController {
 
   @Get()
   @ApiOperation({
+    summary: 'Список откликов',
     description:
-      'Список откликов: исполнитель — свои отклики; заказчик — отклики на свои задачи (опционально taskId)',
+      'Исполнитель видит свои отклики, заказчик — отклики на свои задачи (опционально taskId)',
   })
   @ApiOkResponse({
     description: 'Список откликов',
@@ -87,8 +89,27 @@ export class TaskApplicationController {
     return fillRdo(TaskApplicationListRdo, { items });
   }
 
+  @Get('stats')
+  @ApiOperation({
+    summary: 'Статистика откликов',
+    description:
+      'Счетчики текущего пользователя: всего, на рассмотрении и принято. У исполнителя — свои отклики, у заказчика — отклики на его задачи. Не зависит от списка и taskId',
+  })
+  @ApiOkResponse({
+    description: 'Счетчики откликов пользователя',
+    type: TaskApplicationStatsRdo,
+  })
+  async getStats(
+    @CurrentUser() authUser: AuthUserPayload,
+  ): Promise<TaskApplicationStatsRdo> {
+    const stats = await this.taskApplicationService.getStats(authUser);
+
+    return fillRdo(TaskApplicationStatsRdo, stats);
+  }
+
   @Get(':id')
   @ApiOperation({
+    summary: 'Отклик по id',
     description: 'Получение отклика по id',
   })
   @ApiOkResponse({
@@ -123,6 +144,7 @@ export class TaskApplicationController {
   @Post()
   @HttpCode(HttpStatus.CREATED)
   @ApiOperation({
+    summary: 'Создание отклика',
     description: 'Создание отклика на задачу',
   })
   @ApiBody({ type: CreateTaskApplicationDto })
@@ -165,6 +187,7 @@ export class TaskApplicationController {
 
   @Patch(':id')
   @ApiOperation({
+    summary: 'Обновление отклика',
     description: 'Обновление отклика по id',
   })
   @ApiBody({ type: UpdateTaskApplicationDto })

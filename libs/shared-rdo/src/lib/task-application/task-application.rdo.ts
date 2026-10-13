@@ -1,6 +1,7 @@
-import { Expose } from 'class-transformer';
+import { Expose, Type } from 'class-transformer';
 import { ApiProperty } from '@nestjs/swagger';
 import { TaskApplicationStatus } from '@freelance-platform/shared-types';
+import { UserRdo } from '../user/user.rdo';
 
 export class TaskApplicationRdo {
   @Expose()
@@ -41,6 +42,14 @@ export class TaskApplicationRdo {
 
   @Expose()
   @ApiProperty({
+    description: 'Срок выполнения текстом',
+    example: '2 недели',
+    nullable: true,
+  })
+  timeline!: string | null;
+
+  @Expose()
+  @ApiProperty({
     description: 'Статус отклика',
     enum: TaskApplicationStatus,
     example: TaskApplicationStatus.Pending,
@@ -60,4 +69,12 @@ export class TaskApplicationRdo {
     example: '2026-09-14T12:00:00.000Z',
   })
   updatedAt!: Date;
+
+  @Expose()
+  @Type(() => UserRdo)
+  @ApiProperty({
+    description: 'Исполнитель, который откликнулся',
+    type: UserRdo,
+  })
+  user!: UserRdo;
 }

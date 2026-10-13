@@ -6,5 +6,6 @@ export interface ITaskApplication extends IEntity {
   performerId: string;
   proposedPrice: number | null;
   message: string;
+  timeline: string | null;
   status: TaskApplicationStatus;
 }
