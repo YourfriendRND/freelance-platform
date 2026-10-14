@@ -3,8 +3,9 @@ import {
   TaskListResponse,
   TaskResponse,
   TaskStatus,
+  UserRole,
 } from '@freelance-platform/shared-types';
-import { MOCK_USER_ID_CLIENT } from '../user/user-response.mock';
+import { MOCK_USER_CREATED_AT, MOCK_USER_EMAIL, MOCK_USER_ID_CLIENT } from '../user/user-response.mock';
 import { MOCK_TASK_CATEGORY_ID } from './task-category.mock';
 
 export const MOCK_TASK_ID = '5c8e1a97-0a01-4b62-8d11-7e9f0a1b2c01';
@@ -29,6 +30,18 @@ export function createMockTaskResponse(
     categoryId: MOCK_TASK_CATEGORY_ID,
     createdAt: MOCK_TASK_CREATED_AT,
     updatedAt: MOCK_TASK_UPDATED_AT,
+    applicationsCount: 0,
+    viewsCount: 0,
+    author: {
+      id: MOCK_USER_ID_CLIENT,
+      email: MOCK_USER_EMAIL,
+      firstName: 'Иван',
+      lastName: 'Петров',
+      role: UserRole.Client,
+      createdAt: MOCK_USER_CREATED_AT,
+      rating: 0,
+      reviewsCount: 0,
+    },
     ...overrides,
   };
 }

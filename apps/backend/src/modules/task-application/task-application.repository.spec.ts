@@ -1,4 +1,4 @@
-import { TaskApplicationStatus } from '@freelance-platform/shared-types';
+import { TaskApplicationStatus, UserEntity } from '@freelance-platform/shared-types';
 import { DatabaseClient } from '../../database/database.client';
 import { DuplicateTaskApplicationError } from './errors';
 import { TaskApplicationRepository } from './task-application.repository';
@@ -44,6 +44,7 @@ describe('TaskApplicationRepository testing', () => {
       applicationRow.performer_id,
       applicationRow.message,
       applicationRow.proposed_price,
+      null,
       TaskApplicationStatus.Pending,
     ]);
     expect(result.id).toBe(applicationRow.id);
@@ -51,6 +52,38 @@ describe('TaskApplicationRepository testing', () => {
     expect(result.performerId).toBe(applicationRow.performer_id);
     expect(result.proposedPrice).toBe(applicationRow.proposed_price);
     expect(result.status).toBe(TaskApplicationStatus.Pending);
+  });
+
+  it('should map the performer returned after create', async () => {
+    const userCreatedAt = new Date('2026-07-03T18:30:00.000Z');
+    database.query.mockResolvedValue({
+      rows: [{
+        ...applicationRow,
+        user_id: applicationRow.performer_id,
+        user_email: 'freelancer@example.com',
+        user_first_name: 'Иван',
+        user_last_name: null,
+        user_role: 'freelancer',
+        user_created_at: userCreatedAt,
+      }],
+    });
+
+    const result = await repository.create({
+      taskId: applicationRow.task_id,
+      performerId: applicationRow.performer_id,
+      message: applicationRow.message,
+      timeline: '2 недели',
+    });
+    const [sql, params] = database.query.mock.calls[0];
+
+    expect(sql).toContain('INNER JOIN users AS u ON u.id = inserted.performer_id');
+    expect(params).toContain('2 недели');
+    expect(result.user).toMatchObject({
+      id: applicationRow.performer_id,
+      email: 'freelancer@example.com',
+      rating: 0,
+      reviewsCount: 0,
+    });
   });
 
   it('should throw DuplicateTaskApplicationError on unique violation', async () => {
@@ -80,16 +113,38 @@ describe('TaskApplicationRepository testing', () => {
   });
 
   it('should return an application by id', async () => {
-    database.query.mockResolvedValue({ rows: [applicationRow] });
+    const userCreatedAt = new Date('2026-07-03T18:30:00.000Z');
+    database.query.mockResolvedValue({
+      rows: [{
+        ...applicationRow,
+        user_id: applicationRow.performer_id,
+        user_email: 'freelancer@example.com',
+        user_first_name: 'Иван',
+        user_last_name: null,
+        user_role: 'freelancer',
+        user_created_at: userCreatedAt,
+      }],
+    });
 
     const result = await repository.findById(applicationRow.id);
 
     const [sql, params] = database.query.mock.calls[0];
 
     expect(sql).toContain('FROM task_applications');
-    expect(sql).toContain('WHERE id = $1');
+    expect(sql).toContain('INNER JOIN users AS u ON u.id = ta.performer_id');
+    expect(sql).toContain('WHERE ta.id = $1');
     expect(params).toEqual([applicationRow.id]);
     expect(result?.id).toBe(applicationRow.id);
+    expect(result?.user).toBeInstanceOf(UserEntity);
+    expect(result?.user).toMatchObject({
+      id: applicationRow.performer_id,
+      email: 'freelancer@example.com',
+      firstName: 'Иван',
+      role: 'freelancer',
+      createdAt: userCreatedAt,
+      rating: 0,
+      reviewsCount: 0,
+    });
   });
 
   it('should return null when application by id is missing', async () => {
@@ -123,11 +178,41 @@ describe('TaskApplicationRepository testing', () => {
 
     const [sql, params] = database.query.mock.calls[0];
 
-    expect(sql).toContain('WHERE performer_id = $1');
-    expect(sql).toContain('ORDER BY created_at DESC, id DESC');
+    expect(sql).toContain('INNER JOIN users AS u ON u.id = ta.performer_id');
+    expect(sql).toContain('WHERE ta.performer_id = $1');
+    expect(sql).toContain('ORDER BY ta.created_at DESC, ta.id DESC');
     expect(params).toEqual([applicationRow.performer_id]);
     expect(result).toHaveLength(1);
     expect(result[0].performerId).toBe(applicationRow.performer_id);
+  });
+
+  it('should map the performer on listed applications', async () => {
+    const userCreatedAt = new Date('2026-07-03T18:30:00.000Z');
+    database.query.mockResolvedValue({
+      rows: [{
+        ...applicationRow,
+        user_id: applicationRow.performer_id,
+        user_email: 'freelancer@example.com',
+        user_first_name: 'Иван',
+        user_last_name: 'Петров',
+        user_role: 'freelancer',
+        user_created_at: userCreatedAt,
+      }],
+    });
+
+    const [application] = await repository.findAllByPerformerId(applicationRow.performer_id);
+
+    expect(application.user).toBeInstanceOf(UserEntity);
+    expect(application.user).toMatchObject({
+      id: applicationRow.performer_id,
+      email: 'freelancer@example.com',
+      firstName: 'Иван',
+      lastName: 'Петров',
+      role: 'freelancer',
+      createdAt: userCreatedAt,
+      rating: 0,
+      reviewsCount: 0,
+    });
   });
 
   it('should join tasks when listing by customer', async () => {
@@ -138,7 +223,7 @@ describe('TaskApplicationRepository testing', () => {
 
     const [sql, params] = database.query.mock.calls[0];
 
-    expect(sql).toContain('INNER JOIN tasks ON task_applications.task_id = tasks.id');
+    expect(sql).toContain('INNER JOIN tasks ON ta.task_id = tasks.id');
     expect(sql).toContain('WHERE tasks.customer_id = $1');
     expect(params).toEqual([customerId]);
   });
@@ -151,8 +236,49 @@ describe('TaskApplicationRepository testing', () => {
 
     const [sql, params] = database.query.mock.calls[0];
 
-    expect(sql).toContain('WHERE tasks.customer_id = $1 AND task_applications.task_id = $2');
+    expect(sql).toContain('WHERE tasks.customer_id = $1 AND ta.task_id = $2');
     expect(params).toEqual([customerId, applicationRow.task_id]);
+  });
+
+  it('should count performer applications by status', async () => {
+    database.query.mockResolvedValue({
+      rows: [{ total: '3', pending: '2', accepted: '1' }],
+    });
+
+    const result = await repository.countByPerformerId(applicationRow.performer_id);
+
+    const [sql, params] = database.query.mock.calls[0];
+
+    expect(sql).toContain('COUNT(*) FILTER (WHERE ta.status = $2) AS pending');
+    expect(sql).toContain('COUNT(*) FILTER (WHERE ta.status = $3) AS accepted');
+    expect(sql).toContain('WHERE ta.performer_id = $1');
+    expect(sql).not.toContain('INNER JOIN tasks');
+    expect(params).toEqual([
+      applicationRow.performer_id,
+      TaskApplicationStatus.Pending,
+      TaskApplicationStatus.Accept,
+    ]);
+    expect(result).toEqual({ total: 3, pending: 2, accepted: 1 });
+  });
+
+  it('should count customer applications by status', async () => {
+    database.query.mockResolvedValue({
+      rows: [{ total: '5', pending: '1', accepted: '4' }],
+    });
+    const customerId = 'c8ae551b-9c3f-4781-a99d-4c81de40ab91';
+
+    const result = await repository.countByCustomerId(customerId);
+
+    const [sql, params] = database.query.mock.calls[0];
+
+    expect(sql).toContain('INNER JOIN tasks ON ta.task_id = tasks.id');
+    expect(sql).toContain('WHERE tasks.customer_id = $1');
+    expect(params).toEqual([
+      customerId,
+      TaskApplicationStatus.Pending,
+      TaskApplicationStatus.Accept,
+    ]);
+    expect(result).toEqual({ total: 5, pending: 1, accepted: 4 });
   });
 
   it('should return true when customer owns the task', async () => {
@@ -192,11 +318,12 @@ describe('TaskApplicationRepository testing', () => {
 
     const [sql, params] = database.query.mock.calls[0];
 
-    expect(sql).toContain('UPDATE task_applications SET');
+    expect(sql).toContain('UPDATE task_applications AS ta SET');
+    expect(sql).toContain('INNER JOIN users AS u ON u.id = updated.performer_id');
     expect(sql).toContain('message = $1');
     expect(sql).toContain('status = $2');
     expect(sql).toContain('updated_at = now()');
-    expect(sql).toContain('WHERE id = $3');
+    expect(sql).toContain('WHERE ta.id = $3');
     expect(params).toEqual([
       'Новое сообщение',
       TaskApplicationStatus.Accept,
@@ -212,8 +339,8 @@ describe('TaskApplicationRepository testing', () => {
 
     const [sql, params] = database.query.mock.calls[0];
 
-    expect(sql).toContain('FROM task_applications');
-    expect(sql).toContain('WHERE id = $1');
+    expect(sql).toContain('INNER JOIN users AS u ON u.id = ta.performer_id');
+    expect(sql).toContain('WHERE ta.id = $1');
     expect(params).toEqual([applicationRow.id]);
     expect(result?.id).toBe(applicationRow.id);
   });

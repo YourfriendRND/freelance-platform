@@ -10,6 +10,16 @@ function constraintMessages(errors: ValidationError[]): string[] {
 }
 
 describe('UpdateTaskApplicationDto testing', () => {
+  it('should accept timeline', async () => {
+    const dto = Object.assign(new UpdateTaskApplicationDto(), {
+      timeline: '2 недели',
+    });
+
+    const errors = await validate(dto);
+
+    expect(errors).toHaveLength(0);
+  });
+
   it('should accept status accept', async () => {
     const dto = Object.assign(new UpdateTaskApplicationDto(), {
       status: TaskApplicationStatus.Accept,
