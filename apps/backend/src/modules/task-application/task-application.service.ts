@@ -13,6 +13,7 @@ import {
 import {
   AuthUserPayload,
   TaskApplicationEntity,
+  TaskApplicationStats,
   TaskApplicationStatus,
   TaskStatus,
   UpdateTaskApplicationRecord,
@@ -63,6 +64,16 @@ export class TaskApplicationService {
     return this.taskApplicationRepository.findAllByCustomerId(userId);
   }
 
+  async getStats(authUser: AuthUserPayload): Promise<TaskApplicationStats> {
+    const { user: { id: userId, role } } = authUser;
+
+    if (role === UserRole.Freelancer) {
+      return this.taskApplicationRepository.countByPerformerId(userId);
+    }
+
+    return this.taskApplicationRepository.countByCustomerId(userId);
+  }
+
   async findOne(id: string, authUser: AuthUserPayload): Promise<TaskApplicationEntity> {
     const { user: { id: userId, role } } = authUser;
     const found = await this.taskApplicationRepository.findByIdWithTaskCustomer(id);
@@ -88,7 +99,7 @@ export class TaskApplicationService {
     dto: CreateTaskApplicationDto,
     authUser: AuthUserPayload,
   ): Promise<TaskApplicationEntity> {
-    const { taskId, message, proposedPrice } = dto;
+    const { taskId, message, proposedPrice, timeline } = dto;
     const { user: { id: performerId, role } } = authUser;
 
     if (role !== UserRole.Freelancer) {
@@ -111,6 +122,7 @@ export class TaskApplicationService {
         performerId,
         message,
         ...(proposedPrice !== undefined && { proposedPrice }),
+        ...(timeline !== undefined && { timeline }),
       });
     } catch (error) {
       if (error instanceof DuplicateTaskApplicationError) {
@@ -156,7 +168,7 @@ export class TaskApplicationService {
     dto: UpdateTaskApplicationDto,
     performerId: string,
   ): UpdateTaskApplicationRecord {
-    const { message, proposedPrice, status } = dto;
+    const { message, proposedPrice, timeline, status } = dto;
 
     if (application.performerId !== performerId) {
       throw new ForbiddenException('Изменять отклик может только его автор');
@@ -170,13 +182,14 @@ export class TaskApplicationService {
       throw new ForbiddenException('Изменить можно только отклик на рассмотрении');
     }
 
-    if (message === undefined && proposedPrice === undefined) {
+    if (message === undefined && proposedPrice === undefined && timeline === undefined) {
       throw new BadRequestException('Не переданы данные для обновления');
     }
 
     return {
       ...(message !== undefined && { message }),
       ...(proposedPrice !== undefined && { proposedPrice }),
+      ...(timeline !== undefined && { timeline }),
     };
   }
 
@@ -185,13 +198,13 @@ export class TaskApplicationService {
     taskCustomerId: string,
     customerId: string,
   ): UpdateTaskApplicationRecord {
-    const { message, proposedPrice, status } = dto;
+    const { message, proposedPrice, timeline, status } = dto;
 
     if (taskCustomerId !== customerId) {
       throw new ForbiddenException('Изменять отклик может только владелец задачи');
     }
 
-    if (message !== undefined || proposedPrice !== undefined) {
+    if (message !== undefined || proposedPrice !== undefined || timeline !== undefined) {
       throw new ForbiddenException('Заказчик может изменить только статус отклика');
     }
 

@@ -23,6 +23,8 @@ describe('TaskApplicationService testing', () => {
     findAllByPerformerId: ReturnType<typeof vi.fn>;
     findAllByCustomerId: ReturnType<typeof vi.fn>;
     findAllByCustomerIdAndTaskId: ReturnType<typeof vi.fn>;
+    countByPerformerId: ReturnType<typeof vi.fn>;
+    countByCustomerId: ReturnType<typeof vi.fn>;
     customerOwnsTask: ReturnType<typeof vi.fn>;
     update: ReturnType<typeof vi.fn>;
   };
@@ -135,6 +137,8 @@ describe('TaskApplicationService testing', () => {
       findAllByPerformerId: vi.fn(),
       findAllByCustomerId: vi.fn(),
       findAllByCustomerIdAndTaskId: vi.fn(),
+      countByPerformerId: vi.fn(),
+      countByCustomerId: vi.fn(),
       customerOwnsTask: vi.fn(),
       update: vi.fn(),
     };
@@ -199,6 +203,28 @@ describe('TaskApplicationService testing', () => {
       `Задача с "${taskId}" не найдена`,
     );
     expect(taskApplicationRepository.findAllByCustomerIdAndTaskId).not.toHaveBeenCalled();
+  });
+
+  it('should count performer applications for freelancer', async () => {
+    const stats = { total: 3, pending: 2, accepted: 1 };
+    taskApplicationRepository.countByPerformerId.mockResolvedValue(stats);
+
+    const result = await service.getStats(freelancerAuthUser);
+
+    expect(result).toEqual(stats);
+    expect(taskApplicationRepository.countByPerformerId).toHaveBeenCalledWith(performerId);
+    expect(taskApplicationRepository.countByCustomerId).not.toHaveBeenCalled();
+  });
+
+  it('should count incoming applications for customer', async () => {
+    const stats = { total: 5, pending: 1, accepted: 4 };
+    taskApplicationRepository.countByCustomerId.mockResolvedValue(stats);
+
+    const result = await service.getStats(clientAuthUser);
+
+    expect(result).toEqual(stats);
+    expect(taskApplicationRepository.countByCustomerId).toHaveBeenCalledWith(customerId);
+    expect(taskApplicationRepository.countByPerformerId).not.toHaveBeenCalled();
   });
 
   it('should return an application by id for its performer', async () => {
@@ -300,6 +326,30 @@ describe('TaskApplicationService testing', () => {
     expect(result).toBe(updated);
     expect(taskApplicationRepository.update).toHaveBeenCalledWith(applicationId, {
       message: 'Обновлённое сообщение',
+    });
+  });
+
+  it('should update timeline for performer while pending', async () => {
+    const timeline = '2 недели';
+    const updated = new TaskApplicationEntity({
+      ...application,
+      timeline,
+    });
+    taskApplicationRepository.findByIdWithTaskCustomer.mockResolvedValue({
+      application,
+      taskCustomerId: customerId,
+    });
+    taskApplicationRepository.update.mockResolvedValue(updated);
+
+    const result = await service.update(
+      applicationId,
+      { timeline },
+      freelancerAuthUser,
+    );
+
+    expect(result).toBe(updated);
+    expect(taskApplicationRepository.update).toHaveBeenCalledWith(applicationId, {
+      timeline,
     });
   });
 
@@ -470,6 +520,18 @@ describe('TaskApplicationService testing', () => {
           otherClientAuthUser,
         ),
       ).rejects.toThrow('Изменять отклик может только владелец задачи');
+      expect(taskApplicationRepository.update).not.toHaveBeenCalled();
+    });
+
+    it('should throw ForbiddenException when client updates timeline', async () => {
+      taskApplicationRepository.findByIdWithTaskCustomer.mockResolvedValue({
+        application,
+        taskCustomerId: customerId,
+      });
+
+      await expect(
+        service.update(applicationId, { timeline: '3 дня' }, clientAuthUser),
+      ).rejects.toThrow('Заказчик может изменить только статус отклика');
       expect(taskApplicationRepository.update).not.toHaveBeenCalled();
     });
 

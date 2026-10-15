@@ -43,7 +43,9 @@ describe('TaskRepository findAll testing', () => {
     const [selectCall, countCall] = database.query.mock.calls;
 
     expect(selectCall[0]).toContain('status IN ($1, $2)');
-    expect(selectCall[0]).toContain('ORDER BY created_at DESC, id DESC');
+    expect(selectCall[0]).toContain('ORDER BY tasks.created_at DESC, tasks.id DESC');
+    expect(selectCall[0]).toContain('AS applications_count');
+    expect(selectCall[0]).toContain('INNER JOIN users AS u ON u.id = tasks.customer_id');
     expect(selectCall[0]).toContain('LIMIT $3');
     expect(selectCall[0]).toContain('OFFSET $4');
     expect(selectCall[1]).toEqual([
@@ -86,7 +88,7 @@ describe('TaskRepository findAll testing', () => {
     expect(sql).toContain('status = $2');
     expect(sql).toContain('budget_min >= $3');
     expect(sql).toContain('budget_max <= $4');
-    expect(sql).toContain('ORDER BY budget_min ASC, created_at DESC, id DESC');
+    expect(sql).toContain('ORDER BY tasks.budget_min ASC, tasks.created_at DESC, tasks.id DESC');
     expect(sql).toContain('LIMIT $5');
     expect(sql).toContain('OFFSET $6');
     expect(params).toEqual([
@@ -97,5 +99,109 @@ describe('TaskRepository findAll testing', () => {
       5,
       5,
     ]);
+  });
+
+  it('should add hasApplied for a performer and keep it false', async () => {
+    const performerId = '74412729-b4eb-4d88-b64b-a3b3446db2d5';
+    database.query
+      .mockReset()
+      .mockResolvedValueOnce({
+        rows: [{
+          ...taskRow,
+          has_applied: false,
+          applications_count: '2',
+          author_id: taskRow.customer_id,
+          author_email: 'client@example.com',
+          author_first_name: 'Иван',
+          author_last_name: null,
+          author_role: 'client',
+          author_created_at: new Date('2026-08-14T00:00:00.000Z'),
+        }],
+      })
+      .mockResolvedValueOnce({ rows: [{ total: '1' }] });
+
+    const result = await repository.findAll({}, performerId);
+    const [sql, params] = database.query.mock.calls[0];
+    const [task] = result.items;
+
+    expect(sql).toContain('tasks.id IN (');
+    expect(sql).toContain('WHERE performer_id = $3');
+    expect(sql).toContain('AS has_applied');
+    expect(sql).toContain('status IN ($1, $2)');
+    expect(params[2]).toBe(performerId);
+    expect(task.hasApplied).toBe(false);
+    expect(task.applicationsCount).toBe(2);
+    expect(task.viewsCount).toBe(0);
+    expect(task.author).toMatchObject({
+      id: taskRow.customer_id,
+      email: 'client@example.com',
+      firstName: 'Иван',
+      role: 'client',
+      rating: 0,
+      reviewsCount: 0,
+    });
+    expect(task.author?.lastName).toBeUndefined();
+  });
+
+  it('should omit hasApplied when performer id is not passed', async () => {
+    const result = await repository.findAll({});
+    const [sql] = database.query.mock.calls[0];
+
+    expect(sql).not.toContain('AS has_applied');
+    expect(result.items[0].hasApplied).toBeUndefined();
+    expect(result.items[0].viewsCount).toBe(0);
+  });
+
+  it('should list customer tasks including draft without hasApplied', async () => {
+    database.query
+      .mockReset()
+      .mockResolvedValueOnce({
+        rows: [{ ...taskRow, status: TaskStatus.Draft, applications_count: '0' }],
+      })
+      .mockResolvedValueOnce({ rows: [{ total: '1' }] });
+
+    const result = await repository.findAllByCustomer(taskRow.customer_id, {
+      status: TaskStatus.Draft,
+    });
+    const [sql, params] = database.query.mock.calls[0];
+
+    expect(sql).toContain('customer_id = $1');
+    expect(sql).toContain('status = $2');
+    expect(sql).not.toContain('status IN ($1, $2)');
+    expect(sql).not.toContain('AS has_applied');
+    expect(params[0]).toBe(taskRow.customer_id);
+    expect(params[1]).toBe(TaskStatus.Draft);
+    expect(result.items[0].status).toBe(TaskStatus.Draft);
+    expect(result.items[0].hasApplied).toBeUndefined();
+    expect(result.items[0].applicationsCount).toBe(0);
+    expect(result.items[0].viewsCount).toBe(0);
+  });
+
+  it('should add hasApplied when loading one task for a performer', async () => {
+    const performerId = '74412729-b4eb-4d88-b64b-a3b3446db2d5';
+    database.query.mockReset().mockResolvedValue({
+      rows: [{ ...taskRow, has_applied: true, applications_count: '1' }],
+    });
+
+    const result = await repository.findById(taskRow.id, performerId);
+    const [sql, params] = database.query.mock.calls[0];
+
+    expect(sql).toContain('AS has_applied');
+    expect(sql).toContain('WHERE tasks.id = $1');
+    expect(params).toEqual([taskRow.id, performerId]);
+    expect(result?.hasApplied).toBe(true);
+    expect(result?.applicationsCount).toBe(1);
+    expect(result?.viewsCount).toBe(0);
+  });
+
+  it('should omit hasApplied when loading one task without a performer', async () => {
+    database.query.mockReset().mockResolvedValue({ rows: [taskRow] });
+
+    const result = await repository.findById(taskRow.id);
+    const [sql, params] = database.query.mock.calls[0];
+
+    expect(sql).not.toContain('AS has_applied');
+    expect(params).toEqual([taskRow.id]);
+    expect(result?.hasApplied).toBeUndefined();
   });
 });

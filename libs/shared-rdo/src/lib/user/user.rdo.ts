@@ -45,4 +45,18 @@ export class UserRdo {
     example: '2026-07-03T18:30:00.000Z'
   })
   createdAt?: Date;
+
+  @Expose()
+  @ApiProperty({
+    description: 'Рейтинг пользователя',
+    example: 0,
+  })
+  rating?: number;
+
+  @Expose()
+  @ApiProperty({
+    description: 'Число отзывов',
+    example: 0,
+  })
+  reviewsCount?: number;
 }

@@ -21,7 +21,7 @@ import {
 } from '@freelance-platform/shared-types';
 import { IsGreaterThan } from './is-greater-than.decorator';
 
-export class FindTasksQueryDto implements FindTasksQuery {
+export class FindTasksQueryFieldsDto {
   @ApiPropertyOptional({
     description: 'Идентификатор категории задачи',
     example: 'b4252672-a116-41ee-b78c-d694b236db32',
@@ -29,15 +29,6 @@ export class FindTasksQueryDto implements FindTasksQuery {
   @IsOptional()
   @IsUUID()
   categoryId?: string;
-
-  @ApiPropertyOptional({
-    description: 'Статус задачи',
-    enum: PUBLIC_TASK_STATUSES,
-    example: TaskStatus.Open,
-  })
-  @IsOptional()
-  @IsIn(PUBLIC_TASK_STATUSES)
-  status?: PublicTaskStatus;
 
   @ApiPropertyOptional({
     description: 'Минимальный бюджет задачи',
@@ -96,4 +87,15 @@ export class FindTasksQueryDto implements FindTasksQuery {
   @Min(1)
   @Max(PAGINATION_MAX_LIMIT)
   limit: number = PAGINATION_DEFAULT_LIMIT;
+}
+
+export class FindTasksQueryDto extends FindTasksQueryFieldsDto implements FindTasksQuery {
+  @ApiPropertyOptional({
+    description: 'Статус задачи',
+    enum: PUBLIC_TASK_STATUSES,
+    example: TaskStatus.Open,
+  })
+  @IsOptional()
+  @IsIn(PUBLIC_TASK_STATUSES)
+  status?: PublicTaskStatus;
 }

@@ -11,6 +11,28 @@ describe('CreateTaskApplicationDto testing', () => {
     expect(errors).toHaveLength(0);
   });
 
+  it('should accept payload with timeline', async () => {
+    const dto = Object.assign(new CreateTaskApplicationDto(), {
+      ...validCreateTaskApplicationPayload,
+      timeline: '2 недели',
+    });
+
+    const errors = await validate(dto);
+
+    expect(errors).toHaveLength(0);
+  });
+
+  it('should reject timeline longer than 100 characters', async () => {
+    const dto = Object.assign(new CreateTaskApplicationDto(), {
+      ...validCreateTaskApplicationPayload,
+      timeline: 'а'.repeat(101),
+    });
+
+    const errors = await validate(dto);
+
+    expect(errors.length).toBeGreaterThan(0);
+  });
+
   it('should accept payload without proposedPrice', async () => {
     const dto = Object.assign(new CreateTaskApplicationDto(), {
       taskId: validCreateTaskApplicationPayload.taskId,

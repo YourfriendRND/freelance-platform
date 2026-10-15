@@ -1,9 +1,11 @@
+import { UserResponse } from '../auth/auth-client.type';
 import { TaskApplicationStatus } from './task-application-status';
 
 export type CreateTaskApplicationRequest = {
   taskId: string;
   message: string;
   proposedPrice?: number;
+  timeline?: string;
 };
 
 export type UpdateTaskApplicationRequest = {
@@ -16,13 +18,19 @@ export type TaskApplicationResponse = {
   performerId: string;
   proposedPrice: number | null;
   message: string;
+  timeline: string | null;
   status: TaskApplicationStatus;
   createdAt: string;
   updatedAt: string;
-  // TODO: бэкенд должен отдавать пользователя вместе с откликом, чтобы не запрашивать его отдельно
+  user: UserResponse;
 };
 
 export type TaskApplicationListResponse = {
   items: TaskApplicationResponse[];
-  // TODO: бэкенд должен отдавать статистику откликов конкретного пользователя, чтобы не считать её на клиенте по списку
+};
+
+export type TaskApplicationStatsResponse = {
+  total: number;
+  pending: number;
+  accepted: number;
 };

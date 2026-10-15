@@ -7,3 +7,11 @@ export const CurrentUser = createParamDecorator(
     return request[AUTH_USER_KEY] as AuthUserPayload;
   },
 );
+
+export const OptionalCurrentUser = createParamDecorator(
+  (_data: unknown, ctx: ExecutionContext): AuthUserPayload | undefined => {
+    const request = ctx.switchToHttp().getRequest<{ [AUTH_USER_KEY]?: AuthUserPayload }>();
+
+    return request[AUTH_USER_KEY];
+  },
+);

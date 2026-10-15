@@ -19,6 +19,8 @@ export function createMockUserResponse(
     lastName: 'Петров',
     role: UserRole.Client,
     createdAt: MOCK_USER_CREATED_AT,
+    rating: 0,
+    reviewsCount: 0,
     ...overrides,
   };
 }

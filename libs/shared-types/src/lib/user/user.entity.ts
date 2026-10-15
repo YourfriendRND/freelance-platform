@@ -11,6 +11,9 @@ export class UserEntity extends Entity<IUser> {
   role!: UserRole;
   bio?: string;
   birthday?: Date;
+  // TODO: Добавить таблицы рейтинга и отзывов
+  rating = 0;
+  reviewsCount = 0;
 
   constructor(props?: Partial<IUser>) {
     super(props);

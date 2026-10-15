@@ -1,6 +1,7 @@
-import { Expose } from 'class-transformer';
+import { Expose, Type } from 'class-transformer';
 import { ApiProperty } from '@nestjs/swagger';
 import { TaskExecutionType, TaskStatus } from '@freelance-platform/shared-types';
+import { UserRdo } from '../user/user.rdo';
 
 export class TaskRdo {
   @Expose()
@@ -88,4 +89,34 @@ export class TaskRdo {
     example: '2026-08-19T12:00:00.000Z'
   })
   updatedAt!: Date;
+
+  @Expose()
+  @ApiProperty({
+    description: 'Исполнитель уже откликался на задачу. Есть только у авторизованного исполнителя',
+    example: false,
+    required: false,
+  })
+  hasApplied?: boolean;
+
+  @Expose()
+  @ApiProperty({
+    description: 'Число откликов на задачу',
+    example: 3,
+  })
+  applicationsCount!: number;
+
+  @Expose()
+  @ApiProperty({
+    description: 'Число просмотров задачи',
+    example: 0,
+  })
+  viewsCount!: number;
+
+  @Expose()
+  @Type(() => UserRdo)
+  @ApiProperty({
+    description: 'Заказчик задачи',
+    type: UserRdo,
+  })
+  author!: UserRdo;
 }

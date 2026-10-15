@@ -1,5 +1,5 @@
 import { NotFoundException } from '@nestjs/common';
-import { FindTasksQueryDto } from '@freelance-platform/shared-dto';
+import { FindMyTasksQueryDto, FindTasksQueryDto } from '@freelance-platform/shared-dto';
 import {
   AuthUserPayload,
   TaskEntity,
@@ -18,6 +18,7 @@ describe('TaskService testing', () => {
   let taskRepository: {
     create: ReturnType<typeof vi.fn>;
     findAll: ReturnType<typeof vi.fn>;
+    findAllByCustomer: ReturnType<typeof vi.fn>;
     findById: ReturnType<typeof vi.fn>;
     update: ReturnType<typeof vi.fn>;
     deleteById: ReturnType<typeof vi.fn>;
@@ -44,6 +45,20 @@ describe('TaskService testing', () => {
     user,
     sessionId: '8dbbc21d-ed8c-4b11-ba3d-4dcfa0d1660b',
     token: 'test-token-1',
+  };
+
+  const freelancerId = '74412729-b4eb-4d88-b64b-a3b3446db2d5';
+  const freelancerAuthUser: AuthUserPayload = {
+    user: new UserEntity({
+      id: freelancerId,
+      email: 'freelancer@example.com',
+      firstName: 'Petr',
+      role: UserRole.Freelancer,
+      createdAt: new Date('2026-08-19'),
+      updatedAt: new Date('2026-08-19'),
+    }),
+    sessionId: '19a5d0c2-6b44-4f0a-9c31-2d8e7b6a5c10',
+    token: 'test-token-2',
   };
 
   const createDto = {
@@ -75,6 +90,7 @@ describe('TaskService testing', () => {
     taskRepository = {
       create: vi.fn(),
       findAll: vi.fn(),
+      findAllByCustomer: vi.fn(),
       findById: vi.fn(),
       update: vi.fn(),
       deleteById: vi.fn(),
@@ -167,6 +183,67 @@ describe('TaskService testing', () => {
       page: 2,
       limit: 10,
     });
+  });
+
+  it('should pass performer id when the viewer is a freelancer', async () => {
+    const paginated = { items: [task], total: 1, page: 1, limit: 20 };
+    taskRepository.findAll.mockResolvedValue(paginated);
+
+    const result = await service.findAll(new FindTasksQueryDto(), freelancerAuthUser);
+
+    expect(result).toBe(paginated);
+    expect(taskRepository.findAll).toHaveBeenCalledWith(
+      expect.any(Object),
+      freelancerId,
+    );
+  });
+
+  it('should not pass performer id when the viewer is a customer', async () => {
+    taskRepository.findAll.mockResolvedValue({ items: [], total: 0, page: 1, limit: 20 });
+
+    await service.findAll(new FindTasksQueryDto(), authUser);
+
+    expect(taskRepository.findAll).toHaveBeenCalledWith(expect.any(Object));
+  });
+
+  it('should pass performer id when loading one task for a freelancer', async () => {
+    taskRepository.findById.mockResolvedValue(task);
+
+    const result = await service.findOne(taskId, freelancerAuthUser);
+
+    expect(result).toBe(task);
+    expect(taskRepository.findById).toHaveBeenCalledWith(taskId, freelancerId);
+  });
+
+  it('should load one task without performer id for a customer', async () => {
+    taskRepository.findById.mockResolvedValue(task);
+
+    await service.findOne(taskId, authUser);
+
+    expect(taskRepository.findById).toHaveBeenCalledWith(taskId);
+  });
+
+  it('should return the customer tasks including a draft filter', async () => {
+    const query = Object.assign(new FindMyTasksQueryDto(), {
+      status: TaskStatus.Draft,
+    });
+    const paginated = { items: [task], total: 1, page: 1, limit: 20 };
+    taskRepository.findAllByCustomer.mockResolvedValue(paginated);
+
+    const result = await service.findAllByCustomer(query, authUser);
+
+    expect(result).toBe(paginated);
+    expect(taskRepository.findAllByCustomer).toHaveBeenCalledWith(
+      customerId,
+      expect.objectContaining({ status: TaskStatus.Draft }),
+    );
+  });
+
+  it('should forbid a freelancer from listing own tasks', async () => {
+    await expect(
+      service.findAllByCustomer(new FindMyTasksQueryDto(), freelancerAuthUser),
+    ).rejects.toThrow('Смотреть свои задачи может только заказчик');
+    expect(taskRepository.findAllByCustomer).not.toHaveBeenCalled();
   });
 
   it('should return an empty page when there are no tasks', async () => {

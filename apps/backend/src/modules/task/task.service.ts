@@ -1,6 +1,7 @@
 import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import {
   CreateTaskDto,
+  FindMyTasksQueryDto,
   FindTasksQueryDto,
   UpdateTaskDto,
 } from '@freelance-platform/shared-dto';
@@ -53,10 +54,41 @@ export class TaskService {
     });
   }
 
-  async findAll(query: FindTasksQueryDto): Promise<PaginationResult<TaskEntity>> {
+  async findAll(
+    query: FindTasksQueryDto,
+    authUser?: AuthUserPayload,
+  ): Promise<PaginationResult<TaskEntity>> {
+    const { categoryId, status, budgetMin, budgetMax, sort, page, limit } = query;
+    const filters = {
+      categoryId,
+      status,
+      budgetMin,
+      budgetMax,
+      sort,
+      page,
+      limit,
+    };
+
+    if (authUser?.user.role === UserRole.Freelancer) {
+      return this.taskRepository.findAll(filters, authUser.user.id);
+    }
+
+    return this.taskRepository.findAll(filters);
+  }
+
+  async findAllByCustomer(
+    query: FindMyTasksQueryDto,
+    authUser: AuthUserPayload,
+  ): Promise<PaginationResult<TaskEntity>> {
+    const { user: { id: customerId, role } } = authUser;
+
+    if (role !== UserRole.Client) {
+      throw new ForbiddenException('Смотреть свои задачи может только заказчик');
+    }
+
     const { categoryId, status, budgetMin, budgetMax, sort, page, limit } = query;
 
-    return this.taskRepository.findAll({
+    return this.taskRepository.findAllByCustomer(customerId, {
       categoryId,
       status,
       budgetMin,
@@ -67,8 +99,10 @@ export class TaskService {
     });
   }
 
-  async findOne(id: string): Promise<TaskEntity> {
-    const task = await this.taskRepository.findById(id);
+  async findOne(id: string, authUser?: AuthUserPayload): Promise<TaskEntity> {
+    const task = authUser?.user.role === UserRole.Freelancer
+      ? await this.taskRepository.findById(id, authUser.user.id)
+      : await this.taskRepository.findById(id);
 
     if (!task) {
       throw new NotFoundException(`Задача с "${id}" не найдена`);
