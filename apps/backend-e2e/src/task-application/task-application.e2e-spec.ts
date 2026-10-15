@@ -414,4 +414,126 @@ describe('Task application module e2e testing', () => {
       expect(updateRes.data.message).toBe('Изменять отклик может только владелец задачи');
     });
   });
+
+  describe('contract: user, timeline and stats', () => {
+    let client: { userId: string; sessionCookie: string };
+    let freelancer: { userId: string; sessionCookie: string };
+    let categoryId: string;
+    let taskId: string;
+    let applicationId: string;
+
+    it('join and login: should authorize client and freelancer', async () => {
+      client = await joinAndLogin(UserRole.Client);
+      freelancer = await joinAndLogin(UserRole.Freelancer);
+    });
+
+    it('categories: should load a category', async () => {
+      categoryId = await loadCategoryId();
+    });
+
+    it('stats: should be zero before the first application', async () => {
+      const freelancerStats = await axios.get('/api/task-applications/stats', {
+        headers: { Cookie: freelancer.sessionCookie },
+      });
+      const clientStats = await axios.get('/api/task-applications/stats', {
+        headers: { Cookie: client.sessionCookie },
+      });
+
+      expect(freelancerStats.status).toBe(200);
+      expect(freelancerStats.data).toEqual({ total: 0, pending: 0, accepted: 0 });
+      expect(clientStats.status).toBe(200);
+      expect(clientStats.data).toEqual({ total: 0, pending: 0, accepted: 0 });
+    });
+
+    it('create: should return timeline and the performer', async () => {
+      taskId = await createOpenTask(client.sessionCookie, categoryId);
+
+      const createRes = await axios.post(
+        '/api/task-applications',
+        {
+          taskId,
+          message: 'Готов выполнить задачу',
+          timeline: '2 недели',
+        },
+        { headers: { Cookie: freelancer.sessionCookie } },
+      );
+
+      expect(createRes.status).toBe(201);
+      expect(createRes.data).toMatchObject({
+        taskId,
+        performerId: freelancer.userId,
+        timeline: '2 недели',
+        user: {
+          id: freelancer.userId,
+          role: UserRole.Freelancer,
+          rating: 0,
+          reviewsCount: 0,
+        },
+      });
+      expect(createRes.data.user).not.toHaveProperty('password');
+
+      applicationId = createRes.data.id;
+    });
+
+    it('list and get: should include the performer', async () => {
+      const listRes = await axios.get('/api/task-applications', {
+        headers: { Cookie: freelancer.sessionCookie },
+      });
+      const listed = listRes.data.items.find((item: { id: string }) => item.id === applicationId);
+
+      expect(listRes.status).toBe(200);
+      expect(listed.user).toMatchObject({
+        id: freelancer.userId,
+        rating: 0,
+        reviewsCount: 0,
+      });
+      expect(listed.timeline).toBe('2 недели');
+
+      const getRes = await axios.get(`/api/task-applications/${applicationId}`, {
+        headers: { Cookie: client.sessionCookie },
+      });
+
+      expect(getRes.status).toBe(200);
+      expect(getRes.data.user).toMatchObject({
+        id: freelancer.userId,
+        role: UserRole.Freelancer,
+        rating: 0,
+        reviewsCount: 0,
+      });
+    });
+
+    it('stats: should count the user applications and ignore taskId', async () => {
+      const freelancerStats = await axios.get('/api/task-applications/stats', {
+        headers: { Cookie: freelancer.sessionCookie },
+      });
+      const clientStats = await axios.get('/api/task-applications/stats', {
+        headers: { Cookie: client.sessionCookie },
+      });
+
+      expect(freelancerStats.data).toEqual({ total: 1, pending: 1, accepted: 0 });
+      expect(clientStats.data).toEqual({ total: 1, pending: 1, accepted: 0 });
+
+      const filteredList = await axios.get(`/api/task-applications?taskId=${taskId}`, {
+        headers: { Cookie: client.sessionCookie },
+      });
+      const statsAfterFilter = await axios.get('/api/task-applications/stats', {
+        headers: { Cookie: client.sessionCookie },
+      });
+
+      expect(filteredList.status).toBe(200);
+      expect(statsAfterFilter.data).toEqual({ total: 1, pending: 1, accepted: 0 });
+    });
+
+    it('update: freelancer should change timeline while pending', async () => {
+      const updateRes = await axios.patch(
+        `/api/task-applications/${applicationId}`,
+        { timeline: '3 дня' },
+        { headers: { Cookie: freelancer.sessionCookie } },
+      );
+
+      expect(updateRes.status).toBe(200);
+      expect(updateRes.data.timeline).toBe('3 дня');
+      expect(updateRes.data.user.id).toBe(freelancer.userId);
+    });
+  });
 });

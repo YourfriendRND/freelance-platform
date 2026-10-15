@@ -385,4 +385,140 @@ describe('Task module e2e testing', () => {
       expect(deleteRes.data).toEqual({ message: 'Задача удалена' });
     });
   });
+
+  describe('contract: my tasks, hasApplied, author and counts', () => {
+    let client: { userId: string; sessionCookie: string };
+    let freelancer: { userId: string; sessionCookie: string };
+    let categoryId: string;
+    let taskId: string;
+
+    it('join and login: should authorize client and freelancer', async () => {
+      client = await joinAndLogin(UserRole.Client);
+      freelancer = await joinAndLogin(UserRole.Freelancer);
+    });
+
+    it('categories: should load a category', async () => {
+      const categoriesRes = await axios.get('/api/task-categories');
+
+      expect(categoriesRes.status).toBe(200);
+      categoryId = categoriesRes.data[0].id;
+    });
+
+    it('my: should return the customer draft and hide hasApplied', async () => {
+      const createRes = await axios.post(
+        '/api/tasks',
+        createTaskBody(categoryId),
+        { headers: { Cookie: client.sessionCookie } },
+      );
+
+      expect(createRes.status).toBe(201);
+      taskId = createRes.data.id;
+      expect(createRes.data).toMatchObject({
+        status: TaskStatus.Draft,
+        applicationsCount: 0,
+        viewsCount: 0,
+        author: {
+          id: client.userId,
+          rating: 0,
+          reviewsCount: 0,
+        },
+      });
+      expect(createRes.data).not.toHaveProperty('hasApplied');
+
+      const myRes = await axios.get(`/api/tasks/my?status=${TaskStatus.Draft}`, {
+        headers: { Cookie: client.sessionCookie },
+      });
+
+      expect(myRes.status).toBe(200);
+      const draft = myRes.data.items.find((task: { id: string }) => task.id === taskId);
+      expect(draft).toMatchObject({
+        id: taskId,
+        status: TaskStatus.Draft,
+        viewsCount: 0,
+        author: { id: client.userId, rating: 0, reviewsCount: 0 },
+      });
+      expect(draft).not.toHaveProperty('hasApplied');
+    });
+
+    it('my: freelancer should get 403', async () => {
+      const myRes = await axios.get('/api/tasks/my', {
+        headers: { Cookie: freelancer.sessionCookie },
+      });
+
+      expect(myRes.status).toBe(403);
+      expect(myRes.data.message).toBe('Смотреть свои задачи может только заказчик');
+    });
+
+    it('guest and customer should not receive hasApplied', async () => {
+      const openRes = await axios.patch(
+        `/api/tasks/${taskId}`,
+        { status: TaskStatus.Open },
+        { headers: { Cookie: client.sessionCookie } },
+      );
+
+      expect(openRes.status).toBe(200);
+
+      const guestListRes = await axios.get(`/api/tasks?limit=${PAGINATION_MAX_LIMIT}`);
+      const guestTask = guestListRes.data.items.find((task: { id: string }) => task.id === taskId);
+
+      expect(guestListRes.status).toBe(200);
+      expect(guestTask).toBeDefined();
+      expect(guestTask).not.toHaveProperty('hasApplied');
+      expect(guestTask.viewsCount).toBe(0);
+
+      const guestGetRes = await axios.get(`/api/tasks/${taskId}`);
+
+      expect(guestGetRes.status).toBe(200);
+      expect(guestGetRes.data).not.toHaveProperty('hasApplied');
+
+      const customerGetRes = await axios.get(`/api/tasks/${taskId}`, {
+        headers: { Cookie: client.sessionCookie },
+      });
+
+      expect(customerGetRes.status).toBe(200);
+      expect(customerGetRes.data).not.toHaveProperty('hasApplied');
+    });
+
+    it('freelancer should receive hasApplied on the list and the card', async () => {
+      const beforeRes = await axios.get(`/api/tasks/${taskId}`, {
+        headers: { Cookie: freelancer.sessionCookie },
+      });
+
+      expect(beforeRes.status).toBe(200);
+      expect(beforeRes.data.hasApplied).toBe(false);
+      expect(beforeRes.data.applicationsCount).toBe(0);
+
+      const applyRes = await axios.post(
+        '/api/task-applications',
+        { taskId, message: 'Отклик для hasApplied' },
+        { headers: { Cookie: freelancer.sessionCookie } },
+      );
+
+      expect(applyRes.status).toBe(201);
+
+      const listRes = await axios.get(`/api/tasks?limit=${PAGINATION_MAX_LIMIT}`, {
+        headers: { Cookie: freelancer.sessionCookie },
+      });
+      const listed = listRes.data.items.find((task: { id: string }) => task.id === taskId);
+
+      expect(listRes.status).toBe(200);
+      expect(listed.hasApplied).toBe(true);
+      expect(listed.applicationsCount).toBe(1);
+      expect(listed.viewsCount).toBe(0);
+      expect(listed.author).toMatchObject({
+        id: client.userId,
+        rating: 0,
+        reviewsCount: 0,
+      });
+
+      const getRes = await axios.get(`/api/tasks/${taskId}`, {
+        headers: { Cookie: freelancer.sessionCookie },
+      });
+
+      expect(getRes.status).toBe(200);
+      expect(getRes.data.hasApplied).toBe(true);
+      expect(getRes.data.applicationsCount).toBe(1);
+      expect(getRes.data.viewsCount).toBe(0);
+    });
+  });
 });
