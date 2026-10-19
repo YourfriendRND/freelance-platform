@@ -106,13 +106,23 @@ describe('Task module e2e testing', () => {
       ).toBeUndefined();
     });
 
-    it('get: should return the created task by id', async () => {
+    it('get: guest should not see the draft', async () => {
       const getRes = await axios.get(`/api/tasks/${taskId}`);
+
+      expect(getRes.status).toBe(404);
+      expect(getRes.data.message).toBe(`Задача с "${taskId}" не найдена`);
+    });
+
+    it('get: owner should see the draft', async () => {
+      const getRes = await axios.get(`/api/tasks/${taskId}`, {
+        headers: { Cookie: sessionCookie },
+      });
 
       expect(getRes.status).toBe(200);
       expect(getRes.data).toMatchObject({
         id: taskId,
         customerId: userId,
+        status: TaskStatus.Draft,
       });
     });
 
@@ -345,6 +355,89 @@ describe('Task module e2e testing', () => {
 
       expect(deleteRes.status).toBe(403);
       expect(deleteRes.data.message).toBe('Удалять задачу может только владелец');
+    });
+
+    it('get: draft is visible to the owner and hidden from others', async () => {
+      const owner = await joinAndLogin(UserRole.Client);
+      const other = await joinAndLogin(UserRole.Client);
+      const freelancer = await joinAndLogin(UserRole.Freelancer);
+
+      const createRes = await axios.post(
+        '/api/tasks',
+        createTaskBody(categoryId),
+        { headers: { Cookie: owner.sessionCookie } },
+      );
+
+      expect(createRes.status).toBe(201);
+      const { id: taskId } = createRes.data;
+      const hiddenMessage = `Задача с "${taskId}" не найдена`;
+
+      const ownerRes = await axios.get(`/api/tasks/${taskId}`, {
+        headers: { Cookie: owner.sessionCookie },
+      });
+
+      expect(ownerRes.status).toBe(200);
+      expect(ownerRes.data).toMatchObject({
+        id: taskId,
+        status: TaskStatus.Draft,
+        customerId: owner.userId,
+      });
+
+      const guestRes = await axios.get(`/api/tasks/${taskId}`);
+
+      expect(guestRes.status).toBe(404);
+      expect(guestRes.data.message).toBe(hiddenMessage);
+
+      const otherRes = await axios.get(`/api/tasks/${taskId}`, {
+        headers: { Cookie: other.sessionCookie },
+      });
+
+      expect(otherRes.status).toBe(404);
+      expect(otherRes.data.message).toBe(hiddenMessage);
+
+      const freelancerRes = await axios.get(`/api/tasks/${taskId}`, {
+        headers: { Cookie: freelancer.sessionCookie },
+      });
+
+      expect(freelancerRes.status).toBe(404);
+      expect(freelancerRes.data.message).toBe(hiddenMessage);
+    });
+
+    it('get: guest can read open and closed tasks', async () => {
+      const { sessionCookie } = await joinAndLogin(UserRole.Client);
+
+      const createRes = await axios.post(
+        '/api/tasks',
+        { ...createTaskBody(categoryId), status: TaskStatus.Open },
+        { headers: { Cookie: sessionCookie } },
+      );
+
+      expect(createRes.status).toBe(201);
+      const { id: taskId } = createRes.data;
+
+      const openRes = await axios.get(`/api/tasks/${taskId}`);
+
+      expect(openRes.status).toBe(200);
+      expect(openRes.data).toMatchObject({
+        id: taskId,
+        status: TaskStatus.Open,
+      });
+
+      const closeRes = await axios.patch(
+        `/api/tasks/${taskId}`,
+        { status: TaskStatus.Closed },
+        { headers: { Cookie: sessionCookie } },
+      );
+
+      expect(closeRes.status).toBe(200);
+
+      const closedRes = await axios.get(`/api/tasks/${taskId}`);
+
+      expect(closedRes.status).toBe(200);
+      expect(closedRes.data).toMatchObject({
+        id: taskId,
+        status: TaskStatus.Closed,
+      });
     });
 
     it('closed task: patch should get 403 and owner can delete', async () => {

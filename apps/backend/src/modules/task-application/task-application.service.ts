@@ -106,7 +106,7 @@ export class TaskApplicationService {
       throw new ForbiddenException('Откликаться на задачу может только исполнитель');
     }
 
-    const task = await this.taskService.findOne(taskId);
+    const task = await this.taskService.getTask(taskId);
 
     if (task.status !== TaskStatus.Open) {
       throw new ForbiddenException('Откликнуться можно только на открытую задачу');

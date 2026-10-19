@@ -29,7 +29,7 @@ describe('TaskApplicationService testing', () => {
     update: ReturnType<typeof vi.fn>;
   };
   let taskService: {
-    findOne: ReturnType<typeof vi.fn>;
+    getTask: ReturnType<typeof vi.fn>;
   };
   let service: TaskApplicationService;
 
@@ -143,7 +143,7 @@ describe('TaskApplicationService testing', () => {
       update: vi.fn(),
     };
     taskService = {
-      findOne: vi.fn(),
+      getTask: vi.fn(),
     };
 
     service = new TaskApplicationService(
@@ -261,13 +261,13 @@ describe('TaskApplicationService testing', () => {
   });
 
   it('should create an application for freelancer on open task', async () => {
-    taskService.findOne.mockResolvedValue(openTask);
+    taskService.getTask.mockResolvedValue(openTask);
     taskApplicationRepository.create.mockResolvedValue(application);
 
     const result = await service.create(createDto, freelancerAuthUser);
 
     expect(result).toBe(application);
-    expect(taskService.findOne).toHaveBeenCalledWith(taskId);
+    expect(taskService.getTask).toHaveBeenCalledWith(taskId);
     expect(taskApplicationRepository.create).toHaveBeenCalledWith({
       taskId,
       performerId,
@@ -277,7 +277,7 @@ describe('TaskApplicationService testing', () => {
   });
 
   it('should omit proposedPrice when it is not provided', async () => {
-    taskService.findOne.mockResolvedValue(openTask);
+    taskService.getTask.mockResolvedValue(openTask);
     taskApplicationRepository.create.mockResolvedValue(application);
 
     await service.create({ taskId, message: createDto.message }, freelancerAuthUser);
@@ -290,7 +290,7 @@ describe('TaskApplicationService testing', () => {
   });
 
   it('should throw ConflictException on duplicate application', async () => {
-    taskService.findOne.mockResolvedValue(openTask);
+    taskService.getTask.mockResolvedValue(openTask);
     taskApplicationRepository.create.mockRejectedValue(new DuplicateTaskApplicationError());
 
     await expect(service.create(createDto, freelancerAuthUser)).rejects.toThrow(
@@ -300,7 +300,7 @@ describe('TaskApplicationService testing', () => {
 
   it('should rethrow unexpected create errors', async () => {
     const unexpected = new Error('db down');
-    taskService.findOne.mockResolvedValue(openTask);
+    taskService.getTask.mockResolvedValue(openTask);
     taskApplicationRepository.create.mockRejectedValue(unexpected);
 
     await expect(service.create(createDto, freelancerAuthUser)).rejects.toBe(unexpected);
@@ -393,12 +393,12 @@ describe('TaskApplicationService testing', () => {
       await expect(service.create(createDto, clientAuthUser)).rejects.toThrow(
         'Откликаться на задачу может только исполнитель',
       );
-      expect(taskService.findOne).not.toHaveBeenCalled();
+      expect(taskService.getTask).not.toHaveBeenCalled();
       expect(taskApplicationRepository.create).not.toHaveBeenCalled();
     });
 
     it('should throw ForbiddenException when task is not open', async () => {
-      taskService.findOne.mockResolvedValue(
+      taskService.getTask.mockResolvedValue(
         new TaskEntity({ ...openTask, status: TaskStatus.Draft }),
       );
 
@@ -409,7 +409,7 @@ describe('TaskApplicationService testing', () => {
     });
 
     it('should throw ForbiddenException when freelancer applies to own task', async () => {
-      taskService.findOne.mockResolvedValue(
+      taskService.getTask.mockResolvedValue(
         new TaskEntity({ ...openTask, customerId: performerId }),
       );
 
@@ -420,7 +420,7 @@ describe('TaskApplicationService testing', () => {
     });
 
     it('should throw NotFoundException when created task is missing', async () => {
-      taskService.findOne.mockRejectedValue(
+      taskService.getTask.mockRejectedValue(
         new NotFoundException(`Задача с "${taskId}" не найдена`),
       );
 

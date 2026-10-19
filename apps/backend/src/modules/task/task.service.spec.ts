@@ -207,11 +207,12 @@ describe('TaskService testing', () => {
   });
 
   it('should pass performer id when loading one task for a freelancer', async () => {
-    taskRepository.findById.mockResolvedValue(task);
+    const openTask = new TaskEntity({ ...task, status: TaskStatus.Open });
+    taskRepository.findById.mockResolvedValue(openTask);
 
     const result = await service.findOne(taskId, freelancerAuthUser);
 
-    expect(result).toBe(task);
+    expect(result).toBe(openTask);
     expect(taskRepository.findById).toHaveBeenCalledWith(taskId, freelancerId);
   });
 
@@ -265,11 +266,12 @@ describe('TaskService testing', () => {
   });
 
   it('should return a task by id', async () => {
-    taskRepository.findById.mockResolvedValue(task);
+    const openTask = new TaskEntity({ ...task, status: TaskStatus.Open });
+    taskRepository.findById.mockResolvedValue(openTask);
 
     const result = await service.findOne(taskId);
 
-    expect(result).toBe(task);
+    expect(result).toBe(openTask);
     expect(taskRepository.findById).toHaveBeenCalledWith(taskId);
   });
 
@@ -281,7 +283,7 @@ describe('TaskService testing', () => {
     );
   });
 
-  it('should update a task', async () => {
+  it('should update a draft task by owner', async () => {
     const updated = new TaskEntity({ ...task, title: 'Новое название' });
     taskRepository.findById.mockResolvedValue(task);
     taskRepository.update.mockResolvedValue(updated);
@@ -332,7 +334,7 @@ describe('TaskService testing', () => {
     expect(taskRepository.update).not.toHaveBeenCalled();
   });
 
-  it('should delete a task', async () => {
+  it('should delete a draft task by owner', async () => {
     taskRepository.findById.mockResolvedValue(task);
     taskRepository.deleteById.mockResolvedValue(true);
 
@@ -376,6 +378,80 @@ describe('TaskService testing', () => {
       sessionId: '3a97706c-73df-4346-b252-089db7b081b0',
       token: 'test-other-client-token-3',
     };
+
+    it('should return a draft to the owner', async () => {
+      taskRepository.findById.mockResolvedValue(task);
+
+      const result = await service.findOne(taskId, authUser);
+
+      expect(result).toBe(task);
+    });
+
+    it('should hide a draft from a guest', async () => {
+      taskRepository.findById.mockResolvedValue(task);
+
+      await expect(service.findOne(taskId)).rejects.toThrow(
+        `Задача с "${taskId}" не найдена`,
+      );
+    });
+
+    it('should hide a draft from a freelancer', async () => {
+      taskRepository.findById.mockResolvedValue(task);
+
+      await expect(service.findOne(taskId, freelancerAuthUser)).rejects.toThrow(
+        `Задача с "${taskId}" не найдена`,
+      );
+    });
+
+    it('should hide a draft from another customer', async () => {
+      taskRepository.findById.mockResolvedValue(task);
+
+      await expect(service.findOne(taskId, otherClientAuthUser)).rejects.toThrow(
+        `Задача с "${taskId}" не найдена`,
+      );
+    });
+
+    it('should return an open task to another customer', async () => {
+      const openTask = new TaskEntity({ ...task, status: TaskStatus.Open });
+      taskRepository.findById.mockResolvedValue(openTask);
+
+      const result = await service.findOne(taskId, otherClientAuthUser);
+
+      expect(result).toBe(openTask);
+      expect(taskRepository.findById).toHaveBeenCalledWith(taskId);
+    });
+
+    it('should return a closed task to a guest', async () => {
+      const closedTask = new TaskEntity({ ...task, status: TaskStatus.Closed });
+      taskRepository.findById.mockResolvedValue(closedTask);
+
+      const result = await service.findOne(taskId);
+
+      expect(result).toBe(closedTask);
+    });
+
+    it('should return a closed task to a freelancer', async () => {
+      const closedTask = new TaskEntity({ ...task, status: TaskStatus.Closed });
+      taskRepository.findById.mockResolvedValue(closedTask);
+
+      const result = await service.findOne(taskId, freelancerAuthUser);
+
+      expect(result).toBe(closedTask);
+      expect(taskRepository.findById).toHaveBeenCalledWith(
+        taskId,
+        freelancerAuthUser.user.id,
+      );
+    });
+
+    it('should return a closed task to another customer', async () => {
+      const closedTask = new TaskEntity({ ...task, status: TaskStatus.Closed });
+      taskRepository.findById.mockResolvedValue(closedTask);
+
+      const result = await service.findOne(taskId, otherClientAuthUser);
+
+      expect(result).toBe(closedTask);
+      expect(taskRepository.findById).toHaveBeenCalledWith(taskId);
+    });
 
     it('should throw ForbiddenException when freelancer creates a task', async () => {
       await expect(service.create(createDto, freelancerAuthUser)).rejects.toThrow(
