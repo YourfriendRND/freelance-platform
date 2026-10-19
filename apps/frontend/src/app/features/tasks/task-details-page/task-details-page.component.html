@@ -25,12 +25,25 @@
       @case (ApplicationsPageView.Content) {
         @if (task(); as details) {
           <div class="task-details-page__layout">
-            <app-task-details [task]="details" />
+            <app-task-details [task]="details">
+              @if (isOwnTask()) {
+                <app-task-details-responses
+                  taskDetailsResponses
+                  [applicationsCount]="details.applicationsCount"
+                  [responses]="taskResponses()"
+                  [isLoading]="responsesLoading()"
+                  [loadError]="responsesError()"
+                  (accept)="onAcceptResponse($event)"
+                  (decline)="onDeclineResponse($event)"
+                />
+              }
+            </app-task-details>
             <div class="task-details-page__aside">
               <app-task-details-aside [task]="details" />
               <app-task-details-apply-button
                 [status]="details.status"
                 [taskId]="details.id"
+                [taskHasApplied]="taskHasApplied()"
                 (apply)="onOpenApplyForm()"
               />
             </div>

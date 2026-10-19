@@ -26,7 +26,6 @@ export type ApplicationListItem = {
   clientDetails: string;
   message: string;
   proposedPrice: number | null;
-  // TODO: срок выполнения, когда бэкенд начнёт его отдавать
   timelineLabel: string;
   submittedAt: string;
 };

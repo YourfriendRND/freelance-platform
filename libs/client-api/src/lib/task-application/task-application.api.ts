@@ -6,6 +6,8 @@ import {
   CreateTaskApplicationRequest,
   TaskApplicationListResponse,
   TaskApplicationResponse,
+  TaskApplicationStatsResponse,
+  UpdateTaskApplicationRequest,
 } from '@freelance-platform/shared-types';
 
 @Injectable({ providedIn: 'root' })
@@ -13,9 +15,31 @@ export class TaskApplicationApi {
   private readonly http = inject(HttpClient);
   private readonly apiBaseUrl = inject(API_BASE_URL);
 
-  findAll(): Observable<TaskApplicationListResponse> {
-    return this.http.get<TaskApplicationListResponse>(
-      `${this.apiBaseUrl}/task-applications`,
+  findAll(taskId?: string): Observable<TaskApplicationListResponse> {
+    const url = `${this.apiBaseUrl}/task-applications`;
+
+    if (!taskId) {
+      return this.http.get<TaskApplicationListResponse>(url);
+    }
+
+    return this.http.get<TaskApplicationListResponse>(url, {
+      params: { taskId },
+    });
+  }
+
+  update(
+    id: string,
+    body: UpdateTaskApplicationRequest,
+  ): Observable<TaskApplicationResponse> {
+    return this.http.patch<TaskApplicationResponse>(
+      `${this.apiBaseUrl}/task-applications/${id}`,
+      body,
+    );
+  }
+
+  getStats(): Observable<TaskApplicationStatsResponse> {
+    return this.http.get<TaskApplicationStatsResponse>(
+      `${this.apiBaseUrl}/task-applications/stats`,
     );
   }
 

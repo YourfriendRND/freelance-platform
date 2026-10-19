@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, effect, inject, input, output } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, input, output } from '@angular/core';
 import { Router } from '@angular/router';
 import { AuthStore, TaskApplicationStore } from '@freelance-platform/client-state';
 import { TaskStatus, UserRole } from '@freelance-platform/shared-types';
@@ -14,6 +14,7 @@ import { UiButtonComponent } from '@freelance-platform/ui';
 export class TaskDetailsApplyButtonComponent {
   readonly status = input.required<TaskStatus>();
   readonly taskId = input.required<string>();
+  readonly taskHasApplied = input(false);
 
   readonly apply = output<void>();
 
@@ -21,8 +22,8 @@ export class TaskDetailsApplyButtonComponent {
   private readonly taskApplicationStore = inject(TaskApplicationStore);
   private readonly router = inject(Router);
 
-  protected readonly hasApplied = computed(() =>
-    this.taskApplicationStore.hasApplied(this.taskId()),
+  protected readonly hasApplied = computed(
+    () => this.taskHasApplied() || this.taskApplicationStore.hasApplied(this.taskId()),
   );
 
   protected readonly isVisible = computed(() => {
@@ -34,17 +35,6 @@ export class TaskDetailsApplyButtonComponent {
 
     return !user || user.role === UserRole.Freelancer;
   });
-
-  constructor() {
-    effect(() => {
-      if (this.authStore.user()?.role !== UserRole.Freelancer || !this.isVisible()) {
-        return;
-      }
-
-      // TODO: убрать отдельную загрузку откликов, когда бэкенд начнёт отдавать hasApplied вместе с данными задачи
-      this.taskApplicationStore.load();
-    });
-  }
 
   protected onApply(): void {
     if (this.hasApplied()) {

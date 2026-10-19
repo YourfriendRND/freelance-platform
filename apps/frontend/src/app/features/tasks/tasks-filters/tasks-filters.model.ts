@@ -1,4 +1,11 @@
-import { FindTasksQuery, PublicTaskStatus, TASK_STATUS_LABEL, TaskSort, TaskStatus } from '@freelance-platform/shared-types';
+import {
+  FindMyTasksQuery,
+  FindTasksQuery,
+  PublicTaskStatus,
+  TASK_STATUS_LABEL,
+  TaskSort,
+  TaskStatus,
+} from '@freelance-platform/shared-types';
 import { UiSelectOption } from '@freelance-platform/ui';
 
 export const TASKS_ALL_FILTER_VALUE = 'all';
@@ -74,6 +81,30 @@ export function toTasksFiltersSelection(value: TasksFiltersFormValue): TasksFilt
 
 export function toFindTasksQuery(value: TasksFiltersFormValue): FindTasksQuery {
   return toPublicTasksQuery(toTasksFiltersSelection(value));
+}
+
+export function toMyTasksQuery(selection: TasksFiltersSelection): FindMyTasksQuery {
+  const query: FindMyTasksQuery = {
+    sort: selection.sort,
+  };
+
+  if (selection.categoryId) {
+    query.categoryId = selection.categoryId;
+  }
+
+  if (selection.status) {
+    query.status = selection.status;
+  }
+
+  if (selection.budgetMin !== undefined) {
+    query.budgetMin = selection.budgetMin;
+  }
+
+  if (selection.budgetMax !== undefined) {
+    query.budgetMax = selection.budgetMax;
+  }
+
+  return query;
 }
 
 export function toPublicTasksQuery(selection: TasksFiltersSelection): FindTasksQuery {

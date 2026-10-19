@@ -6,10 +6,12 @@ import {
   inject,
   signal,
 } from '@angular/core';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { takeUntilDestroyed, toObservable } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, RouterLink } from '@angular/router';
-import { TaskStore } from '@freelance-platform/client-state';
-import { TaskViewData } from '@freelance-platform/shared-types';
+import { TaskApplicationApi } from '@freelance-platform/client-api';
+import { AuthStore, TaskStore } from '@freelance-platform/client-state';
+import { resolveHttpErrorMessage } from '@freelance-platform/http';
+import { TaskApplicationStatus, TaskViewData } from '@freelance-platform/shared-types';
 import { UiDashboardWrapperComponent } from '@freelance-platform/ui';
 import { AppHeaderComponent } from '../../../app-header/app-header.component';
 import { DashboardSidebarComponent } from '../../../dashboard/dashboard-sidebar/dashboard-sidebar.component';
@@ -17,6 +19,11 @@ import { TaskDetailsApplyButtonComponent } from '../task-details-apply-button/ta
 import { TaskDetailsApplyFormComponent } from '../task-details-apply-form/task-details-apply-form.component';
 import { TaskDetailsAsideComponent } from '../task-details-aside/task-details-aside.component';
 import { TaskDetailsComponent } from '../task-details/task-details.component';
+import { TaskDetailsResponsesComponent } from '../task-details-responses/task-details-responses.component';
+import {
+  TaskDetailsResponseCard,
+  toTaskDetailsResponseCard,
+} from '../task-details-responses/task-details-responses.model';
 import { TasksPageContainerComponent } from '../tasks-page-container/tasks-page-container.component';
 import { ApplicationsPageView } from '../../applications/applications-list.model';
 
@@ -31,6 +38,7 @@ const UNKNOWN_CATEGORY_TITLE = 'Без категории';
     DashboardSidebarComponent,
     TasksPageContainerComponent,
     TaskDetailsComponent,
+    TaskDetailsResponsesComponent,
     TaskDetailsAsideComponent,
     TaskDetailsApplyButtonComponent,
     TaskDetailsApplyFormComponent,
@@ -41,10 +49,28 @@ const UNKNOWN_CATEGORY_TITLE = 'Без категории';
 })
 export class TaskDetailsPageComponent {
   private readonly taskStore = inject(TaskStore);
+  private readonly authStore = inject(AuthStore);
+  private readonly taskApplicationApi = inject(TaskApplicationApi);
   private readonly route = inject(ActivatedRoute);
   private readonly destroyRef = inject(DestroyRef);
+  private responsesRequestId = 0;
 
   protected readonly isApplyFormOpen = signal(false);
+  protected readonly taskResponses = signal<TaskDetailsResponseCard[]>([]);
+  protected readonly responsesLoading = signal(false);
+  protected readonly responsesError = signal<string | null>(null);
+  protected readonly taskHasApplied = computed(
+    () => this.taskStore.selectedTask()?.hasApplied === true,
+  );
+  protected readonly isOwnTask = computed(() => {
+    const userId = this.authStore.user()?.id;
+    const customerId = this.taskStore.selectedTask()?.customerId;
+
+    return Boolean(userId && customerId === userId);
+  });
+  private readonly ownedTaskId = computed(() =>
+    this.isOwnTask() ? (this.taskStore.selectedTask()?.id ?? null) : null,
+  );
 
   protected readonly ApplicationsPageView = ApplicationsPageView;
   protected readonly errorMessage = this.taskStore.selectedError;
@@ -70,10 +96,9 @@ export class TaskDetailsPageComponent {
       createdAt: selectedTask.createdAt,
       categoryTitle:
         categoryTitleById.get(selectedTask.categoryId) ?? UNKNOWN_CATEGORY_TITLE,
-      // TODO: подставить applicationsCount, viewsCount и author, когда бэкенд начнёт их отдавать
-      applicationsCount: 0,
-      viewsCount: 0,
-      author: null,
+      applicationsCount: selectedTask.applicationsCount,
+      viewsCount: selectedTask.viewsCount,
+      author: selectedTask.author,
     };
   });
 
@@ -90,6 +115,10 @@ export class TaskDetailsPageComponent {
   });
 
   constructor() {
+    toObservable(this.ownedTaskId)
+      .pipe(takeUntilDestroyed())
+      .subscribe((taskId) => this.loadResponses(taskId));
+
     this.route.paramMap.pipe(takeUntilDestroyed()).subscribe((params) => {
       const id = params.get('id');
 
@@ -111,5 +140,83 @@ export class TaskDetailsPageComponent {
 
   protected onCloseApplyForm(): void {
     this.isApplyFormOpen.set(false);
+  }
+
+  protected onAcceptResponse(id: string): void {
+    this.updateResponse(id, TaskApplicationStatus.Accept);
+  }
+
+  protected onDeclineResponse(id: string): void {
+    this.updateResponse(id, TaskApplicationStatus.Decline);
+  }
+
+  private loadResponses(taskId: string | null): void {
+    const request = ++this.responsesRequestId;
+
+    if (!taskId) {
+      this.taskResponses.set([]);
+      this.responsesLoading.set(false);
+      this.responsesError.set(null);
+      return;
+    }
+
+    this.responsesLoading.set(true);
+    this.responsesError.set(null);
+
+    this.taskApplicationApi
+      .findAll(taskId)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (list) => {
+          if (request !== this.responsesRequestId) {
+            return;
+          }
+
+          this.taskResponses.set(list.items.map(toTaskDetailsResponseCard));
+          this.responsesLoading.set(false);
+        },
+        error: (error: unknown) => {
+          if (request !== this.responsesRequestId) {
+            return;
+          }
+
+          this.taskResponses.set([]);
+          this.responsesLoading.set(false);
+          this.responsesError.set(
+            resolveHttpErrorMessage(error, 'Не удалось загрузить отклики'),
+          );
+        },
+      });
+  }
+
+  private updateResponse(id: string, status: TaskApplicationStatus): void {
+    const current = this.taskResponses().find((item) => item.id === id);
+
+    if (!current || current.isUpdating) {
+      return;
+    }
+
+    this.patchResponse(id, { isUpdating: true, error: null });
+
+    this.taskApplicationApi
+      .update(id, { status })
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (application) => {
+          this.patchResponse(id, toTaskDetailsResponseCard(application));
+        },
+        error: (error: unknown) => {
+          this.patchResponse(id, {
+            isUpdating: false,
+            error: resolveHttpErrorMessage(error, 'Не удалось обновить отклик'),
+          });
+        },
+      });
+  }
+
+  private patchResponse(id: string, patch: Partial<TaskDetailsResponseCard>): void {
+    this.taskResponses.update((items) =>
+      items.map((item) => (item.id === id ? { ...item, ...patch } : item)),
+    );
   }
 }

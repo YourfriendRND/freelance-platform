@@ -46,6 +46,13 @@
             </li>
           }
         </ul>
+
+        <app-tasks-pagination
+          class="my-tasks-page__pagination"
+          [currentPage]="currentPage()"
+          [totalPages]="totalPages()"
+          (pageChange)="onPageChange($event)"
+        />
       }
     }
   </app-tasks-page-container>

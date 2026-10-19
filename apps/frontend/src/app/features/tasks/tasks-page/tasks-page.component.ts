@@ -74,10 +74,9 @@ export class TasksPageComponent {
       createdAt: task.createdAt,
       categoryTitle:
         categoryTitleById.get(task.categoryId) ?? UNKNOWN_CATEGORY_TITLE,
-      // TODO: подставить applicationsCount, viewsCount и author, когда бэкенд начнёт их отдавать
-      applicationsCount: 0,
-      viewsCount: 0,
-      author: null,
+      applicationsCount: task.applicationsCount,
+      viewsCount: task.viewsCount,
+      author: task.author,
     }));
   });
 

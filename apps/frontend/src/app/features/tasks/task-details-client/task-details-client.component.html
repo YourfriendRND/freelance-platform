@@ -8,8 +8,38 @@
 
     <div class="task-details-client__info">
       <p class="task-details-client__name">{{ authorName() }}</p>
-      <p class="task-details-client__role">{{ authorRoleLabel() }}</p>
-      <p class="task-details-client__since">{{ memberSinceLabel() }}</p>
+
+      <p class="task-details-client__rating" [attr.aria-label]="ratingAriaLabel()">
+        <span class="task-details-client__stars" aria-hidden="true">
+          @for (star of stars(); track star.index) {
+            <span class="task-details-client__star" [attr.data-fill]="star.fill">★</span>
+          }
+        </span>
+        <span>{{ ratingLabel() }} {{ reviewsLabel() }}</span>
+      </p>
+
+      <p class="task-details-client__bio">{{ bioLabel }}</p>
+
+      <p class="task-details-client__meta">
+        <span>{{ memberSinceLabel() }}</span>
+        <span class="task-details-client__verified">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="14"
+            height="14"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2.5"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            aria-hidden="true"
+          >
+            <path d="M20 6 9 17l-5-5"></path>
+          </svg>
+          {{ verifiedLabel }}
+        </span>
+      </p>
     </div>
   </div>
 </article>

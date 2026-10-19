@@ -9,10 +9,15 @@ import {
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, RouterLink } from '@angular/router';
-import { TaskApi, UserApi } from '@freelance-platform/client-api';
+import { TaskApi } from '@freelance-platform/client-api';
 import { TaskApplicationStore } from '@freelance-platform/client-state';
-import { TaskResponse, UserResponse } from '@freelance-platform/shared-types';
-import { formatTaskBudget, formatTaskDate, formatUserName } from '../../../format';
+import { TaskResponse } from '@freelance-platform/shared-types';
+import {
+  formatAuthorRating,
+  formatTaskBudget,
+  formatTaskDate,
+  formatUserName,
+} from '../../../format';
 import { UiDashboardWrapperComponent } from '@freelance-platform/ui';
 import { AppHeaderComponent } from '../../../app-header/app-header.component';
 import { DashboardSidebarComponent } from '../../../dashboard/dashboard-sidebar/dashboard-sidebar.component';
@@ -25,7 +30,6 @@ import { ApplicationsPageView } from '../applications-list.model';
 
 const PENDING_LABEL = 'Загрузка';
 const MISSING_LABEL = '—';
-const MISSING_RATING_LABEL = 'Рейтинг недоступен';
 
 @Component({
   selector: 'app-application-details-page',
@@ -48,11 +52,9 @@ export class ApplicationDetailsPageComponent {
   private readonly destroyRef = inject(DestroyRef);
   private readonly taskApplicationStore = inject(TaskApplicationStore);
   private readonly taskApi = inject(TaskApi);
-  private readonly userApi = inject(UserApi);
   private requestedTaskId: string | null = null;
 
   private readonly task = signal<TaskResponse | null>(null);
-  private readonly client = signal<UserResponse | null>(null);
   private readonly taskUnavailable = signal(false);
 
   protected readonly ApplicationsPageView = ApplicationsPageView;
@@ -66,7 +68,6 @@ export class ApplicationDetailsPageComponent {
     }
 
     const task = this.task();
-    const client = this.client();
     const taskUnavailable = this.taskUnavailable();
     const taskLabel = task ? null : taskUnavailable ? MISSING_LABEL : PENDING_LABEL;
 
@@ -76,20 +77,22 @@ export class ApplicationDetailsPageComponent {
       taskTitle: task?.title ?? taskLabel ?? PENDING_LABEL,
       submittedAt: selected.createdAt,
       proposedPrice: selected.proposedPrice,
-      // TODO: срок выполнения, когда бэкенд начнёт его отдавать
-      timelineLabel: MISSING_LABEL,
+      timelineLabel: selected.timeline?.trim() || MISSING_LABEL,
       taskBudgetLabel: task
         ? formatTaskBudget(task.budgetMin, task.budgetMax)
         : (taskLabel ?? MISSING_LABEL),
       message: selected.message,
       client: {
-        name: client
-          ? formatUserName(client)
+        name: task
+          ? formatUserName(task.author)
           : taskUnavailable
             ? MISSING_LABEL
             : PENDING_LABEL,
-        // TODO: рейтинг заказчика, когда бэкенд начнёт его отдавать
-        ratingLabel: MISSING_RATING_LABEL,
+        ratingLabel: task
+          ? formatAuthorRating(task.author)
+          : taskUnavailable
+            ? MISSING_LABEL
+            : PENDING_LABEL,
       },
       task: {
         id: selected.taskId,
@@ -120,7 +123,6 @@ export class ApplicationDetailsPageComponent {
       }
 
       this.task.set(null);
-      this.client.set(null);
       this.taskUnavailable.set(false);
       this.requestedTaskId = null;
       this.taskApplicationStore.loadById(id);
@@ -141,7 +143,6 @@ export class ApplicationDetailsPageComponent {
     });
   }
 
-  // TODO: убрать отдельный запрос пользователя, когда бэкенд начнёт отдавать его вместе с откликом
   private loadTask(taskId: string): void {
     if (this.requestedTaskId === taskId) {
       return;
@@ -159,36 +160,9 @@ export class ApplicationDetailsPageComponent {
           }
 
           this.task.set(task);
-          this.loadClient(task.customerId);
         },
         error: () => {
           if (this.taskApplicationStore.selectedApplication()?.taskId !== taskId) {
-            return;
-          }
-
-          this.taskUnavailable.set(true);
-        },
-      });
-  }
-
-  private loadClient(userId: string): void {
-    this.userApi
-      .findOne(userId)
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe({
-        next: (user) => {
-          const task = this.task();
-
-          if (task?.customerId !== userId) {
-            return;
-          }
-
-          this.client.set(user);
-        },
-        error: () => {
-          const task = this.task();
-
-          if (task?.customerId !== userId) {
             return;
           }
 
