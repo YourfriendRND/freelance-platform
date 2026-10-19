@@ -122,14 +122,14 @@ export class TaskController {
   @ApiOperation({
     summary: 'Задача по id',
     description:
-      'Получение задачи по id. В задаче есть автор, число откликов и viewsCount. Для авторизованного исполнителя есть hasApplied',
+      'Получение задачи по id. Черновик виден только владельцу, для остальных ответ такой же, как если задачи нет. В задаче есть автор, число откликов и viewsCount. Для авторизованного исполнителя есть hasApplied',
   })
   @ApiOkResponse({
     description: 'Данные задачи',
     type: TaskRdo,
   })
   @ApiNotFoundResponse({
-    description: 'Задача не найдена',
+    description: 'Задача не найдена. Черновик для всех, кроме владельца, тоже отвечает 404',
     example: {
       statusCode: 404,
       message: 'Задача с "b4252672-a116-41ee-b78c-d694b236db32" не найдена',

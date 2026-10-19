@@ -100,8 +100,22 @@ export class TaskService {
   }
 
   async findOne(id: string, authUser?: AuthUserPayload): Promise<TaskEntity> {
-    const task = authUser?.user.role === UserRole.Freelancer
-      ? await this.taskRepository.findById(id, authUser.user.id)
+    const performerId = authUser?.user.role === UserRole.Freelancer
+      ? authUser.user.id
+      : undefined;
+    const task = await this.getTask(id, performerId);
+    const { status, customerId } = task;
+
+    if (status === TaskStatus.Draft && customerId !== authUser?.user.id) {
+      throw new NotFoundException(`Задача с "${id}" не найдена`);
+    }
+
+    return task;
+  }
+
+  async getTask(id: string, performerId?: string): Promise<TaskEntity> {
+    const task = performerId !== undefined
+      ? await this.taskRepository.findById(id, performerId)
       : await this.taskRepository.findById(id);
 
     if (!task) {
@@ -112,7 +126,7 @@ export class TaskService {
   }
 
   async update(id: string, dto: UpdateTaskDto, authUser: AuthUserPayload): Promise<TaskEntity> {
-    const currentTask = await this.findOne(id);
+    const currentTask = await this.getTask(id);
     const { user: { id: userId } } = authUser;
 
     if (currentTask.customerId !== userId) {
@@ -143,7 +157,7 @@ export class TaskService {
   }
 
   async delete(id: string, authUser: AuthUserPayload): Promise<void> {
-    const task = await this.findOne(id);
+    const task = await this.getTask(id);
     const { user: { id: userId } } = authUser;
 
     if (task.customerId !== userId) {
