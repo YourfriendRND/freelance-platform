@@ -51,6 +51,8 @@ describe('TasksPageComponent testing', () => {
       budgetMin: TASKS_TEST_BUDGET_MIN,
       budgetMax: TASKS_TEST_BUDGET_MAX,
       categoryId,
+      applicationsCount: 4,
+      viewsCount: 9,
     });
   }
 
@@ -159,6 +161,9 @@ describe('TasksPageComponent testing', () => {
     expect(root().textContent).toContain('Первая задача');
     expect(root().textContent).toContain('Четвёртая задача');
     expect(root().textContent).toContain('Программирование и IT');
+    expect(root().textContent).toContain('4 откликов');
+    expect(root().textContent).toContain('9 просмотров');
+    expect(root().textContent).toContain('Иван Петров');
     expect(root().textContent).toContain(
       `Найдите подходящую задачу среди ${availableTotal} доступных`,
     );

@@ -8,30 +8,30 @@ import {
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { TaskApi, TaskCategoryApi } from '@freelance-platform/client-api';
-import { AuthStore } from '@freelance-platform/client-state';
 import { resolveHttpErrorMessage } from '@freelance-platform/http';
 import {
-  FindTasksQuery,
+  FindMyTasksQuery,
   PAGINATION_DEFAULT_LIMIT,
   PAGINATION_DEFAULT_PAGE,
   TaskCategoryResponse,
   TaskResponse,
   TaskSort,
+  TaskViewData,
 } from '@freelance-platform/shared-types';
 import { UiDashboardWrapperComponent } from '@freelance-platform/ui';
 import { AppHeaderComponent } from '../../../app-header/app-header.component';
 import { DashboardSidebarComponent } from '../../../dashboard/dashboard-sidebar/dashboard-sidebar.component';
+import { ApplicationsPageView } from '../../applications/applications-list.model';
 import { TaskItemComponent } from '../../tasks/task-item/task-item.component';
 import { TasksFiltersComponent } from '../../tasks/tasks-filters/tasks-filters.component';
 import {
   TasksFiltersSelection,
-  toPublicTasksQuery,
+  toMyTasksQuery,
 } from '../../tasks/tasks-filters/tasks-filters.model';
 import { TasksPageContainerComponent } from '../../tasks/tasks-page-container/tasks-page-container.component';
-import { ApplicationsPageView } from '../../applications/applications-list.model';
+import { TasksPaginationComponent } from '../../tasks/tasks-pagination/tasks-pagination.component';
 import {
   categoryTitleById,
-  filterMyTasks,
   hasAppliedFilters,
   isSameTasksQuery,
   toMyTaskListItem,
@@ -46,58 +46,55 @@ import {
     TasksPageContainerComponent,
     TasksFiltersComponent,
     TaskItemComponent,
+    TasksPaginationComponent,
   ],
   templateUrl: './my-tasks-page.component.html',
   styleUrl: './my-tasks-page.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class MyTasksPageComponent {
-  private readonly authStore = inject(AuthStore);
   private readonly taskApi = inject(TaskApi);
   private readonly taskCategoryApi = inject(TaskCategoryApi);
   private readonly destroyRef = inject(DestroyRef);
   private requestId = 0;
-  private loadedQuery: FindTasksQuery | null = null;
+  private loadedQuery: FindMyTasksQuery | null = null;
 
   private readonly filters = signal<TasksFiltersSelection>({ sort: TaskSort.Newest });
+  private readonly page = signal(PAGINATION_DEFAULT_PAGE);
   private readonly loadedTasks = signal<readonly TaskResponse[]>([]);
   private readonly loadedCategories = signal<readonly TaskCategoryResponse[]>([]);
+  private readonly total = signal(0);
 
   protected readonly isLoading = signal(false);
   protected readonly ApplicationsPageView = ApplicationsPageView;
   protected readonly errorMessage = signal<string | null>(null);
   protected readonly categories = this.loadedCategories;
+  protected readonly currentPage = this.page;
 
-  // TODO: бэкенд должен добавить запрос списка задач пользователя. Сейчас невозможно получить задачи в раздел «Мои задачи»
-  protected readonly ownTasks = computed(() => {
-    const userId = this.authStore.user()?.id;
+  protected readonly tasks = computed<readonly TaskViewData[]>(() => {
     const titles = categoryTitleById(this.loadedCategories());
 
-    if (!userId) {
-      return [];
-    }
-
-    return this.loadedTasks()
-      .filter((task) => task.customerId === userId)
-      .map((task) => toMyTaskListItem(task, titles));
+    return this.loadedTasks().map((task) => toMyTaskListItem(task, titles));
   });
-
-  protected readonly tasks = computed(() => filterMyTasks(this.ownTasks(), this.filters()));
 
   protected readonly shownCount = computed(() => this.tasks().length);
 
-  protected readonly totalCount = computed(() => this.ownTasks().length);
+  protected readonly totalCount = this.total;
+
+  protected readonly totalPages = computed(() =>
+    Math.max(1, Math.ceil(this.total() / PAGINATION_DEFAULT_LIMIT)),
+  );
 
   protected readonly view = computed(() => {
-    if (this.isLoading() && this.loadedTasks().length === 0) {
+    if (this.isLoading()) {
       return ApplicationsPageView.Loading;
     }
 
-    if (this.errorMessage() && this.loadedTasks().length === 0) {
+    if (this.errorMessage()) {
       return ApplicationsPageView.Error;
     }
 
-    return this.tasks().length === 0 ? ApplicationsPageView.Empty : ApplicationsPageView.Content;
+    return this.total() === 0 ? ApplicationsPageView.Empty : ApplicationsPageView.Content;
   });
 
   protected readonly emptyTitle = computed(() =>
@@ -119,19 +116,41 @@ export class MyTasksPageComponent {
         },
       });
 
-    this.loadTasks(this.filters());
+    this.loadTasks();
   }
 
   protected onFiltersChange(filters: TasksFiltersSelection): void {
+    const previous = toMyTasksQuery(this.filters());
+    const next = toMyTasksQuery(filters);
+
     this.filters.set(filters);
-    this.loadTasks(filters);
+
+    if (isSameTasksQuery(previous, next)) {
+      return;
+    }
+
+    this.page.set(PAGINATION_DEFAULT_PAGE);
+    this.loadTasks();
   }
 
-  private loadTasks(filters: TasksFiltersSelection): void {
-    const query: FindTasksQuery = {
-      page: PAGINATION_DEFAULT_PAGE,
+  protected onPageChange(page: number): void {
+    const nextPage = Math.min(Math.max(page, 1), this.totalPages());
+
+    if (nextPage === this.page()) {
+      return;
+    }
+
+    this.page.set(nextPage);
+    this.loadTasks();
+  }
+
+  private loadTasks(): void {
+    const filters = this.filters();
+    const filtersQuery = toMyTasksQuery(filters);
+    const query: FindMyTasksQuery = {
+      page: this.page(),
       limit: PAGINATION_DEFAULT_LIMIT,
-      ...toPublicTasksQuery(filters),
+      ...filtersQuery,
     };
 
     if (this.loadedQuery && isSameTasksQuery(this.loadedQuery, query)) {
@@ -144,15 +163,17 @@ export class MyTasksPageComponent {
     this.errorMessage.set(null);
 
     this.taskApi
-      .findAll(query)
+      .findMine(query)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
-        next: ({ items }) => {
+        next: ({ items, total, page }) => {
           if (request !== this.requestId) {
             return;
           }
 
           this.loadedTasks.set(items);
+          this.total.set(total);
+          this.page.set(page);
           this.isLoading.set(false);
         },
         error: (error: unknown) => {

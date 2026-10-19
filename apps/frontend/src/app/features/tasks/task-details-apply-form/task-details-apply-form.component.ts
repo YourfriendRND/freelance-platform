@@ -7,20 +7,18 @@ import {
   output,
 } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
-import {
-  NonNullableFormBuilder,
-  ReactiveFormsModule,
-  Validators,
-} from '@angular/forms';
+import { NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { map, startWith } from 'rxjs';
 import { TaskApplicationStore } from '@freelance-platform/client-state';
 import { CreateTaskApplicationRequest } from '@freelance-platform/shared-types';
 import { formatTaskBudget } from '../../../format';
 import { UiButtonComponent, UiModalComponent, UiTextFieldComponent } from '@freelance-platform/ui';
+import { timelineValidator } from './task-details-apply-form.validation';
 
 type TaskDetailsApplyFormValue = {
   proposedPrice: string;
   message: string;
+  timeline: string;
 };
 
 type TaskDetailsApplyControlName = keyof TaskDetailsApplyFormValue;
@@ -68,8 +66,7 @@ export class TaskDetailsApplyFormComponent {
       Validators.minLength(MESSAGE_MIN_LENGTH),
       Validators.maxLength(MESSAGE_MAX_LENGTH),
     ]),
-    // TODO: отправлять срок выполнения, когда бэкенд начнёт его принимать
-    timeline: this.formBuilder.control({ value: '', disabled: true }),
+    timeline: this.formBuilder.control('', [timelineValidator]),
   });
 
   protected readonly messageLength = toSignal(
@@ -107,10 +104,12 @@ export class TaskDetailsApplyFormComponent {
     }
 
     const value = this.form.getRawValue();
+    const timeline = value.timeline.trim();
     const body: CreateTaskApplicationRequest = {
       taskId: this.taskId(),
       message: value.message.trim(),
       proposedPrice: Number(value.proposedPrice),
+      ...(timeline ? { timeline } : {}),
     };
 
     this.taskApplicationStore.create(body).subscribe({
@@ -132,9 +131,13 @@ export class TaskDetailsApplyFormComponent {
       case Boolean(control.errors['required']):
         return 'Обязательное поле';
       case Boolean(control.errors['minlength']):
-        return `Минимум ${MESSAGE_MIN_LENGTH} символов`;
+        return controlName === 'timeline'
+          ? 'Минимум 2 символа'
+          : `Минимум ${MESSAGE_MIN_LENGTH} символов`;
       case Boolean(control.errors['maxlength']):
-        return `Максимум ${MESSAGE_MAX_LENGTH} символов`;
+        return controlName === 'timeline'
+          ? 'Максимум 100 символов'
+          : `Максимум ${MESSAGE_MAX_LENGTH} символов`;
       case Boolean(control.errors['pattern']):
         return 'Введите целое число';
       case Boolean(control.errors['min']):

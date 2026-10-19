@@ -122,6 +122,49 @@ describe('TaskDetailsApplyFormComponent testing', () => {
     expect(closed).toHaveBeenCalledTimes(1);
   });
 
+  it('should send a timeline of 2 to 100 characters', () => {
+    setInput('#task-apply-price', '2500');
+    setInput('#task-apply-message', 'а'.repeat(40));
+    setInput('#task-apply-timeline', '2 недели');
+    fixture.detectChanges();
+
+    (root().querySelector('button[type="submit"]') as HTMLButtonElement).click();
+    fixture.detectChanges();
+
+    expect(create).toHaveBeenCalledWith({
+      taskId: MOCK_TASK_ID,
+      message: 'а'.repeat(40),
+      proposedPrice: 2500,
+      timeline: '2 недели',
+    });
+  });
+
+  it('should reject a timeline shorter than 2 characters', () => {
+    setInput('#task-apply-price', '2500');
+    setInput('#task-apply-message', 'а'.repeat(40));
+    setInput('#task-apply-timeline', 'я');
+    fixture.detectChanges();
+
+    (root().querySelector('button[type="submit"]') as HTMLButtonElement).click();
+    fixture.detectChanges();
+
+    expect(create).not.toHaveBeenCalled();
+    expect(root().textContent).toContain('Минимум 2 символа');
+  });
+
+  it('should reject a timeline longer than 100 characters', () => {
+    setInput('#task-apply-price', '2500');
+    setInput('#task-apply-message', 'а'.repeat(40));
+    setInput('#task-apply-timeline', 'я'.repeat(101));
+    fixture.detectChanges();
+
+    (root().querySelector('button[type="submit"]') as HTMLButtonElement).click();
+    fixture.detectChanges();
+
+    expect(create).not.toHaveBeenCalled();
+    expect(root().textContent).toContain('Максимум 100 символов');
+  });
+
   it('should keep the modal open and show the submit error', () => {
     const closed = vi.fn();
     fixture.componentInstance.closed.subscribe(closed);

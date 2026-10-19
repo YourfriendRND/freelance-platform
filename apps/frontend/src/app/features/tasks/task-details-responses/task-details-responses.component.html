@@ -1,0 +1,83 @@
+<section class="task-responses" aria-labelledby="task-responses-title">
+  <h2 id="task-responses-title" class="task-responses__title">
+    Отклики ({{ applicationsCount() }})
+  </h2>
+
+  @if (isLoading()) {
+    <p class="task-responses__status">Загрузка откликов</p>
+  } @else if (loadError(); as errorMessage) {
+    <p class="task-responses__error">{{ errorMessage }}</p>
+  }
+
+  @if (responses().length) {
+    <ul class="task-responses__list">
+      @for (response of responses(); track response.id) {
+        <li class="task-response">
+          <article class="task-response__card">
+            <span class="task-response__avatar" aria-hidden="true">
+              {{ performerInitial(response.performerName) }}
+            </span>
+
+            <div class="task-response__heading">
+              <h3 class="task-response__name">{{ response.performerName }}</h3>
+              <p
+                class="task-response__rating"
+                [attr.aria-label]="ratingAriaLabel(response.rating, response.reviewsCount)"
+              >
+                <span class="task-response__stars" aria-hidden="true">
+                  @for (star of stars(response.rating); track star.index) {
+                    <span class="task-response__star" [attr.data-fill]="star.fill">★</span>
+                  }
+                </span>
+                <span>{{ ratingLabel(response.rating, response.reviewsCount) }}</span>
+              </p>
+            </div>
+
+            <div class="task-response__offer">
+              <p class="task-response__price">{{ priceLabel(response.price) }}</p>
+              <p class="task-response__timeline">{{ timelineLabel(response.timeline) }}</p>
+            </div>
+
+            <p class="task-response__message">{{ response.message }}</p>
+
+            @if (response.error) {
+              <p class="task-response__error">{{ response.error }}</p>
+            }
+
+            <div class="task-response__actions">
+              @if (isPending(response.status)) {
+                <button
+                  type="button"
+                  class="task-response__button task-response__button--accept"
+                  [disabled]="response.isUpdating"
+                  (click)="accept.emit(response.id)"
+                >
+                  Принять
+                </button>
+                <button
+                  type="button"
+                  class="task-response__button task-response__button--decline"
+                  [disabled]="response.isUpdating"
+                  (click)="decline.emit(response.id)"
+                >
+                  Отклонить
+                </button>
+              } @else {
+                <span class="task-response__status" [attr.data-status]="response.status">
+                  {{ statusLabel(response.status) }}
+                </span>
+              }
+              <button
+                type="button"
+                class="task-response__button task-response__button--message"
+                disabled
+              >
+                Написать
+              </button>
+            </div>
+          </article>
+        </li>
+      }
+    </ul>
+  }
+</section>

@@ -90,7 +90,17 @@ describe('TaskDetailsApplyButtonComponent testing', () => {
 
     expect(navigateByUrl).not.toHaveBeenCalled();
     expect(apply).toHaveBeenCalledTimes(1);
-    expect(load).toHaveBeenCalledTimes(1);
+    expect(load).not.toHaveBeenCalled();
+  });
+
+  it('should show an applied state from the task without loading applications', () => {
+    authStore.user.set(mockFreelancerUserResponse);
+    fixture.componentRef.setInput('taskHasApplied', true);
+    fixture.detectChanges();
+
+    expect(root().textContent).toContain('Отклик отправлен');
+    expect(applyButton()).toBeNull();
+    expect(load).not.toHaveBeenCalled();
   });
 
   it('should show an applied state and skip opening the form', () => {

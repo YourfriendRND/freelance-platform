@@ -27,13 +27,13 @@
           [error]="fieldError('proposedPrice')"
         />
 
-        <!-- TODO: отправлять срок выполнения, когда бэкенд начнёт его принимать -->
         <ui-text-field
           formControlName="timeline"
           inputId="task-apply-timeline"
           label="Срок выполнения"
           placeholder="Например, 2 недели"
           hint="Укажите реалистичный срок"
+          [error]="fieldError('timeline')"
         />
       </div>
 

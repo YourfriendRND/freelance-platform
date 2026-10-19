@@ -1,12 +1,11 @@
 import { signal } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ActivatedRoute, convertToParamMap, provideRouter } from '@angular/router';
-import { TaskApi, UserApi } from '@freelance-platform/client-api';
+import { TaskApi } from '@freelance-platform/client-api';
 import { AuthStore, TaskApplicationStore } from '@freelance-platform/client-state';
 import {
   createMockTaskApplicationResponse,
   createMockTaskResponse,
-  createMockUserResponse,
   MOCK_TASK_APPLICATION_ID,
   mockFreelancerUserResponse,
 } from '@freelance-platform/shared-mock';
@@ -23,8 +22,13 @@ describe('ApplicationDetailsPageComponent testing', () => {
   let clearSelected: ReturnType<typeof vi.fn>;
 
   const application = createMockTaskApplicationResponse();
-  const task = createMockTaskResponse();
-  const client = createMockUserResponse();
+  const task = createMockTaskResponse({
+    author: {
+      ...createMockTaskResponse().author,
+      rating: 4.8,
+      reviewsCount: 12,
+    },
+  });
 
   beforeEach(async () => {
     selectedApplication = signal<TaskApplicationResponse | null>(null);
@@ -64,10 +68,6 @@ describe('ApplicationDetailsPageComponent testing', () => {
         {
           provide: TaskApi,
           useValue: { findOne: () => of(task) },
-        },
-        {
-          provide: UserApi,
-          useValue: { findOne: () => of(client) },
         },
       ],
     }).compileComponents();
@@ -118,10 +118,19 @@ describe('ApplicationDetailsPageComponent testing', () => {
     expect(text).toContain('Ждём ответа заказчика');
     expect(text).toContain('Иван Петров');
     expect(text).toContain('Удалённо');
-    expect(text).toContain('Рейтинг недоступен');
+    expect(text).toContain('2 недели');
+    expect(text).toContain('4.8 · 12 отзывов');
     expect(links).toContain('/applications');
     expect(links).toContain(`/tasks/${task.id}`);
     expect(messageButton?.disabled).toBe(true);
+  });
+
+  it('should show a dash when the application has no timeline', () => {
+    selectedApplication.set(createMockTaskApplicationResponse({ timeline: null }));
+    fixture.detectChanges();
+
+    expect(root().textContent).toContain('—');
+    expect(root().textContent).toContain('4.8 · 12 отзывов');
   });
 
   it('should clear the selected application on destroy', () => {

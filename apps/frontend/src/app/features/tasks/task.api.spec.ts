@@ -13,6 +13,7 @@ import {
 } from '@freelance-platform/shared-mock';
 import {
   CreateTaskRequest,
+  FindMyTasksQuery,
   FindTasksQuery,
   PAGINATION_DEFAULT_LIMIT,
   PAGINATION_DEFAULT_PAGE,
@@ -144,6 +145,29 @@ describe('TaskApi testing', () => {
         httpRequest.method === 'GET' &&
         httpRequest.url === '/api/tasks' &&
         httpRequest.params.get('sort') === TaskSort.BudgetDesc,
+    );
+
+    request.flush(listResponse);
+  });
+
+  it('should request the current customer tasks including a draft status', () => {
+    const query: FindMyTasksQuery = {
+      page: PAGINATION_DEFAULT_PAGE,
+      limit: PAGINATION_DEFAULT_LIMIT,
+      status: TaskStatus.Draft,
+      sort: TaskSort.Newest,
+    };
+
+    api.findMine(query).subscribe();
+
+    const request = http.expectOne(
+      (httpRequest) =>
+        httpRequest.method === 'GET' &&
+        httpRequest.url === '/api/tasks/my' &&
+        httpRequest.params.get('status') === TaskStatus.Draft &&
+        httpRequest.params.get('sort') === TaskSort.Newest &&
+        httpRequest.params.get('page') === String(PAGINATION_DEFAULT_PAGE) &&
+        httpRequest.params.get('limit') === String(PAGINATION_DEFAULT_LIMIT),
     );
 
     request.flush(listResponse);
