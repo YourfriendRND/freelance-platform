@@ -6,6 +6,7 @@ import {
   TASKS_ALL_FILTER_VALUE,
   TasksFiltersSelection,
   toFindTasksQuery,
+  toMyTasksQuery,
 } from './tasks-filters.model';
 import { TASKS_TEST_BUDGET_MAX, TASKS_TEST_BUDGET_MIN } from '../tasks-test.constants';
 
@@ -61,6 +62,18 @@ describe('TasksFiltersComponent testing', () => {
     ).toEqual({
       budgetMin: TASKS_TEST_BUDGET_MIN,
       budgetMax: TASKS_TEST_BUDGET_MAX,
+      sort: TaskSort.Newest,
+    });
+  });
+
+  it('should keep draft status in the my tasks query', () => {
+    expect(
+      toMyTasksQuery({
+        status: TaskStatus.Draft,
+        sort: TaskSort.Newest,
+      }),
+    ).toEqual({
+      status: TaskStatus.Draft,
       sort: TaskSort.Newest,
     });
   });

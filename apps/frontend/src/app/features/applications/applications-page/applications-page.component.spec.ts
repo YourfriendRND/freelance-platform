@@ -1,7 +1,7 @@
 import { signal } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter, Router } from '@angular/router';
-import { TaskApi, TaskCategoryApi, UserApi } from '@freelance-platform/client-api';
+import { TaskApi, TaskApplicationApi, TaskCategoryApi } from '@freelance-platform/client-api';
 import { AuthStore, TaskApplicationStore } from '@freelance-platform/client-state';
 import {
   createMockTaskApplicationResponse,
@@ -47,6 +47,7 @@ describe('ApplicationsPageComponent testing', () => {
     title: 'Дизайн современного интернет-магазина',
     customerId: ivan.id,
     categoryId: category.id,
+    author: ivan,
   });
 
   const campaignTask = createMockTaskResponse({
@@ -54,6 +55,7 @@ describe('ApplicationsPageComponent testing', () => {
     title: 'Кампания в социальных сетях',
     customerId: maria.id,
     categoryId: category.id,
+    author: maria,
   });
 
   const pendingApplication = createMockTaskApplicationResponse({
@@ -98,9 +100,9 @@ describe('ApplicationsPageComponent testing', () => {
           },
         },
         {
-          provide: UserApi,
+          provide: TaskApplicationApi,
           useValue: {
-            findOne: (id: string) => of(id === maria.id ? maria : ivan),
+            getStats: () => of({ total: 12, pending: 4, accepted: 3 }),
           },
         },
         {
@@ -142,13 +144,36 @@ describe('ApplicationsPageComponent testing', () => {
   it('should render loaded applications and summary', () => {
     showApplications();
 
+    const summary = Array.from(root().querySelectorAll('.applications-summary__value')).map(
+      (value) => value.textContent?.trim(),
+    );
+
     expect(root().textContent).toContain('Мои отклики');
-    expect(root().textContent).toContain('Всего');
+    expect(summary).toEqual(['12', '4', '3']);
     expect(root().textContent).toContain(designTask.title);
     expect(root().textContent).toContain('Иван Смирнов');
     expect(root().textContent).toContain(campaignTask.title);
     expect(root().textContent).toContain('Мария Волкова');
+    expect(root().textContent).toContain('2 недели');
     expect(root().textContent).toContain(category.title);
+  });
+
+  it('should show a dash when the application has no timeline', () => {
+    applications.set([
+      createMockTaskApplicationResponse({
+        ...pendingApplication,
+        timeline: null,
+      }),
+    ]);
+    isLoaded.set(true);
+    fixture.detectChanges();
+    fixture.detectChanges();
+
+    const timeline = Array.from(root().querySelectorAll('.application-item__metric')).find((metric) =>
+      metric.textContent?.includes('Срок'),
+    );
+
+    expect(timeline?.textContent).toContain('—');
   });
 
   it('should filter applications by status tab', () => {

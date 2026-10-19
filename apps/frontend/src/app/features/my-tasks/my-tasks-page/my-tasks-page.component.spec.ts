@@ -6,12 +6,15 @@ import { TaskApi, TaskCategoryApi } from '@freelance-platform/client-api';
 import { AuthStore } from '@freelance-platform/client-state';
 import {
   createMockTaskCategoryResponse,
+  createMockTaskListResponse,
   createMockTaskResponse,
-  createMockUserResponse,
   mockClientUserResponse,
 } from '@freelance-platform/shared-mock';
 import {
-  FindTasksQuery,
+  FindMyTasksQuery,
+  PAGINATION_DEFAULT_LIMIT,
+  PAGINATION_DEFAULT_PAGE,
+  TaskListResponse,
   TaskSort,
   TaskStatus,
   UserResponse,
@@ -21,8 +24,8 @@ import { MyTasksPageComponent } from './my-tasks-page.component';
 
 describe('MyTasksPageComponent testing', () => {
   let fixture: ComponentFixture<MyTasksPageComponent>;
-  let findAll: ReturnType<typeof vi.fn>;
-  let tasks: Subject<{ items: ReturnType<typeof createMockTaskResponse>[] }>;
+  let findMine: ReturnType<typeof vi.fn>;
+  let tasks: Subject<TaskListResponse>;
 
   const category = createMockTaskCategoryResponse({ title: 'Дизайн и творчество' });
   const ownTask = createMockTaskResponse({
@@ -30,16 +33,13 @@ describe('MyTasksPageComponent testing', () => {
     categoryId: category.id,
     customerId: mockClientUserResponse.id,
     status: TaskStatus.Open,
-  });
-  const foreignTask = createMockTaskResponse({
-    id: 'f6a7b8c9-d0e1-4234-f567-89abcdef0123',
-    title: 'Чужая задача',
-    customerId: createMockUserResponse({ id: 'aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee' }).id,
+    applicationsCount: 2,
+    viewsCount: 5,
   });
 
   beforeEach(async () => {
     tasks = new Subject();
-    findAll = vi.fn(() => tasks.asObservable());
+    findMine = vi.fn(() => tasks.asObservable());
 
     await TestBed.configureTestingModule({
       imports: [MyTasksPageComponent],
@@ -53,7 +53,7 @@ describe('MyTasksPageComponent testing', () => {
             logout: vi.fn(),
           },
         },
-        { provide: TaskApi, useValue: { findAll } },
+        { provide: TaskApi, useValue: { findMine } },
         {
           provide: TaskCategoryApi,
           useValue: { findAll: () => of([category]) },
@@ -73,32 +73,52 @@ describe('MyTasksPageComponent testing', () => {
     return fixture.nativeElement as HTMLElement;
   }
 
-  function emitTasks(): void {
-    tasks.next({ items: [foreignTask, ownTask] });
-    tasks.complete();
+  function emitTasks(response: TaskListResponse = createMockTaskListResponse({
+    items: [ownTask],
+    total: 1,
+  })): void {
+    tasks.next(response);
     fixture.detectChanges();
   }
 
-  it('should load public tasks without a draft status', () => {
-    const query = findAll.mock.calls[0][0] as FindTasksQuery;
+  it('should load own tasks without a draft status', () => {
+    const [firstCall] = findMine.mock.calls;
+    const [query] = firstCall as [FindMyTasksQuery];
 
     expect(query.status).toBeUndefined();
     expect(query.sort).toBe(TaskSort.Newest);
+    expect(query.page).toBe(PAGINATION_DEFAULT_PAGE);
+    expect(query.limit).toBe(PAGINATION_DEFAULT_LIMIT);
+    expect(query).not.toHaveProperty('customerId');
   });
 
-  it('should show only the current user tasks', () => {
-    emitTasks();
+  it('should render a task returned by the server without a customer filter', () => {
+    const foreignTask = createMockTaskResponse({
+      title: 'Чужая задача',
+      categoryId: category.id,
+      customerId: 'foreign-customer-id',
+    });
+
+    emitTasks(createMockTaskListResponse({ items: [foreignTask], total: 1 }));
+
+    expect(root().textContent).toContain('Чужая задача');
+  });
+
+  it('should show tasks from the response', () => {
+    emitTasks(createMockTaskListResponse({ items: [ownTask], total: 3 }));
 
     const text = root().textContent ?? '';
 
     expect(text).toContain('Дизайн интернет-магазина');
     expect(text).toContain('Дизайн и творчество');
-    expect(text).not.toContain('Чужая задача');
-    expect(text).toContain('Показано 1 из 1 задач');
+    expect(text).toContain('2 откликов');
+    expect(text).toContain('5 просмотров');
+    expect(text).toContain('Иван Петров');
+    expect(text).toContain('Показано 1 из 3 задач');
     expect(text).not.toContain('Откликнуться');
   });
 
-  it('should keep draft filtering on the client', async () => {
+  it('should send draft status to the backend', async () => {
     emitTasks();
     vi.useFakeTimers();
 
@@ -109,15 +129,46 @@ describe('MyTasksPageComponent testing', () => {
     await vi.advanceTimersByTimeAsync(300);
     fixture.detectChanges();
 
-    const queries = findAll.mock.calls.map((call) => call[0] as FindTasksQuery);
+    const [lastCall] = findMine.mock.calls.slice(-1);
+    const [query] = lastCall as [FindMyTasksQuery];
 
-    expect(queries.every((query) => query.status === undefined)).toBe(true);
-    expect(root().textContent).toContain('По заданным фильтрам ничего не найдено');
-    expect(root().textContent).not.toContain('Дизайн интернет-магазина');
+    expect(query.status).toBe(TaskStatus.Draft);
+    expect(query.page).toBe(PAGINATION_DEFAULT_PAGE);
+  });
+
+  it('should ignore search without a new request', async () => {
+    emitTasks();
+    vi.useFakeTimers();
+
+    const search = root().querySelector('#tasks-search') as HTMLInputElement;
+    search.value = 'магазин';
+    search.dispatchEvent(new Event('input'));
+    fixture.detectChanges();
+    await vi.advanceTimersByTimeAsync(300);
+    fixture.detectChanges();
+
+    expect(findMine).toHaveBeenCalledTimes(1);
+    expect(root().textContent).toContain('Дизайн интернет-магазина');
+  });
+
+  it('should request the next page', () => {
+    emitTasks(createMockTaskListResponse({ items: [ownTask], total: 21 }));
+
+    const next = Array.from(root().querySelectorAll('button')).find((button) =>
+      button.textContent?.includes('Вперёд'),
+    );
+
+    next?.click();
+    fixture.detectChanges();
+
+    const [lastCall] = findMine.mock.calls.slice(-1);
+    const [query] = lastCall as [FindMyTasksQuery];
+
+    expect(query.page).toBe(2);
   });
 
   it('should render the load error', () => {
-    findAll.mockReturnValue(
+    findMine.mockReturnValue(
       throwError(() => new HttpErrorResponse({ status: 500 })),
     );
 

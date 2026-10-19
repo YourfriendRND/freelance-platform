@@ -14,6 +14,8 @@ import {
   CreateTaskApplicationRequest,
   TaskApplicationListResponse,
   TaskApplicationResponse,
+  TaskApplicationStatsResponse,
+  TaskApplicationStatus,
 } from '@freelance-platform/shared-types';
 
 describe('TaskApplicationApi testing', () => {
@@ -61,6 +63,60 @@ describe('TaskApplicationApi testing', () => {
     request.flush(list);
 
     expect(result).toEqual(list);
+  });
+
+  it('should request applications for one task', () => {
+    let result: TaskApplicationListResponse | null = null;
+
+    api.findAll(MOCK_TASK_ID).subscribe((response) => {
+      result = response;
+    });
+
+    const request = http.expectOne(`/api/task-applications?taskId=${MOCK_TASK_ID}`);
+
+    expect(request.request.method).toBe('GET');
+
+    request.flush(list);
+
+    expect(result).toEqual(list);
+  });
+
+  it('should update an application status', () => {
+    let result: TaskApplicationResponse | null = null;
+
+    api.update(application.id, { status: TaskApplicationStatus.Accept }).subscribe((response) => {
+      result = response;
+    });
+
+    const request = http.expectOne(`/api/task-applications/${application.id}`);
+
+    expect(request.request.method).toBe('PATCH');
+    expect(request.request.body).toEqual({ status: TaskApplicationStatus.Accept });
+
+    request.flush(application);
+
+    expect(result).toEqual(application);
+  });
+
+  it('should request application stats', () => {
+    let result: TaskApplicationStatsResponse | null = null;
+    const stats: TaskApplicationStatsResponse = {
+      total: 12,
+      pending: 4,
+      accepted: 3,
+    };
+
+    api.getStats().subscribe((response) => {
+      result = response;
+    });
+
+    const request = http.expectOne('/api/task-applications/stats');
+
+    expect(request.request.method).toBe('GET');
+
+    request.flush(stats);
+
+    expect(result).toEqual(stats);
   });
 
   it('should request one application', () => {
