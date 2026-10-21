@@ -614,4 +614,131 @@ describe('Task module e2e testing', () => {
       expect(getRes.data.viewsCount).toBe(0);
     });
   });
+
+  describe('customer stats', () => {
+    it('should count own tasks and pending applications on open tasks only', async () => {
+      const client = await joinAndLogin(UserRole.Client);
+      const other = await joinAndLogin(UserRole.Client);
+      const freelancer = await joinAndLogin(UserRole.Freelancer);
+      const categoryId = await axios.get('/api/task-categories').then((response) => {
+        expect(response.status).toBe(200);
+
+        const [category] = response.data;
+
+        return category.id as string;
+      });
+
+      const emptyRes = await axios.get('/api/tasks/stats', {
+        headers: { Cookie: client.sessionCookie },
+      });
+
+      expect(emptyRes.status).toBe(200);
+      expect(emptyRes.data).toEqual({
+        open: 0,
+        closed: 0,
+        draft: 0,
+        pendingApplications: 0,
+      });
+
+      const openRes = await axios.post(
+        '/api/tasks',
+        { ...createTaskBody(categoryId), status: TaskStatus.Open },
+        { headers: { Cookie: client.sessionCookie } },
+      );
+      const closingRes = await axios.post(
+        '/api/tasks',
+        { ...createTaskBody(categoryId), status: TaskStatus.Open },
+        { headers: { Cookie: client.sessionCookie } },
+      );
+      const closedCreateRes = await axios.post(
+        '/api/tasks',
+        { ...createTaskBody(categoryId), status: TaskStatus.Open },
+        { headers: { Cookie: client.sessionCookie } },
+      );
+      const closedRes = await axios.patch(
+        `/api/tasks/${closedCreateRes.data.id}`,
+        { status: TaskStatus.Closed },
+        { headers: { Cookie: client.sessionCookie } },
+      );
+      const draftRes = await axios.post(
+        '/api/tasks',
+        createTaskBody(categoryId),
+        { headers: { Cookie: client.sessionCookie } },
+      );
+      const otherOpenRes = await axios.post(
+        '/api/tasks',
+        { ...createTaskBody(categoryId), status: TaskStatus.Open },
+        { headers: { Cookie: other.sessionCookie } },
+      );
+
+      expect(openRes.status).toBe(201);
+      expect(closingRes.status).toBe(201);
+      expect(closedCreateRes.status).toBe(201);
+      expect(closedRes.status).toBe(200);
+      expect(closedRes.data.status).toBe(TaskStatus.Closed);
+      expect(draftRes.status).toBe(201);
+      expect(draftRes.data.status).toBe(TaskStatus.Draft);
+      expect(otherOpenRes.status).toBe(201);
+
+      const pendingOnOpenRes = await axios.post(
+        '/api/task-applications',
+        { taskId: openRes.data.id, message: 'Отклик на открытую задачу' },
+        { headers: { Cookie: freelancer.sessionCookie } },
+      );
+      const pendingOnClosingRes = await axios.post(
+        '/api/task-applications',
+        { taskId: closingRes.data.id, message: 'Отклик на задачу, которую закроют' },
+        { headers: { Cookie: freelancer.sessionCookie } },
+      );
+
+      expect(pendingOnOpenRes.status).toBe(201);
+      expect(pendingOnClosingRes.status).toBe(201);
+
+      const closeRes = await axios.patch(
+        `/api/tasks/${closingRes.data.id}`,
+        { status: TaskStatus.Closed },
+        { headers: { Cookie: client.sessionCookie } },
+      );
+
+      expect(closeRes.status).toBe(200);
+      expect(closeRes.data.status).toBe(TaskStatus.Closed);
+
+      const statsRes = await axios.get('/api/tasks/stats', {
+        headers: { Cookie: client.sessionCookie },
+      });
+
+      expect(statsRes.status).toBe(200);
+      expect(statsRes.data).toEqual({
+        open: 1,
+        closed: 2,
+        draft: 1,
+        pendingApplications: 1,
+      });
+
+      const otherStatsRes = await axios.get('/api/tasks/stats', {
+        headers: { Cookie: other.sessionCookie },
+      });
+
+      expect(otherStatsRes.status).toBe(200);
+      expect(otherStatsRes.data).toEqual({
+        open: 1,
+        closed: 0,
+        draft: 0,
+        pendingApplications: 0,
+      });
+
+      const freelancerRes = await axios.get('/api/tasks/stats', {
+        headers: { Cookie: freelancer.sessionCookie },
+      });
+
+      expect(freelancerRes.status).toBe(403);
+      expect(freelancerRes.data.message).toBe(
+        'Смотреть статистику задач может только заказчик',
+      );
+
+      const guestRes = await axios.get('/api/tasks/stats');
+
+      expect(guestRes.status).toBe(401);
+    });
+  });
 });

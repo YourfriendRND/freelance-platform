@@ -1,4 +1,4 @@
-import { TaskCategoryEntity } from '@freelance-platform/shared-types';
+import { PopularTaskCategory, TaskCategoryEntity } from '@freelance-platform/shared-types';
 
 import { TaskCategoryRepository } from './task-category.repository';
 import { TaskCategoryService } from './task-category.service';
@@ -6,6 +6,7 @@ import { TaskCategoryService } from './task-category.service';
 describe('TaskCategoryService testing', () => {
   let taskCategoryRepository: {
     findAll: ReturnType<typeof vi.fn>;
+    findPopular: ReturnType<typeof vi.fn>;
   };
   let service: TaskCategoryService;
 
@@ -20,6 +21,7 @@ describe('TaskCategoryService testing', () => {
   beforeEach(() => {
     taskCategoryRepository = {
       findAll: vi.fn(),
+      findPopular: vi.fn(),
     };
 
     service = new TaskCategoryService(
@@ -44,5 +46,28 @@ describe('TaskCategoryService testing', () => {
 
     expect(result).toEqual([]);
     expect(taskCategoryRepository.findAll).toHaveBeenCalled();
+  });
+
+  it('should return popular categories from repository', async () => {
+    const popular: PopularTaskCategory[] = [{
+      id: category.id,
+      title: category.title,
+      description: category.description,
+      taskCount: 4,
+    }];
+    taskCategoryRepository.findPopular.mockResolvedValue(popular);
+
+    const result = await service.findPopular();
+
+    expect(result).toBe(popular);
+    expect(taskCategoryRepository.findPopular).toHaveBeenCalled();
+  });
+
+  it('should return an empty popular list when no category has open tasks', async () => {
+    taskCategoryRepository.findPopular.mockResolvedValue([]);
+
+    const result = await service.findPopular();
+
+    expect(result).toEqual([]);
   });
 });
