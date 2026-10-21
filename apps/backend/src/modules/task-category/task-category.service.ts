@@ -1,5 +1,5 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { TaskCategoryEntity } from '@freelance-platform/shared-types';
+import { PopularTaskCategory, TaskCategoryEntity } from '@freelance-platform/shared-types';
 import { TaskCategoryRepository } from './task-category.repository';
 
 @Injectable()
@@ -8,6 +8,10 @@ export class TaskCategoryService {
 
   async findAll(): Promise<TaskCategoryEntity[]> {
     return this.taskCategoryRepository.findAll();
+  }
+
+  async findPopular(): Promise<PopularTaskCategory[]> {
+    return this.taskCategoryRepository.findPopular();
   }
 
   async findOne(id: string): Promise<TaskCategoryEntity> {

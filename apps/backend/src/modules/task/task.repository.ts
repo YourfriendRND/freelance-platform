@@ -1,15 +1,18 @@
 import { Injectable } from '@nestjs/common';
 import {
   CreateTaskRecord,
+  CustomerTaskStats,
   FindMyTasksQuery,
   FindTasksQuery,
   PAGINATION_DEFAULT_LIMIT,
   PAGINATION_DEFAULT_PAGE,
   PaginationResult,
   PUBLIC_TASK_STATUSES,
+  TaskApplicationStatus,
   TaskDbRow,
   TaskEntity,
   TaskSort,
+  TaskStatus,
   UpdateTaskRecord,
 } from '@freelance-platform/shared-types';
 import { DatabaseClient } from '../../database/database.client';
@@ -34,6 +37,13 @@ type TaskCountRow = {
 type TaskStatusCountRow = {
   status: string;
   task_count: string;
+};
+
+type CustomerTaskStatsRow = {
+  open_count: string;
+  closed_count: string;
+  draft_count: string;
+  pending_applications: string;
 };
 
 type TaskBudgetStatsRow = {
@@ -453,6 +463,48 @@ export class TaskRepository {
   }
 
   /**
+   * Счетчики задач заказчика и откликов на рассмотрении.
+   * Pending считается только по открытым задачам. Пустая выборка отдается нулями.
+   */
+  async countCustomerStats(customerId: string): Promise<CustomerTaskStats> {
+    const { rows } = await this.database.query<CustomerTaskStatsRow>(
+      `
+        SELECT
+          COUNT(*) FILTER (WHERE tasks.status = $2) AS open_count,
+          COUNT(*) FILTER (WHERE tasks.status = $3) AS closed_count,
+          COUNT(*) FILTER (WHERE tasks.status = $4) AS draft_count,
+          (
+            SELECT COUNT(*)
+            FROM task_applications AS ta
+            INNER JOIN tasks AS open_tasks ON open_tasks.id = ta.task_id
+            WHERE open_tasks.customer_id = $1
+              AND open_tasks.status = $2
+              AND ta.status = $5
+          ) AS pending_applications
+        FROM tasks
+        WHERE tasks.customer_id = $1
+      `,
+      [
+        customerId,
+        TaskStatus.Open,
+        TaskStatus.Closed,
+        TaskStatus.Draft,
+        TaskApplicationStatus.Pending,
+      ],
+    );
+
+    const [row] = rows;
+
+    return {
+      open: Number(row?.open_count ?? 0),
+      closed: Number(row?.closed_count ?? 0),
+      draft: Number(row?.draft_count ?? 0),
+      pendingApplications: Number(row?.pending_applications ?? 0),
+    };
+  }
+
+  /**
+   * ! Deprecated - не учитывать в отчетах.
    * Количество задач заказчика по каждому статусу.
    * Группы без задач у этого customer_id в выборку не попадают.
    */
@@ -474,6 +526,7 @@ export class TaskRepository {
   }
 
   /**
+   * ! Deprecated - не учитывать в отчетах.
    * MIN/MAX/AVG бюджета задач заказчика (одна строка).
    * Если задач нет, агрегаты приходят как 0 за счёт COALESCE.
    */

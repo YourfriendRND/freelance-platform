@@ -1,6 +1,20 @@
 import { Injectable } from '@nestjs/common';
 import { DatabaseClient } from '../../database/database.client';
-import { TaskCategoryDbRow, TaskCategoryEntity } from '@freelance-platform/shared-types';
+import {
+  PopularTaskCategory,
+  TaskCategoryDbRow,
+  TaskCategoryEntity,
+  TaskStatus,
+} from '@freelance-platform/shared-types';
+
+const POPULAR_TASK_CATEGORIES_LIMIT = 8;
+
+type PopularTaskCategoryRow = {
+  id: string;
+  title: string;
+  description: string;
+  task_count: string;
+};
 
 type TaskCategoryCountRow = {
   category_id: string;
@@ -29,7 +43,7 @@ export class TaskCategoryRepository {
       `,
     );
 
-    return rows.map((row) => TaskCategoryEntity.fromDb(row));
+    return rows.map((row: TaskCategoryDbRow) => TaskCategoryEntity.fromDb(row));
   }
 
   async findById(id: string): Promise<TaskCategoryEntity | null> {
@@ -52,6 +66,37 @@ export class TaskCategoryRepository {
   }
 
   /**
+   * До 8 категорий с открытыми задачами.
+   * Категории без открытых задач не попадают в выборку.
+   */
+  async findPopular(): Promise<PopularTaskCategory[]> {
+    const { rows } = await this.database.query<PopularTaskCategoryRow>(
+      `
+        SELECT
+          tc.id AS id,
+          tc.title AS title,
+          tc.description AS description,
+          COUNT(*) AS task_count
+        FROM task_categories AS tc
+        INNER JOIN tasks AS t ON t.category_id = tc.id
+        WHERE t.status = $1
+        GROUP BY tc.id, tc.title, tc.description
+        ORDER BY task_count DESC, tc.title ASC
+        LIMIT $2
+      `,
+      [TaskStatus.Open, POPULAR_TASK_CATEGORIES_LIMIT],
+    );
+
+    return rows.map((row: PopularTaskCategoryRow) => ({
+      id: row.id,
+      title: row.title,
+      description: row.description,
+      taskCount: Number(row.task_count),
+    }));
+  }
+
+  /**
+   * ! Deprecated - не учитывать в отчетах.
    * Количество задач заказчика по каждой категории.
    * Категории без задач этого customer_id в выборку не попадают.
    */
@@ -72,6 +117,7 @@ export class TaskCategoryRepository {
   }
 
   /**
+   * ! Deprecated - не учитывать в отчетах.
    * MIN/MAX/SUM бюджета задач заказчика по каждой категории.
    * Категории без задач этого customer_id в выборку не попадают.
    */
@@ -97,6 +143,7 @@ export class TaskCategoryRepository {
   }
 
   /**
+   * ! Deprecated - не учитывать в отчетах.
    * Категории заказчика, в которых не меньше minCount задач.
    */
   async findCategoriesWithMinTaskCount(
