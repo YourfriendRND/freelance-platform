@@ -2,6 +2,7 @@ import { NotFoundException } from '@nestjs/common';
 import { FindMyTasksQueryDto, FindTasksQueryDto } from '@freelance-platform/shared-dto';
 import {
   AuthUserPayload,
+  CustomerTaskStats,
   TaskEntity,
   TaskExecutionType,
   TaskSort,
@@ -22,6 +23,7 @@ describe('TaskService testing', () => {
     findById: ReturnType<typeof vi.fn>;
     update: ReturnType<typeof vi.fn>;
     deleteById: ReturnType<typeof vi.fn>;
+    countCustomerStats: ReturnType<typeof vi.fn>;
   };
   let taskCategoryService: {
     findOne: ReturnType<typeof vi.fn>;
@@ -94,6 +96,7 @@ describe('TaskService testing', () => {
       findById: vi.fn(),
       update: vi.fn(),
       deleteById: vi.fn(),
+      countCustomerStats: vi.fn(),
     };
     taskCategoryService = {
       findOne: vi.fn(),
@@ -497,6 +500,45 @@ describe('TaskService testing', () => {
       await service.delete(taskId, authUser);
 
       expect(taskRepository.deleteById).toHaveBeenCalledWith(taskId);
+    });
+  });
+
+  describe('customer stats', () => {
+    const stats: CustomerTaskStats = {
+      open: 2,
+      closed: 1,
+      draft: 3,
+      pendingApplications: 4,
+    };
+
+    it('should return task counters for the customer', async () => {
+      taskRepository.countCustomerStats.mockResolvedValue(stats);
+
+      const result = await service.getCustomerStats(authUser);
+
+      expect(result).toEqual(stats);
+      expect(taskRepository.countCustomerStats).toHaveBeenCalledWith(customerId);
+    });
+
+    it('should return zeros when the customer has no tasks', async () => {
+      const emptyStats: CustomerTaskStats = {
+        open: 0,
+        closed: 0,
+        draft: 0,
+        pendingApplications: 0,
+      };
+      taskRepository.countCustomerStats.mockResolvedValue(emptyStats);
+
+      const result = await service.getCustomerStats(authUser);
+
+      expect(result).toEqual(emptyStats);
+    });
+
+    it('should throw ForbiddenException when freelancer requests task stats', async () => {
+      await expect(service.getCustomerStats(freelancerAuthUser)).rejects.toThrow(
+        'Смотреть статистику задач может только заказчик',
+      );
+      expect(taskRepository.countCustomerStats).not.toHaveBeenCalled();
     });
   });
 });

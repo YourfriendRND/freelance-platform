@@ -1,6 +1,7 @@
 import {
   PAGINATION_DEFAULT_LIMIT,
   PAGINATION_DEFAULT_PAGE,
+  TaskApplicationStatus,
   TaskExecutionType,
   TaskSort,
   TaskStatus,
@@ -203,5 +204,65 @@ describe('TaskRepository findAll testing', () => {
     expect(sql).not.toContain('AS has_applied');
     expect(params).toEqual([taskRow.id]);
     expect(result?.hasApplied).toBeUndefined();
+  });
+});
+
+describe('TaskRepository countCustomerStats testing', () => {
+  let database: { query: ReturnType<typeof vi.fn> };
+  let repository: TaskRepository;
+
+  const customerId = 'b7e14a02-91c3-4d58-8a6f-1c2d3e4f5a61';
+
+  beforeEach(() => {
+    database = { query: vi.fn() };
+    repository = new TaskRepository(database as unknown as DatabaseClient);
+  });
+
+  it('should count tasks by status and pending applications on open tasks', async () => {
+    database.query.mockResolvedValue({
+      rows: [{
+        open_count: '2',
+        closed_count: '1',
+        draft_count: '0',
+        pending_applications: '3',
+      }],
+    });
+
+    const result = await repository.countCustomerStats(customerId);
+    const [sql, values] = database.query.mock.calls[0];
+
+    expect(database.query).toHaveBeenCalledTimes(1);
+    expect(sql).toContain('FILTER (WHERE tasks.status = $2)');
+    expect(sql).toContain('FILTER (WHERE tasks.status = $3)');
+    expect(sql).toContain('FILTER (WHERE tasks.status = $4)');
+    expect(sql).toContain('open_tasks.status = $2');
+    expect(sql).toContain('ta.status = $5');
+    expect(sql).toContain('WHERE tasks.customer_id = $1');
+    expect(values).toEqual([
+      customerId,
+      TaskStatus.Open,
+      TaskStatus.Closed,
+      TaskStatus.Draft,
+      TaskApplicationStatus.Pending,
+    ]);
+    expect(result).toEqual({
+      open: 2,
+      closed: 1,
+      draft: 0,
+      pendingApplications: 3,
+    });
+  });
+
+  it('should return zeros when the query has no row', async () => {
+    database.query.mockResolvedValue({ rows: [] });
+
+    const result = await repository.countCustomerStats(customerId);
+
+    expect(result).toEqual({
+      open: 0,
+      closed: 0,
+      draft: 0,
+      pendingApplications: 0,
+    });
   });
 });

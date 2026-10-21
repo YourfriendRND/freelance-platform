@@ -7,6 +7,7 @@ import {
 } from '@freelance-platform/shared-dto';
 import {
   AuthUserPayload,
+  CustomerTaskStats,
   PaginationResult,
   TaskEntity,
   TaskStatus,
@@ -97,6 +98,16 @@ export class TaskService {
       page,
       limit,
     });
+  }
+
+  async getCustomerStats(authUser: AuthUserPayload): Promise<CustomerTaskStats> {
+    const { user: { id: customerId, role } } = authUser;
+
+    if (role !== UserRole.Client) {
+      throw new ForbiddenException('Смотреть статистику задач может только заказчик');
+    }
+
+    return this.taskRepository.countCustomerStats(customerId);
   }
 
   async findOne(id: string, authUser?: AuthUserPayload): Promise<TaskEntity> {

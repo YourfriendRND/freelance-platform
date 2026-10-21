@@ -13,4 +13,6 @@ export * from './task-state.type';
 export * from './task-view.type';
 export * from './find-tasks-query.type';
 export * from './find-my-tasks-query.type';
+export * from './customer-task-stats.type';
+export * from './popular-task-category.type';
 export * from './task-sort';

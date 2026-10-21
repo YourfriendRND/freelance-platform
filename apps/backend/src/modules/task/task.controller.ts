@@ -30,6 +30,7 @@ import {
 } from '@freelance-platform/shared-dto';
 import {
   CommonRdo,
+  CustomerTaskStatsRdo,
   TaskListRdo,
   TaskRdo,
 } from '@freelance-platform/shared-rdo';
@@ -115,6 +116,41 @@ export class TaskController {
     const taskList = await this.taskService.findAllByCustomer(query, authUser);
 
     return fillRdo(TaskListRdo, taskList);
+  }
+
+  @Get('stats')
+  @AuthCheck()
+  @ApiOperation({
+    summary: 'Статистика задач заказчика',
+    description:
+      'Счетчики задач текущего заказчика: открытые, закрытые и черновики. Отклики на рассмотрении считаются только по открытым задачам',
+  })
+  @ApiOkResponse({
+    description: 'Счетчики задач заказчика',
+    type: CustomerTaskStatsRdo,
+  })
+  @ApiUnauthorizedResponse({
+    description: 'Сессия не найдена, cookie отсутствует или сессия просрочена',
+    example: {
+      statusCode: 401,
+      message: 'Пользователь не авторизован. Cookie не найден',
+      error: 'Unauthorized',
+    },
+  })
+  @ApiForbiddenResponse({
+    description: 'Смотреть статистику задач может только заказчик',
+    example: {
+      statusCode: 403,
+      message: 'Смотреть статистику задач может только заказчик',
+      error: 'Forbidden',
+    },
+  })
+  async getCustomerStats(
+    @CurrentUser() authUser: AuthUserPayload,
+  ): Promise<CustomerTaskStatsRdo> {
+    const stats = await this.taskService.getCustomerStats(authUser);
+
+    return fillRdo(CustomerTaskStatsRdo, stats);
   }
 
   @Get(':id')
