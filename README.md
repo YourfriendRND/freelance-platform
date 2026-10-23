@@ -26,6 +26,8 @@ apps/
   backend-e2e/          # HTTP e2e backend (Vitest + axios)
   frontend/
     src/
+      styles/
+        _breakpoints.scss  # планшет 960px, телефон 640px
       app/
         features/       # feature-first
         format/         # вспомогательные функции форматирования 
@@ -77,7 +79,7 @@ REFRESH_AFTER_SECONDS=3600
 
 ```bash
 yarn backend    # API: http://localhost:3000/api
-yarn frontend   # SPA: http://127.0.0.1:4200 (`/` => /welcome для гостя, /tasks при сессии)
+yarn frontend   # SPA: http://127.0.0.1:4200
 ```
 
 Swagger UI: http://localhost:3000/docs
