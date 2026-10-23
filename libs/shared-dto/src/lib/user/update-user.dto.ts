@@ -12,7 +12,7 @@ export class UpdateUserDto {
     minLength: 2,
     maxLength: 255,
   })
-  @IsOptional()
+  @ValidateIf((dto: UpdateUserDto) => dto.firstName !== undefined)
   @IsString()
   @MinLength(2)
   @MaxLength(255)
