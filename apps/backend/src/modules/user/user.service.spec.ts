@@ -1,5 +1,5 @@
-import { NotFoundException } from '@nestjs/common';
-import { UserEntity, UserRole } from '@freelance-platform/shared-types';
+import { ForbiddenException, NotFoundException } from '@nestjs/common';
+import { AuthUserPayload, UserEntity, UserRole } from '@freelance-platform/shared-types';
 
 import { UserRepository } from './user.repository';
 import { UserService } from './user.service';
@@ -15,6 +15,7 @@ describe('UserService testing', () => {
     findByEmail: ReturnType<typeof vi.fn>;
     findAuthCredentialsById: ReturnType<typeof vi.fn>;
     create: ReturnType<typeof vi.fn>;
+    update: ReturnType<typeof vi.fn>;
   };
   let service: UserService;
 
@@ -33,6 +34,7 @@ describe('UserService testing', () => {
       findByEmail: vi.fn(),
       findAuthCredentialsById: vi.fn(),
       create: vi.fn(),
+      update: vi.fn(),
     };
 
     service = new UserService(
@@ -68,5 +70,50 @@ describe('UserService testing', () => {
     await expect(service.findOne('missing-id')).rejects.toBeInstanceOf(
       NotFoundException,
     );
+  });
+
+  describe('update', () => {
+    const authUser: AuthUserPayload = {
+      user,
+      sessionId: 'session-id',
+      token: 'token',
+    };
+
+    it('should update only provided profile fields', async () => {
+      const updated = new UserEntity({ ...user.toObject(), firstName: 'Anna' });
+      userRepository.update.mockResolvedValue(updated);
+
+      const result = await service.update(user.id, { firstName: 'Anna' }, authUser);
+
+      expect(result).toBe(updated);
+      expect(userRepository.update).toHaveBeenCalledWith(user.id, { firstName: 'Anna' });
+    });
+
+    it('should clear bio when it is null', async () => {
+      userRepository.update.mockResolvedValue(user);
+
+      await service.update(user.id, { bio: null }, authUser);
+
+      expect(userRepository.update).toHaveBeenCalledWith(user.id, { bio: null });
+    });
+
+    it('should reject an update of another user', async () => {
+      await expect(
+        service.update('other-user-id', { bio: 'Чужой текст' }, authUser),
+      ).rejects.toBeInstanceOf(ForbiddenException);
+
+      expect(userRepository.update).not.toHaveBeenCalled();
+      expect(userRepository.findById).not.toHaveBeenCalled();
+    });
+
+    it('should return the current user without writing an empty patch', async () => {
+      userRepository.findById.mockResolvedValue(user);
+
+      const result = await service.update(user.id, {}, authUser);
+
+      expect(result).toBe(user);
+      expect(userRepository.update).not.toHaveBeenCalled();
+      expect(userRepository.findById).toHaveBeenCalledWith(user.id);
+    });
   });
 });

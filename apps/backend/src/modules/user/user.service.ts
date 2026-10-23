@@ -1,8 +1,8 @@
-import { Injectable, NotFoundException, Inject } from '@nestjs/common';
+import { ForbiddenException, Injectable, NotFoundException, Inject } from '@nestjs/common';
 import { ConfigType } from '@nestjs/config';
 import { UserRepository } from './user.repository';
-import { UserAuthCredentials, UserEntity } from '@freelance-platform/shared-types';
-import { CreateUserDto } from '@freelance-platform/shared-dto';
+import { AuthUserPayload, UpdateUserRecord, UserAuthCredentials, UserEntity } from '@freelance-platform/shared-types';
+import { CreateUserDto, UpdateUserDto } from '@freelance-platform/shared-dto';
 import { authConfig } from '@freelance-platform/shared-config';
 import { hashPassword } from '../../common/hash-password';
 
@@ -54,6 +54,40 @@ export class UserService {
       passwordHash,
       role: dto.role,
     });
+  }
+
+  async update(id: string, dto: UpdateUserDto, authUser: AuthUserPayload): Promise<UserEntity> {
+    const { user: { id: userId } } = authUser;
+
+    if (userId !== id) {
+      throw new ForbiddenException('Изменять профиль может только владелец');
+    }
+
+    const patch = this.toUpdateRecord(dto);
+
+    if (!Object.keys(patch).length) {
+      return this.findOne(id);
+    }
+
+    const user = await this.userRepository.update(id, patch);
+
+    if (!user) {
+      throw new NotFoundException(`Пользователь с "${id}" не найден`);
+    }
+
+    return user;
+  }
+
+  private toUpdateRecord(dto: UpdateUserDto): UpdateUserRecord {
+    const { firstName, lastName, bio, birthday, rate } = dto;
+
+    return {
+      ...(firstName !== undefined && { firstName }),
+      ...(lastName !== undefined && { lastName }),
+      ...(bio !== undefined && { bio }),
+      ...(birthday !== undefined && { birthday }),
+      ...(rate !== undefined && { rate }),
+    };
   }
 
 }

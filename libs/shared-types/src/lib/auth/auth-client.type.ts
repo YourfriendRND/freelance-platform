@@ -22,4 +22,7 @@ export type UserResponse = {
   createdAt: string;
   rating: number;
   reviewsCount: number;
+  bio?: string | null;
+  birthday?: string | null;
+  rate?: number | null;
 };

@@ -1,6 +1,34 @@
 import { Injectable } from '@nestjs/common';
 import { DatabaseClient } from '../../database/database.client';
-import { CreateUserRecord, UserAuthCredentials, UserDbRow, UserEntity } from '@freelance-platform/shared-types';
+import {
+  CreateUserRecord,
+  UpdateUserRecord,
+  UserAuthCredentials,
+  UserDbRow,
+  UserEntity,
+} from '@freelance-platform/shared-types';
+
+const USER_UPDATE_COLUMNS = {
+  firstName: 'first_name',
+  lastName: 'last_name',
+  bio: 'bio',
+  birthday: 'birthday',
+  rate: 'rate',
+} as const;
+
+type UserUpdateField = keyof typeof USER_UPDATE_COLUMNS;
+
+const USER_RETURNING_COLUMNS = `
+  id,
+  email,
+  first_name,
+  last_name,
+  role,
+  bio,
+  birthday,
+  rate,
+  created_at
+`;
 
 @Injectable()
 export class UserRepository {
@@ -8,11 +36,15 @@ export class UserRepository {
 
   async findById(id: string): Promise<UserEntity | null> {
     const { rows } = await this.database.query<UserDbRow>(
-      `SELECT id, email, first_name, last_name, role, bio, birthday, created_at FROM users WHERE id = $1`,
+      `
+        SELECT ${USER_RETURNING_COLUMNS}
+        FROM users
+        WHERE id = $1
+      `,
       [id],
     );
 
-    const row = rows[0];
+    const [row] = rows;
 
     if (!row) {
       return null;
@@ -23,11 +55,15 @@ export class UserRepository {
 
   async findByEmail(email: string): Promise<UserEntity | null> {
     const { rows } = await this.database.query<UserDbRow>(
-      `SELECT id, email, first_name, last_name, role, bio, birthday, created_at FROM users WHERE email = $1`,
+      `
+        SELECT ${USER_RETURNING_COLUMNS}
+        FROM users
+        WHERE email = $1
+      `,
       [email],
     );
 
-    const row = rows[0];
+    const [row] = rows;
 
     if (!row) {
       return null;
@@ -59,13 +95,57 @@ export class UserRepository {
     const { email, firstName, lastName, passwordHash, role } = user;
 
     const { rows } = await this.database.query<UserDbRow>(
-      `INSERT INTO users (email, first_name, last_name, password_hash, role)
-       VALUES ($1, $2, $3, $4, $5)
-       RETURNING id, email, first_name, last_name, role, bio, birthday, created_at`,
+      `
+        INSERT INTO users (email, first_name, last_name, password_hash, role)
+        VALUES ($1, $2, $3, $4, $5)
+        RETURNING ${USER_RETURNING_COLUMNS}
+      `,
       [email, firstName, lastName ?? null, passwordHash, role],
     );
 
-    return UserEntity.fromDb(rows[0]);
+    const [row] = rows;
+
+    return UserEntity.fromDb(row);
+  }
+
+  async update(id: string, patch: UpdateUserRecord): Promise<UserEntity | null> {
+    const assignments: string[] = [];
+    const values: unknown[] = [];
+
+    for (const [field, column] of Object.entries(USER_UPDATE_COLUMNS)) {
+      const value = patch[field as UserUpdateField];
+
+      if (value === undefined) {
+        continue;
+      }
+
+      values.push(value);
+      assignments.push(`${column} = $${values.length}`);
+    }
+
+    if (assignments.length === 0) {
+      return this.findById(id);
+    }
+
+    values.push(id);
+
+    const { rows } = await this.database.query<UserDbRow>(
+      `
+        UPDATE users
+        SET ${assignments.join(', ')}, updated_at = now()
+        WHERE id = $${values.length}
+        RETURNING ${USER_RETURNING_COLUMNS}
+      `,
+      values,
+    );
+
+    const [row] = rows;
+
+    if (!row) {
+      return null;
+    }
+
+    return UserEntity.fromDb(row);
   }
 
 }

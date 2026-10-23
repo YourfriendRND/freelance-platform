@@ -35,6 +35,8 @@ describe('AuthGuard testing', () => {
     role: UserRole.Client,
     createdAt: new Date('2026-08-03'),
     updatedAt: new Date('2026-08-03'),
+    bio: 'О себе',
+    rate: 1800,
   });
 
   const session = new SessionEntity({
@@ -96,6 +98,12 @@ describe('AuthGuard testing', () => {
       user,
       sessionId: 'f6e519ad-4eab-4e90-8871-cbaf31738b71',
       token: 'token-1',
+    });
+    expect(request[AUTH_USER_KEY]).toMatchObject({
+      user: {
+        bio: 'О себе',
+        rate: 1800,
+      },
     });
   });
 

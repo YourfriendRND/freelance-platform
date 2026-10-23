@@ -48,6 +48,9 @@ describe('Auth e2e', () => {
       expect(meRes.data).toMatchObject({
         email,
         id: userId,
+        bio: null,
+        birthday: null,
+        rate: null,
       });
     });
 

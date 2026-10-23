@@ -21,6 +21,9 @@ export function createMockUserResponse(
     createdAt: MOCK_USER_CREATED_AT,
     rating: 0,
     reviewsCount: 0,
+    bio: null,
+    birthday: null,
+    rate: null,
     ...overrides,
   };
 }

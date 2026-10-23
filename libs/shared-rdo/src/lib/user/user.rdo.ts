@@ -1,6 +1,7 @@
-import { Expose } from 'class-transformer';
+import { Expose, Transform } from 'class-transformer';
 import { ApiProperty } from '@nestjs/swagger';
 import { UserRole } from '@freelance-platform/shared-types';
+import { formatBirthday } from './format-birthday';
 
 export class UserRdo {
   @Expose()
@@ -59,4 +60,31 @@ export class UserRdo {
     example: 0,
   })
   reviewsCount?: number;
+
+  @Expose()
+  @ApiProperty({
+    description: 'О себе',
+    example: 'Верстаю интерфейсы и собираю дизайн-системы',
+    nullable: true,
+  })
+  @Transform(({ value }) => value ?? null)
+  bio!: string | null;
+
+  @Expose()
+  @ApiProperty({
+    description: 'Дата рождения',
+    example: '1994-05-12',
+    nullable: true,
+  })
+  @Transform(({ value }) => formatBirthday(value))
+  birthday!: string | null;
+
+  @Expose()
+  @ApiProperty({
+    description: 'Ставка за час',
+    example: 2500,
+    nullable: true,
+  })
+  @Transform(({ value }) => value ?? null)
+  rate!: number | null;
 }
