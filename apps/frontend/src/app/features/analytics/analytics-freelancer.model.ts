@@ -40,7 +40,7 @@ export type AnalyticsRecentApplication = {
   proposedPrice: number | null;
 };
 
-export function freelancerSummaryCards(
+export function getFreelancerSummaryCards(
   stats: TaskApplicationStatsResponse,
 ): readonly AnalyticsSummaryCard[] {
   return [

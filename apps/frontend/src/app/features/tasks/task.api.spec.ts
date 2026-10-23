@@ -17,6 +17,7 @@ import {
   FindTasksQuery,
   PAGINATION_DEFAULT_LIMIT,
   PAGINATION_DEFAULT_PAGE,
+  CustomerTaskStats,
   TaskExecutionType,
   TaskListResponse,
   TaskResponse,
@@ -171,6 +172,28 @@ describe('TaskApi testing', () => {
     );
 
     request.flush(listResponse);
+  });
+
+  it('should request customer task stats', () => {
+    let result: CustomerTaskStats | null = null;
+    const stats: CustomerTaskStats = {
+      open: 2,
+      closed: 1,
+      draft: 1,
+      pendingApplications: 4,
+    };
+
+    api.getCustomerStats().subscribe((customerStats) => {
+      result = customerStats;
+    });
+
+    const request = http.expectOne('/api/tasks/stats');
+
+    expect(request.request.method).toBe('GET');
+
+    request.flush(stats);
+
+    expect(result).toEqual(stats);
   });
 
   it('should send a create task request', () => {

@@ -65,10 +65,18 @@ test('logout and blocks profile for a guest', async ({ page }) => {
   });
   await logoutUserByUi(page);
 
-  await expect(page.getByText('Добро пожаловать')).toBeVisible();
+  await expect(
+    page.getByRole('heading', {
+      name: 'Найдите идеального исполнителя для следующего проекта',
+    }),
+  ).toBeVisible();
   await expect(page.getByRole('link', { name: 'Войти' })).toBeVisible();
 
   await page.goto('/profile');
   await waitForAppPath(page, '/welcome');
-  await expect(page.getByText('Добро пожаловать')).toBeVisible();
+  await expect(
+    page.getByRole('heading', {
+      name: 'Найдите идеального исполнителя для следующего проекта',
+    }),
+  ).toBeVisible();
 });

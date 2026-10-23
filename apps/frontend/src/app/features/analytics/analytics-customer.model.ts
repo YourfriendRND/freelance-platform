@@ -36,7 +36,7 @@ export type AnalyticsCustomerApplication = {
   timeline: string | null;
 };
 
-export function customerSummaryCards(
+export function getCustomerSummaryCards(
   stats: CustomerTaskStats,
 ): readonly AnalyticsSummaryCard[] {
   return [

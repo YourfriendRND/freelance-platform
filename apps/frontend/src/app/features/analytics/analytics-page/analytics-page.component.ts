@@ -14,7 +14,7 @@ import {
   ANALYTICS_RECENT_TASKS_LIMIT,
   AnalyticsCustomerApplication,
   AnalyticsRecentTask,
-  customerSummaryCards,
+  getCustomerSummaryCards,
   selectCustomerApplications,
   selectRecentTasks,
 } from '../analytics-customer.model';
@@ -22,7 +22,7 @@ import {
   AnalyticsRecentApplication,
   AnalyticsRequestStatus,
   AnalyticsSummaryCard,
-  freelancerSummaryCards,
+  getFreelancerSummaryCards,
   selectRecentApplications,
 } from '../analytics-freelancer.model';
 import { AnalyticsPageContainerComponent } from '../analytics-page-container/analytics-page-container.component';
@@ -129,7 +129,7 @@ export class AnalyticsPageComponent {
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (stats) => {
-          this.summaryCards.set(freelancerSummaryCards(stats));
+          this.summaryCards.set(getFreelancerSummaryCards(stats));
           this.statsStatus.set(AnalyticsRequestStatus.Ready);
         },
         error: () => {
@@ -173,7 +173,7 @@ export class AnalyticsPageComponent {
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (stats) => {
-          this.summaryCards.set(customerSummaryCards(stats));
+          this.summaryCards.set(getCustomerSummaryCards(stats));
           this.statsStatus.set(AnalyticsRequestStatus.Ready);
         },
         error: () => {

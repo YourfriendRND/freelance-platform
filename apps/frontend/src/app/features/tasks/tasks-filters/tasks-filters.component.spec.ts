@@ -38,6 +38,43 @@ describe('TasksFiltersComponent testing', () => {
     return fixture.nativeElement as HTMLElement;
   }
 
+  it('should preset the category from the query without emitting', async () => {
+    const preset = TestBed.createComponent(TasksFiltersComponent);
+    const presetEmitted: TasksFiltersSelection[] = [];
+
+    preset.componentInstance.filtersChange.subscribe((query) => {
+      presetEmitted.push(query);
+    });
+    preset.componentRef.setInput('categories', [category]);
+    preset.componentRef.setInput('initialCategoryId', category.id);
+    preset.detectChanges();
+    await preset.whenStable();
+    preset.detectChanges();
+
+    const categorySelect = preset.nativeElement.querySelector(
+      '#tasks-category',
+    ) as HTMLSelectElement;
+
+    expect(categorySelect.value).toBe(category.id);
+    expect(presetEmitted).toEqual([]);
+  });
+
+  it('should toggle the extra filters', () => {
+    const toggle = Array.from(root().querySelectorAll('button')).find(
+      (button) => button.textContent?.includes('Фильтр'),
+    );
+    const panel = root().querySelector('.tasks-filters__panel');
+
+    expect(toggle?.getAttribute('aria-expanded')).toBe('false');
+    expect(panel?.classList.contains('tasks-filters__panel--open')).toBe(false);
+
+    toggle?.click();
+    fixture.detectChanges();
+
+    expect(toggle?.getAttribute('aria-expanded')).toBe('true');
+    expect(panel?.classList.contains('tasks-filters__panel--open')).toBe(true);
+  });
+
   it('should not include draft status', () => {
     expect(root().textContent).not.toContain('Черновик');
   });
