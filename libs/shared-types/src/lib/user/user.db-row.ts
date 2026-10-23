@@ -7,6 +7,7 @@ export interface UserDbRow {
   role: string;
   bio: string | null;
   birthday: Date | null;
+  rate: number | null;
   created_at: Date;
   updated_at: Date;
   deleted_at: Date | null;

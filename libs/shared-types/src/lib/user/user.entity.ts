@@ -11,6 +11,7 @@ export class UserEntity extends Entity<IUser> {
   role!: UserRole;
   bio?: string;
   birthday?: Date;
+  rate!: number | null;
   // TODO: Добавить таблицы рейтинга и отзывов
   rating = 0;
   reviewsCount = 0;
@@ -29,6 +30,7 @@ export class UserEntity extends Entity<IUser> {
       ...(row.role !== undefined && { role: row.role as UserRole }),
       ...(row.bio !== undefined && { bio: row.bio ?? undefined }),
       ...(row.birthday !== undefined && { birthday: row.birthday ?? undefined }),
+      ...(row.rate !== undefined && { rate: row.rate }),
       ...(row.created_at !== undefined && { createdAt: row.created_at }),
       ...(row.updated_at !== undefined && { updatedAt: row.updated_at }),
       ...(row.deleted_at !== undefined && { deletedAt: row.deleted_at }),
@@ -45,6 +47,7 @@ export class UserEntity extends Entity<IUser> {
       ...(this.role !== undefined && { role: this.role }),
       ...(this.bio !== undefined && { bio: this.bio ?? null }),
       ...(this.birthday !== undefined && { birthday: this.birthday ?? null }),
+      ...(this.rate !== undefined && { rate: this.rate }),
       ...(this.createdAt !== undefined && { created_at: this.createdAt }),
       ...(this.updatedAt !== undefined && { updated_at: this.updatedAt }),
       ...(this.deletedAt !== undefined && { deleted_at: this.deletedAt ?? null }),
@@ -64,6 +67,7 @@ export class UserEntity extends Entity<IUser> {
       role: this.role,
       bio: this.bio,
       birthday: this.birthday,
+      rate: this.rate,
     };
   }
 }

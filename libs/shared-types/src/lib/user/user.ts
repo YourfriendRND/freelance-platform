@@ -9,4 +9,5 @@ export interface IUser extends IEntity {
   role: UserRole;
   bio?: string;
   birthday?: Date;
+  rate: number | null;
 }
