@@ -13,7 +13,11 @@ for (const path of protectedPaths) {
   test(`redirects a guest from ${path} to welcome`, async ({ page }) => {
     await page.goto(path);
     await waitForAppPath(page, '/welcome');
-    await expect(page.getByText('Добро пожаловать')).toBeVisible();
+    await expect(
+      page.getByRole('heading', {
+        name: 'Найдите идеального исполнителя для следующего проекта',
+      }),
+    ).toBeVisible();
   });
 }
 

@@ -43,10 +43,10 @@ describe('HomePageComponent testing', () => {
     expect(navigate).toHaveBeenCalledWith(['/welcome'], { replaceUrl: true });
   });
 
-  it('should navigate an authenticated user to /tasks', async () => {
+  it('should navigate an authenticated user to /welcome', async () => {
     const { navigate, ensureSession } = await createPage(true);
 
     expect(ensureSession).toHaveBeenCalledTimes(1);
-    expect(navigate).toHaveBeenCalledWith(['/tasks'], { replaceUrl: true });
+    expect(navigate).toHaveBeenCalledWith(['/welcome'], { replaceUrl: true });
   });
 });

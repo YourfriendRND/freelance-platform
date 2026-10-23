@@ -14,12 +14,102 @@
     <header class="analytics-page__header">
       <div>
         <h1 class="analytics-page__title">{{ greeting() }}</h1>
-        <p class="analytics-page__subtitle">
-          Вот что происходит с вашими задачами
-        </p>
+        <p class="analytics-page__subtitle">{{ subtitle() }}</p>
       </div>
 
-      <ui-button type="button" (clicked)="onCreateTask()">Новая задача</ui-button>
+      <ui-button class="analytics-page__action" type="button" (clicked)="onHeaderAction()">
+        @if (isFreelancer()) {
+          <svg
+            class="analytics-page__action-icon"
+            xmlns="http://www.w3.org/2000/svg"
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            aria-hidden="true"
+          >
+            <circle cx="11" cy="11" r="8"></circle>
+            <path d="m21 21-4.3-4.3"></path>
+          </svg>
+        } @else {
+          <svg
+            class="analytics-page__action-icon"
+            xmlns="http://www.w3.org/2000/svg"
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            aria-hidden="true"
+          >
+            <path d="M5 12h14"></path>
+            <path d="M12 5v14"></path>
+          </svg>
+        }
+        {{ headerActionLabel() }}
+      </ui-button>
     </header>
+
+    @if (isFreelancer()) {
+      <div class="analytics-page__body">
+        @switch (statsStatus()) {
+          @case (AnalyticsRequestStatus.Loading) {
+            <p class="analytics-page__status">Загрузка</p>
+          }
+          @case (AnalyticsRequestStatus.Error) {
+            <p class="analytics-page__status">Не удалось загрузить аналитику</p>
+          }
+          @case (AnalyticsRequestStatus.Ready) {
+            <app-analytics-summary [cards]="summaryCards()" />
+          }
+        }
+
+        <app-analytics-profile
+          [displayName]="userName()"
+          [rating]="rating()"
+          [reviewsCount]="reviewsCount()"
+        />
+
+        <div class="analytics-page__columns">
+          <app-analytics-active-orders />
+          <app-analytics-recent-applications
+            [applications]="recentApplications()"
+            [status]="applicationsStatus()"
+          />
+        </div>
+      </div>
+    }
+
+    @if (isCustomer()) {
+      <div class="analytics-page__body">
+        @switch (statsStatus()) {
+          @case (AnalyticsRequestStatus.Loading) {
+            <p class="analytics-page__status">Загрузка</p>
+          }
+          @case (AnalyticsRequestStatus.Error) {
+            <p class="analytics-page__status">Не удалось загрузить аналитику</p>
+          }
+          @case (AnalyticsRequestStatus.Ready) {
+            <app-analytics-summary [cards]="summaryCards()" />
+          }
+        }
+
+        <app-analytics-recent-tasks
+          [tasks]="recentTasks()"
+          [status]="tasksStatus()"
+        />
+        <app-analytics-pending-applications
+          [applications]="pendingApplications()"
+          [status]="pendingStatus()"
+        />
+      </div>
+    }
   </app-analytics-page-container>
 </ui-dashboard-wrapper>

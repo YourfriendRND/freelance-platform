@@ -1,3 +1,5 @@
+@use 'breakpoints' as *;
+
 :host {
   display: block;
   flex: 1;
@@ -15,7 +17,7 @@
   padding: 2rem;
 }
 
-@media (max-width: 640px) {
+@media (max-width: $breakpoint-mobile) {
   .analytics-page-container {
     padding: 1.5rem 10%;
   }

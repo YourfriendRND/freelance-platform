@@ -12,8 +12,8 @@ export class HomePageComponent {
     const authStore = inject(AuthStore);
     const router = inject(Router);
 
-    authStore.ensureSession().subscribe((isAuthenticated) => {
-      router.navigate([isAuthenticated ? '/tasks' : '/welcome'], {
+    authStore.ensureSession().subscribe(() => {
+      router.navigate(['/welcome'], {
         replaceUrl: true,
       });
     });

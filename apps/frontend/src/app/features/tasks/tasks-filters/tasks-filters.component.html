@@ -27,6 +27,32 @@
     />
   </label>
 
+  <button
+    type="button"
+    class="tasks-filters__toggle"
+    [attr.aria-expanded]="filtersOpen()"
+    (click)="onToggleFilters()"
+  >
+    Фильтр
+    <svg
+      class="tasks-filters__toggle-icon"
+      [class.tasks-filters__toggle-icon--open]="filtersOpen()"
+      xmlns="http://www.w3.org/2000/svg"
+      width="16"
+      height="16"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="2"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      aria-hidden="true"
+    >
+      <path d="m6 9 6 6 6-6"></path>
+    </svg>
+  </button>
+
+  <div class="tasks-filters__panel" [class.tasks-filters__panel--open]="filtersOpen()">
   <div class="tasks-filters__row">
     <ui-select
       class="tasks-filters__control"
@@ -86,5 +112,6 @@
         </select>
       </span>
     </label>
+  </div>
   </div>
 </form>

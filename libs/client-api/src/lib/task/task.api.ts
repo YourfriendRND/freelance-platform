@@ -4,6 +4,7 @@ import { Observable } from 'rxjs';
 import { API_BASE_URL } from '@freelance-platform/http';
 import {
   CreateTaskRequest,
+  CustomerTaskStats,
   FindMyTasksQuery,
   FindTasksQuery,
   TaskListResponse,
@@ -42,6 +43,10 @@ export class TaskApi {
 
   findOne(id: string): Observable<TaskResponse> {
     return this.http.get<TaskResponse>(`${this.apiBaseUrl}/tasks/${id}`);
+  }
+
+  getCustomerStats(): Observable<CustomerTaskStats> {
+    return this.http.get<CustomerTaskStats>(`${this.apiBaseUrl}/tasks/stats`);
   }
 
   create(body: CreateTaskRequest): Observable<TaskResponse> {

@@ -1,0 +1,65 @@
+<section class="analytics-panel" aria-labelledby="analytics-recent-tasks-title">
+  <header class="analytics-panel__header">
+    <h2 id="analytics-recent-tasks-title" class="analytics-panel__title">Последние задачи</h2>
+    <a class="analytics-panel__link" routerLink="/my-tasks">Смотреть все</a>
+  </header>
+
+  @switch (status()) {
+    @case (AnalyticsRequestStatus.Loading) {
+      <p class="analytics-panel__status">Загрузка</p>
+    }
+    @case (AnalyticsRequestStatus.Error) {
+      <p class="analytics-panel__status">Не удалось загрузить задачи</p>
+    }
+    @case (AnalyticsRequestStatus.Ready) {
+      @if (rows().length === 0) {
+        <div class="analytics-panel__empty">
+          <span class="analytics-panel__empty-icon" aria-hidden="true">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="28"
+              height="28"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.75"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <rect width="20" height="14" x="2" y="7" rx="2"></rect>
+              <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
+            </svg>
+          </span>
+          <p class="analytics-panel__empty-title">Нет задач</p>
+          <p class="analytics-panel__empty-hint">Опубликуйте задачу, чтобы она появилась здесь</p>
+        </div>
+      } @else {
+        <ul class="analytics-panel__list">
+          @for (task of rows(); track task.id) {
+            <li>
+              <a class="analytics-panel__item" [routerLink]="['/tasks', task.id]">
+                <span class="analytics-panel__main">
+                  <span class="analytics-panel__heading">
+                    <span class="analytics-panel__item-title">{{ task.title }}</span>
+                    <span class="analytics-panel__status-badge" [attr.data-status]="task.status">
+                      {{ task.statusLabel }}
+                    </span>
+                  </span>
+                  <span class="analytics-panel__description">{{ task.description }}</span>
+                  <span class="analytics-panel__meta">
+                    <span>{{ task.applicationsLabel }}</span>
+                    <span>{{ task.dateLabel }}</span>
+                  </span>
+                </span>
+                <span class="analytics-panel__budget">
+                  <span class="analytics-panel__budget-value">{{ task.budgetLabel }}</span>
+                  <span class="analytics-panel__budget-label">Бюджет</span>
+                </span>
+              </a>
+            </li>
+          }
+        </ul>
+      }
+    }
+  }
+</section>

@@ -1,0 +1,31 @@
+<section class="analytics-profile" aria-labelledby="analytics-profile-title">
+  <header class="analytics-profile__header">
+    <h2 id="analytics-profile-title" class="analytics-profile__heading">Ваш профиль</h2>
+    <ui-button type="button" variant="muted" [compact]="true" (clicked)="onEditProfile()">
+      Редактировать профиль
+    </ui-button>
+  </header>
+
+  <div class="analytics-profile__main">
+    <span class="analytics-profile__avatar" aria-hidden="true">{{ initial() }}</span>
+
+    <div class="analytics-profile__body">
+      <p class="analytics-profile__name">{{ displayName() }}</p>
+      <p class="analytics-profile__bio">{{ bioLabel }}</p>
+      <p class="analytics-profile__rating" [attr.aria-label]="ratingAriaLabel()">
+        <span class="analytics-profile__stars" aria-hidden="true">
+          @for (star of stars(); track star.index) {
+            <span class="analytics-profile__star" [attr.data-fill]="star.fill">★</span>
+          }
+        </span>
+        <span>{{ ratingLabel() }}</span>
+        <span>({{ reviewsCount() }})</span>
+        <span>{{ completedLabel }}</span>
+        <span>{{ rateLabel }}</span>
+      </p>
+      <p class="analytics-profile__skills">
+        <span class="analytics-profile__skill">{{ skillsLabel }}</span>
+      </p>
+    </div>
+  </div>
+</section>

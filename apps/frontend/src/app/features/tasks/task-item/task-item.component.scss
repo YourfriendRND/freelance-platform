@@ -1,3 +1,5 @@
+@use 'breakpoints' as *;
+
 :host {
   display: block;
 }
@@ -178,9 +180,24 @@
   line-height: 1.2;
 }
 
-@media (max-width: 640px) {
+@media (max-width: $breakpoint-tablet) {
+  .task-item__description {
+    display: -webkit-box;
+    overflow: hidden;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+  }
+}
+
+@media (max-width: $breakpoint-mobile) {
   .task-item__top {
     flex-direction: column;
     gap: 0.75rem;
+  }
+
+  .task-item__tag,
+  .task-item__meta--applications,
+  .task-item__meta--views {
+    display: none;
   }
 }

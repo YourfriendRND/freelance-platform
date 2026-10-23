@@ -1,6 +1,6 @@
 import { computed, signal } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { provideRouter, Router } from '@angular/router';
+import { ActivatedRoute, convertToParamMap, provideRouter, Router } from '@angular/router';
 import { AuthStore, TaskStore } from '@freelance-platform/client-state';
 import {
   createMockTaskCategoryResponse,
@@ -255,5 +255,68 @@ describe('TasksPageComponent testing', () => {
 
     expect(authStore.logout).toHaveBeenCalledTimes(1);
     expect(navigate).toHaveBeenCalledWith(['/welcome']);
+  });
+});
+
+describe('TasksPageComponent category query', () => {
+  it('should load tasks for the category from the query and select it', async () => {
+    const category = createMockTaskCategoryResponse();
+    const categories = signal<TaskCategoryResponse[]>([category]);
+    const load = vi.fn();
+
+    await TestBed.configureTestingModule({
+      imports: [TasksPageComponent],
+      providers: [
+        provideRouter([]),
+        {
+          provide: ActivatedRoute,
+          useValue: {
+            snapshot: {
+              queryParamMap: convertToParamMap({ categoryId: category.id }),
+            },
+          },
+        },
+        {
+          provide: AuthStore,
+          useValue: {
+            isAuthenticated: signal(false),
+            user: signal<UserResponse | null>(null),
+            logout: vi.fn(),
+          },
+        },
+        {
+          provide: TaskStore,
+          useValue: {
+            tasks: signal<TaskResponse[]>([]),
+            categories,
+            isLoading: signal(false),
+            error: signal<string | null>(null),
+            total: signal(0),
+            listQuery: signal<FindTasksQuery>({
+              page: PAGINATION_DEFAULT_PAGE,
+              limit: PAGINATION_DEFAULT_LIMIT,
+              categoryId: category.id,
+            }),
+            page: computed(() => PAGINATION_DEFAULT_PAGE),
+            limit: computed(() => PAGINATION_DEFAULT_LIMIT),
+            categoryTitleById: () => new Map([[category.id, category.title]]),
+            load,
+          },
+        },
+      ],
+    }).compileComponents();
+
+    const fixture = TestBed.createComponent(TasksPageComponent);
+    fixture.detectChanges();
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    const categorySelect = fixture.nativeElement.querySelector(
+      '#tasks-category',
+    ) as HTMLSelectElement;
+
+    expect(load).toHaveBeenCalledTimes(1);
+    expect(load).toHaveBeenCalledWith({ categoryId: category.id });
+    expect(categorySelect.value).toBe(category.id);
   });
 });

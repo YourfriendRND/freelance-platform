@@ -1,14 +1,19 @@
+:host {
+  display: inline-flex;
+}
+
 .ui-button {
   display: inline-flex;
+  flex: 1 1 auto;
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
-  min-height: 3rem;
-  padding: 0.75rem 1.5rem;
+  min-height: var(--ui-button-min-height, 3rem);
+  padding: var(--ui-button-padding, 0.75rem 1.5rem);
   border: 1px solid transparent;
   border-radius: var(--radius-lg);
   font: inherit;
-  font-size: 0.9375rem;
+  font-size: var(--ui-button-font-size, 0.9375rem);
   font-weight: 600;
   line-height: 1.25rem;
   cursor: pointer;
@@ -50,6 +55,19 @@
     &:hover:not(:disabled) {
       border-color: var(--color-primary);
       color: var(--color-primary);
+    }
+  }
+
+  &--muted {
+    background: var(--color-input-background);
+    border-color: var(--color-border);
+    color: var(--color-text);
+    font-weight: 500;
+
+    &:hover:not(:disabled) {
+      background: #e5e7eb;
+      border-color: var(--color-border);
+      color: var(--color-text);
     }
   }
 }

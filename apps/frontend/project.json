@@ -15,6 +15,9 @@
         "browser": "apps/frontend/src/main.ts",
         "tsConfig": "apps/frontend/tsconfig.app.json",
         "inlineStyleLanguage": "scss",
+        "stylePreprocessorOptions": {
+          "includePaths": ["apps/frontend/src/styles"]
+        },
         "assets": [
           {
             "glob": "**/*",
