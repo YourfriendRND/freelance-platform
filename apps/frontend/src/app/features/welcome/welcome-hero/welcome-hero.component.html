@@ -1,0 +1,29 @@
+<section class="welcome-hero">
+  <div class="welcome-hero__copy">
+    <h1 class="welcome-hero__title">Найдите идеального исполнителя для следующего проекта</h1>
+    <p class="welcome-hero__text">
+      Свяжитесь с профессионалами со всего мира. Опубликуйте задачу и получите отклики за считаные минуты
+    </p>
+
+    @if (sessionReady()) {
+      <div class="welcome-hero__actions">
+        @for (action of actions(); track action.route) {
+          <ui-button
+            type="button"
+            [variant]="action.variant"
+            [compact]="true"
+            (clicked)="onAction(action.route)"
+          >
+            {{ action.label }}
+          </ui-button>
+        }
+      </div>
+    }
+  </div>
+
+  <img
+    class="welcome-hero__photo"
+    src="/images/welcome-hero.jpg"
+    alt="Команда работает над проектом"
+  />
+</section>

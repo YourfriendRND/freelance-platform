@@ -1,10 +1,12 @@
+@use 'breakpoints' as *;
+
 :host {
   display: block;
 }
 
 .analytics-page__header {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: space-between;
   gap: 1.5rem;
   flex-wrap: wrap;
@@ -23,4 +25,41 @@
   color: var(--color-text-muted);
   font-size: 0.9375rem;
   line-height: 1.5;
+}
+
+.analytics-page__action {
+  --ui-button-min-height: 2.4rem;
+  --ui-button-padding: 0.6rem 1.2rem;
+  --ui-button-font-size: 0.75rem;
+}
+
+.analytics-page__action-icon {
+  flex-shrink: 0;
+}
+
+.analytics-page__body {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  margin-top: 1.5rem;
+}
+
+.analytics-page__status {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: 0.9375rem;
+  line-height: 1.5;
+}
+
+.analytics-page__columns {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+  align-items: stretch;
+}
+
+@media (max-width: $breakpoint-tablet) {
+  .analytics-page__columns {
+    grid-template-columns: 1fr;
+  }
 }

@@ -1,3 +1,5 @@
+@use 'breakpoints' as *;
+
 :host {
   display: block;
 }
@@ -45,5 +47,11 @@
     border-color: var(--color-primary);
     color: var(--color-on-primary);
     cursor: default;
+  }
+}
+
+@media (max-width: $breakpoint-mobile) {
+  .tasks-pagination__button--step {
+    display: none;
   }
 }

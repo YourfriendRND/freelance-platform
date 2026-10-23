@@ -1,3 +1,5 @@
+@use 'breakpoints' as *;
+
 .task-create-form {
   display: flex;
   flex-direction: column;
@@ -29,7 +31,7 @@
     display: grid;
     gap: 1rem;
 
-    @media (min-width: 640px) {
+    @media (min-width: $breakpoint-mobile) {
       grid-template-columns: repeat(2, minmax(0, 1fr));
     }
   }
@@ -52,7 +54,7 @@
     display: grid;
     gap: 1rem;
 
-    @media (min-width: 640px) {
+    @media (min-width: $breakpoint-mobile) {
       grid-template-columns: minmax(0, 1fr) auto;
       align-items: center;
     }

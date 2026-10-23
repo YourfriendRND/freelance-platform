@@ -1,0 +1,45 @@
+<section class="analytics-panel" aria-labelledby="analytics-recent-applications-title">
+  <header class="analytics-panel__header">
+    <h2 id="analytics-recent-applications-title" class="analytics-panel__title">
+      Последние отклики
+    </h2>
+    <a class="analytics-panel__link" routerLink="/applications">Смотреть все</a>
+  </header>
+
+  @switch (status()) {
+    @case (AnalyticsRequestStatus.Loading) {
+      <p class="analytics-panel__status">Загрузка</p>
+    }
+    @case (AnalyticsRequestStatus.Error) {
+      <p class="analytics-panel__status">Не удалось загрузить отклики</p>
+    }
+    @case (AnalyticsRequestStatus.Ready) {
+      @if (rows().length === 0) {
+        <p class="analytics-panel__status">Откликов пока нет</p>
+      } @else {
+        <ul class="analytics-panel__list">
+          @for (application of rows(); track application.id) {
+            <li>
+              <a
+                class="analytics-panel__item"
+                [routerLink]="['/applications', application.id]"
+              >
+                <span class="analytics-panel__item-main">
+                  <span class="analytics-panel__item-title">{{ application.titleLabel }}</span>
+                  <span class="analytics-panel__item-date">{{ application.dateLabel }}</span>
+                </span>
+                <span
+                  class="analytics-panel__item-status"
+                  [attr.data-status]="application.status"
+                >
+                  {{ application.statusLabel }}
+                </span>
+                <span class="analytics-panel__item-price">{{ application.priceLabel }}</span>
+              </a>
+            </li>
+          }
+        </ul>
+      }
+    }
+  }
+</section>

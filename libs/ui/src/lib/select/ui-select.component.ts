@@ -1,9 +1,12 @@
 import {
+  afterRenderEffect,
   ChangeDetectionStrategy,
   Component,
+  ElementRef,
   forwardRef,
   input,
   signal,
+  viewChild,
 } from '@angular/core';
 import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
 
@@ -36,8 +39,23 @@ export class UiSelectComponent<T extends string = string> implements ControlValu
   protected readonly value = signal<T | null>(null);
   protected readonly isDisabled = signal(false);
 
+  private readonly selectElement = viewChild<ElementRef<HTMLSelectElement>>('select');
+
   private onChange: (value: T | null) => void = () => undefined;
   private onTouched: () => void = () => undefined;
+
+  constructor() {
+    afterRenderEffect(() => {
+      const element = this.selectElement()?.nativeElement;
+      const nextValue = this.value();
+
+      if (!element || nextValue === null || element.value === nextValue) {
+        return;
+      }
+
+      element.value = nextValue;
+    });
+  }
 
   writeValue(value: T | null): void {
     this.value.set(value);

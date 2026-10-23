@@ -4,6 +4,7 @@ import {
   computed,
   inject,
 } from '@angular/core';
+import { ActivatedRoute } from '@angular/router';
 import { TaskStore } from '@freelance-platform/client-state';
 import {
   FindTasksQuery,
@@ -54,6 +55,9 @@ function hasAppliedListFilters(query: FindTasksQuery): boolean {
 })
 export class TasksPageComponent {
   private readonly taskStore = inject(TaskStore);
+  private readonly route = inject(ActivatedRoute);
+
+  protected readonly initialCategoryId = this.route.snapshot.queryParamMap.get('categoryId');
 
   protected readonly categories = this.taskStore.categories;
   protected readonly errorMessage = this.taskStore.error;
@@ -107,7 +111,9 @@ export class TasksPageComponent {
   });
 
   constructor() {
-    this.taskStore.load();
+    const categoryId = this.initialCategoryId;
+
+    this.taskStore.load(categoryId ? { categoryId } : undefined);
   }
 
   protected onPageChange(page: number): void {

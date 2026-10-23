@@ -1,7 +1,7 @@
 <nav class="tasks-pagination" aria-label="Пагинация">
   <button
     type="button"
-    class="tasks-pagination__button"
+    class="tasks-pagination__button tasks-pagination__button--step"
     [disabled]="isFirstPage()"
     (click)="onPrevious()"
   >
@@ -22,7 +22,7 @@
 
   <button
     type="button"
-    class="tasks-pagination__button"
+    class="tasks-pagination__button tasks-pagination__button--step"
     [disabled]="isLastPage()"
     (click)="onNext()"
   >

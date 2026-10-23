@@ -1,0 +1,74 @@
+<section class="analytics-panel" aria-labelledby="analytics-pending-applications-title">
+  <header class="analytics-panel__header">
+    <h2 id="analytics-pending-applications-title" class="analytics-panel__title">
+      Отклики на рассмотрении
+    </h2>
+    <button type="button" class="analytics-panel__action" disabled>Смотреть все</button>
+  </header>
+
+  @switch (status()) {
+    @case (AnalyticsRequestStatus.Loading) {
+      <p class="analytics-panel__status">Загрузка</p>
+    }
+    @case (AnalyticsRequestStatus.Error) {
+      <p class="analytics-panel__status">Не удалось загрузить отклики</p>
+    }
+    @case (AnalyticsRequestStatus.Ready) {
+      @if (rows().length === 0) {
+        <div class="analytics-panel__empty">
+          <span class="analytics-panel__empty-icon" aria-hidden="true">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="28"
+              height="28"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.75"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>
+              <circle cx="9" cy="7" r="4"></circle>
+              <path d="M22 21v-2a4 4 0 0 0-3-3.87"></path>
+              <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+            </svg>
+          </span>
+          <p class="analytics-panel__empty-title">Нет откликов на рассмотрении</p>
+          <p class="analytics-panel__empty-hint">
+            Отклики появятся, когда исполнители откликнутся на задачи
+          </p>
+        </div>
+      } @else {
+        <ul class="analytics-panel__list">
+          @for (application of rows(); track application.id) {
+            <li class="analytics-panel__item">
+              <div class="analytics-panel__top">
+                <div class="analytics-panel__person">
+                  <span class="analytics-panel__avatar" aria-hidden="true">{{ application.initial }}</span>
+                  <div class="analytics-panel__person-text">
+                    <p class="analytics-panel__name">{{ application.performerName }}</p>
+                    <p class="analytics-panel__bio">{{ application.bioLabel }}</p>
+                  </div>
+                </div>
+                <div class="analytics-panel__offer">
+                  <p class="analytics-panel__price">{{ application.priceLabel }}</p>
+                  <p class="analytics-panel__timeline">{{ application.timelineLabel }}</p>
+                </div>
+              </div>
+              <p class="analytics-panel__task">{{ application.titleLabel }}</p>
+              <ui-button
+                class="analytics-panel__details"
+                type="button"
+                variant="muted"
+                (clicked)="onOpenDetails(application.id)"
+              >
+                Смотреть детали
+              </ui-button>
+            </li>
+          }
+        </ul>
+      }
+    }
+  }
+</section>

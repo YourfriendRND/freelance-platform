@@ -8,7 +8,7 @@ import { ChangeDetectionStrategy, Component, input, output } from '@angular/core
 })
 export class UiButtonComponent {
   readonly type = input<'button' | 'submit'>('button');
-  readonly variant = input<'primary' | 'secondary'>('primary');
+  readonly variant = input<'primary' | 'secondary' | 'muted'>('primary');
   readonly disabled = input(false);
   readonly fullWidth = input(false);
   readonly compact = input(false);
