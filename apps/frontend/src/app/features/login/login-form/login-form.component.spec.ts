@@ -7,6 +7,7 @@ import {
   mockClientUserResponse,
 } from '@freelance-platform/shared-mock';
 import { UserResponse } from '@freelance-platform/shared-types';
+import { setField } from '../../../testing/set-field';
 import { LoginFormComponent } from './login-form.component';
 
 describe('LoginFormComponent testing', () => {
@@ -42,16 +43,9 @@ describe('LoginFormComponent testing', () => {
     return fixture.nativeElement as HTMLElement;
   }
 
-  function setInput(selector: string, value: string): void {
-    const input = root().querySelector(selector) as HTMLInputElement;
-    input.value = value;
-    input.dispatchEvent(new Event('input', { bubbles: true }));
-  }
-
   function fillValidForm(): void {
-    setInput('#login-email', MOCK_USER_EMAIL);
-    setInput('#login-password', 'password1');
-    fixture.detectChanges();
+    setField(fixture, '#login-email', MOCK_USER_EMAIL);
+    setField(fixture, '#login-password', 'password1');
   }
 
   function submit(): void {
@@ -81,9 +75,8 @@ describe('LoginFormComponent testing', () => {
   });
 
   it('should validate email and password', () => {
-    setInput('#login-email', 'not-an-email');
-    setInput('#login-password', 'short');
-    fixture.detectChanges();
+    setField(fixture, '#login-email', 'not-an-email');
+    setField(fixture, '#login-password', 'short');
     submit();
 
     expect(login).not.toHaveBeenCalled();

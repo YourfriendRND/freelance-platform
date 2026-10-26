@@ -1,0 +1,1 @@
+export const USER_RATE_MAX = 2147483647;

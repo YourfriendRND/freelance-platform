@@ -18,6 +18,7 @@ import {
   TaskStatus,
   UserResponse,
 } from '@freelance-platform/shared-types';
+import { findButtonByLabel } from '../../../testing/button-by-label';
 import { TasksFiltersComponent } from '../tasks-filters/tasks-filters.component';
 import { TasksPageComponent } from './tasks-page.component';
 import { TASKS_TEST_BUDGET_MAX, TASKS_TEST_BUDGET_MIN } from '../tasks-test.constants';
@@ -186,11 +187,7 @@ describe('TasksPageComponent testing', () => {
     });
     fixture.detectChanges();
 
-    const nextPageButton = Array.from(root().querySelectorAll('button')).find(
-      (button) => button.textContent?.trim() === '2',
-    );
-
-    nextPageButton?.click();
+    findButtonByLabel(root(), '2').click();
     fixture.detectChanges();
 
     expect(load).toHaveBeenCalledWith({

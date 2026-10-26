@@ -10,6 +10,8 @@ describe('ProfileStatisticsComponent testing', () => {
     }).compileComponents();
 
     fixture = TestBed.createComponent(ProfileStatisticsComponent);
+    fixture.componentRef.setInput('rating', 0);
+    fixture.componentRef.setInput('reviewsCount', 0);
     fixture.detectChanges();
   });
 
@@ -24,12 +26,23 @@ describe('ProfileStatisticsComponent testing', () => {
     expect(root().textContent).toContain('Полученные отзывы');
   });
 
-  it('should render zero-value placeholders', () => {
+  it('should render rating and reviews from inputs and keep projects unavailable', () => {
     const values = Array.from(
       root().querySelectorAll('.profile-statistics__value'),
       (element) => element.textContent?.trim(),
     );
 
-    expect(values).toEqual(['0.0', '0', '0']);
+    expect(values).toEqual(['0.0', 'Недоступно', '0']);
+
+    fixture.componentRef.setInput('rating', 4.8);
+    fixture.componentRef.setInput('reviewsCount', 24);
+    fixture.detectChanges();
+
+    const updatedValues = Array.from(
+      root().querySelectorAll('.profile-statistics__value'),
+      (element) => element.textContent?.trim(),
+    );
+
+    expect(updatedValues).toEqual(['4.8', 'Недоступно', '24']);
   });
 });

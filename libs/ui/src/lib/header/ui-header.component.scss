@@ -179,6 +179,10 @@
     }
   }
 
+  &__logout-icon {
+    display: none;
+  }
+
   &__avatar {
     display: inline-flex;
     align-items: center;
@@ -287,6 +291,29 @@
         min-height: 2rem;
         padding: 0.25rem 0.625rem;
         font-size: 0.75rem;
+      }
+
+      .ui-header__browse {
+        display: none;
+      }
+
+      .ui-header__nav {
+        gap: 1rem;
+      }
+
+      .ui-header__logout {
+        width: 2.5rem;
+        height: 2.5rem;
+        min-height: 0;
+        padding: 0;
+      }
+
+      .ui-header__logout-label {
+        display: none;
+      }
+
+      .ui-header__logout-icon {
+        display: block;
       }
     }
   }

@@ -1,5 +1,5 @@
 <section class="profile-statistics" aria-label="Статистика профиля">
-  @for (statistic of statistics; track statistic.label) {
+  @for (statistic of statistics(); track statistic.label) {
     <article class="profile-statistics__item">
       <div
         class="profile-statistics__icon"

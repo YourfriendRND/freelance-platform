@@ -8,20 +8,49 @@
     uiDashboardHeader
     [showBrand]="false"
     [embedded]="true"
-    pageTitle="Профиль"
   />
 
   <app-profile-page-container>
-    @let profileData = profile();
-
-    <div class="profile-page__content">
-      <app-profile-card
-        [displayName]="profileData.displayName"
-        [email]="profileData.email"
-        [roleLabel]="profileData.roleLabel"
-        [registrationLabel]="profileData.registrationLabel"
-      />
-      <app-profile-statistics />
-    </div>
+    @switch (view()) {
+      @case (profilePageView.Loading) {
+        <p class="profile-page__status">Загрузка</p>
+      }
+      @case (profilePageView.Error) {
+        <p class="profile-page__status">
+          {{ errorMessage() ?? 'Не удалось загрузить профиль' }}
+        </p>
+      }
+      @case (profilePageView.Content) {
+        @if (profile(); as profileData) {
+          <div class="profile-page__content">
+            @if (isEditing() && profileUser(); as user) {
+              <app-profile-edit-form
+                [user]="user"
+                (saved)="onProfileSaved($event)"
+                (cancelled)="onEditCancelled()"
+              />
+            } @else {
+              <app-profile-card
+                [displayName]="profileData.displayName"
+                [email]="profileData.email"
+                [roleLabel]="profileData.roleLabel"
+                [registrationLabel]="profileData.registrationLabel"
+                [bio]="profileData.bio"
+                [birthdayLabel]="profileData.birthdayLabel"
+                [rating]="profileData.rating"
+                [reviewsCount]="profileData.reviewsCount"
+                [isFreelancer]="profileData.isFreelancer"
+                [rateLabel]="profileData.rateLabel"
+                (edit)="onEdit()"
+              />
+            }
+            <app-profile-statistics
+              [rating]="profileData.rating"
+              [reviewsCount]="profileData.reviewsCount"
+            />
+          </div>
+        }
+      }
+    }
   </app-profile-page-container>
 </ui-dashboard-wrapper>

@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
 
 enum ProfileStatisticIcon {
   Rating = 'Rating',
@@ -21,24 +21,26 @@ type ProfileStatistic = {
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ProfileStatisticsComponent {
+  readonly rating = input.required<number>();
+  readonly reviewsCount = input.required<number>();
+
   protected readonly profileStatisticIcon = ProfileStatisticIcon;
 
-  // TODO: Заменить заглушки данными rating, completedProjects и reviews из API профиля
-  protected readonly statistics: readonly ProfileStatistic[] = [
+  protected readonly statistics = computed<readonly ProfileStatistic[]>(() => [
     {
       label: 'Средний рейтинг',
-      value: '0.0',
+      value: this.rating().toFixed(1),
       icon: ProfileStatisticIcon.Rating,
     },
     {
       label: 'Завершённые проекты',
-      value: '0',
+      value: 'Недоступно',
       icon: ProfileStatisticIcon.Projects,
     },
     {
       label: 'Полученные отзывы',
-      value: '0',
+      value: String(this.reviewsCount()),
       icon: ProfileStatisticIcon.Reviews,
     },
-  ];
+  ]);
 }

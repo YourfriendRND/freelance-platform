@@ -6,3 +6,10 @@
   display: grid;
   gap: 1.75rem;
 }
+
+.profile-page__status {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: 0.9375rem;
+  line-height: 1.5;
+}

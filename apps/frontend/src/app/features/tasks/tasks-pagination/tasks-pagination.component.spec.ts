@@ -1,4 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { findButtonByLabel } from '../../../testing/button-by-label';
 import { TasksPaginationComponent } from './tasks-pagination.component';
 
 describe('TasksPaginationComponent testing', () => {
@@ -25,38 +26,26 @@ describe('TasksPaginationComponent testing', () => {
     return fixture.nativeElement as HTMLElement;
   }
 
-  function buttonByLabel(root: HTMLElement, label: string): HTMLButtonElement {
-    const button = Array.from(root.querySelectorAll('button')).find(
-      (item) => item.textContent?.trim() === label,
-    );
-
-    if (!button) {
-      throw new Error(`Button "${label}" was not found`);
-    }
-
-    return button;
-  }
-
   it('should render page buttons and disable previous on the first page', () => {
     const root = render(1, 3);
 
-    expect(buttonByLabel(root, 'Назад').disabled).toBe(true);
-    expect(buttonByLabel(root, 'Вперёд').disabled).toBe(false);
-    expect(buttonByLabel(root, '1').getAttribute('aria-current')).toBe('page');
-    expect(buttonByLabel(root, '2').getAttribute('aria-current')).toBeNull();
+    expect(findButtonByLabel(root, 'Назад').disabled).toBe(true);
+    expect(findButtonByLabel(root, 'Вперёд').disabled).toBe(false);
+    expect(findButtonByLabel(root, '1').getAttribute('aria-current')).toBe('page');
+    expect(findButtonByLabel(root, '2').getAttribute('aria-current')).toBeNull();
   });
 
   it('should disable next on the last page', () => {
     const root = render(3, 3);
 
-    expect(buttonByLabel(root, 'Назад').disabled).toBe(false);
-    expect(buttonByLabel(root, 'Вперёд').disabled).toBe(true);
+    expect(findButtonByLabel(root, 'Назад').disabled).toBe(false);
+    expect(findButtonByLabel(root, 'Вперёд').disabled).toBe(true);
   });
 
   it('should emit the next page from the forward button', () => {
     const root = render(1, 3);
 
-    buttonByLabel(root, 'Вперёд').click();
+    findButtonByLabel(root, 'Вперёд').click();
 
     expect(emittedPages).toEqual([2]);
   });
@@ -64,7 +53,7 @@ describe('TasksPaginationComponent testing', () => {
   it('should emit the previous page from the back button', () => {
     const root = render(2, 3);
 
-    buttonByLabel(root, 'Назад').click();
+    findButtonByLabel(root, 'Назад').click();
 
     expect(emittedPages).toEqual([1]);
   });
@@ -72,18 +61,18 @@ describe('TasksPaginationComponent testing', () => {
   it('should emit a selected page number and ignore the current page', () => {
     const root = render(1, 3);
 
-    buttonByLabel(root, '1').click();
-    buttonByLabel(root, '3').click();
+    findButtonByLabel(root, '1').click();
+    findButtonByLabel(root, '3').click();
 
     expect(emittedPages).toEqual([3]);
   });
 
   it('should not emit from disabled navigation buttons', () => {
     const firstPage = render(1, 2);
-    buttonByLabel(firstPage, 'Назад').click();
+    findButtonByLabel(firstPage, 'Назад').click();
 
     const lastPage = render(2, 2);
-    buttonByLabel(lastPage, 'Вперёд').click();
+    findButtonByLabel(lastPage, 'Вперёд').click();
 
     expect(emittedPages).toEqual([]);
   });

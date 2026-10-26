@@ -16,6 +16,7 @@ import {
   UserResponse,
 } from '@freelance-platform/shared-types';
 import { of } from 'rxjs';
+import { setField } from '../../../testing/set-field';
 import { ApplicationsPageComponent } from './applications-page.component';
 
 describe('ApplicationsPageComponent testing', () => {
@@ -187,10 +188,7 @@ describe('ApplicationsPageComponent testing', () => {
   it('should filter applications by search', () => {
     showApplications();
 
-    const search = root().querySelector('input') as HTMLInputElement;
-    search.value = 'Мария';
-    search.dispatchEvent(new Event('input', { bubbles: true }));
-    fixture.detectChanges();
+    setField(fixture, 'input', 'Мария');
 
     expect(root().textContent).toContain(campaignTask.title);
     expect(root().textContent).not.toContain(designTask.title);
@@ -199,10 +197,7 @@ describe('ApplicationsPageComponent testing', () => {
   it('should show an empty filter state', () => {
     showApplications();
 
-    const search = root().querySelector('input') as HTMLInputElement;
-    search.value = 'нет таких откликов';
-    search.dispatchEvent(new Event('input', { bubbles: true }));
-    fixture.detectChanges();
+    setField(fixture, 'input', 'нет таких откликов');
 
     expect(root().textContent).toContain('Отклики не найдены');
   });

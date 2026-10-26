@@ -1,8 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsInt, IsOptional, IsString, Max, MaxLength, Min, MinLength, ValidateIf } from 'class-validator';
+import { USER_RATE_MAX } from '@freelance-platform/shared-types';
 import { IsBirthday } from './is-birthday.decorator';
-
-const RATE_MAX = 2147483647;
 
 export class UpdateUserDto {
   @ApiProperty({
@@ -60,11 +59,11 @@ export class UpdateUserDto {
     required: false,
     nullable: true,
     minimum: 0,
-    maximum: RATE_MAX,
+    maximum: USER_RATE_MAX,
   })
   @IsOptional()
   @IsInt()
   @Min(0)
-  @Max(RATE_MAX)
+  @Max(USER_RATE_MAX)
   rate?: number | null;
 }

@@ -14,6 +14,8 @@ import {
   TaskResponse,
   TaskStatus,
 } from '@freelance-platform/shared-types';
+import { findButtonByLabel } from '../../../testing/button-by-label';
+import { setField } from '../../../testing/set-field';
 import { TaskCreateFormComponent } from './task-create-form.component';
 
 describe('TaskCreateFormComponent testing', () => {
@@ -48,12 +50,6 @@ describe('TaskCreateFormComponent testing', () => {
     return fixture.nativeElement as HTMLElement;
   }
 
-  function setInput(selector: string, value: string): void {
-    const input = root().querySelector(selector) as HTMLInputElement;
-    input.value = value;
-    input.dispatchEvent(new Event('input', { bubbles: true }));
-  }
-
   function setSelect(selector: string, value: string): void {
     const select = root().querySelector(selector) as HTMLSelectElement;
     select.value = value;
@@ -72,12 +68,12 @@ describe('TaskCreateFormComponent testing', () => {
       status: TaskStatus.Draft,
     };
 
-    setInput('#task-create-title', body.title);
-    setInput('#task-create-description', body.description);
+    setField(fixture, '#task-create-title', body.title);
+    setField(fixture, '#task-create-description', body.description);
     setSelect('#task-create-category', body.categoryId);
-    setInput('#task-create-budget-min', String(body.budgetMin));
-    setInput('#task-create-budget-max', String(body.budgetMax));
-    setInput('#task-create-deadline', body.deadline);
+    setField(fixture, '#task-create-budget-min', String(body.budgetMin));
+    setField(fixture, '#task-create-budget-max', String(body.budgetMax));
+    setField(fixture, '#task-create-deadline', body.deadline);
     setSelect('#task-create-execution-type', body.executionType);
     setSelect('#task-create-status', body.status);
     fixture.detectChanges();
@@ -86,11 +82,7 @@ describe('TaskCreateFormComponent testing', () => {
   }
 
   function submit(): void {
-    const button = Array.from(root().querySelectorAll('button')).find(
-      (item) => item.textContent?.trim() === 'Создать задачу',
-    );
-
-    button?.click();
+    findButtonByLabel(root(), 'Создать задачу').click();
     fixture.detectChanges();
   }
 
@@ -104,11 +96,7 @@ describe('TaskCreateFormComponent testing', () => {
   it('should emit cancel when the cancel button is clicked', () => {
     const cancel = vi.spyOn(fixture.componentInstance.cancel, 'emit');
 
-    const cancelButton = Array.from(root().querySelectorAll('button')).find(
-      (button) => button.textContent?.trim() === 'Отмена',
-    );
-
-    cancelButton?.click();
+    findButtonByLabel(root(), 'Отмена').click();
 
     expect(cancel).toHaveBeenCalledTimes(1);
   });
@@ -123,8 +111,8 @@ describe('TaskCreateFormComponent testing', () => {
 
   it('should validate the budget range', () => {
     fillValidForm();
-    setInput('#task-create-budget-min', '20000');
-    setInput('#task-create-budget-max', '10000');
+    setField(fixture, '#task-create-budget-min', '20000');
+    setField(fixture, '#task-create-budget-max', '10000');
 
     submit();
 
@@ -154,9 +142,7 @@ describe('TaskCreateFormComponent testing', () => {
     fillValidForm();
     submit();
 
-    const submitButton = Array.from(root().querySelectorAll('button')).find(
-      (item) => item.textContent?.trim() === 'Создание...',
-    ) as HTMLButtonElement;
+    const submitButton = findButtonByLabel(root(), 'Создание...');
 
     expect(submitButton.disabled).toBe(true);
 

@@ -1,91 +1,189 @@
-<section class="profile-card" aria-labelledby="profile-card-title">
+<section
+  class="profile-card"
+  [attr.aria-labelledby]="editing() ? null : 'profile-card-title'"
+  [attr.aria-label]="editing() ? displayName() : null"
+>
   <div class="profile-card__cover">
-    <div
-      class="profile-card__avatar"
-      role="img"
-      aria-label="Аватар не добавлен"
-    ></div>
+    <div class="profile-card__avatar-wrap">
+      <div
+        class="profile-card__avatar"
+        role="img"
+        aria-label="Аватар не добавлен"
+      ></div>
+      @if (editing()) {
+        <button
+          type="button"
+          class="profile-card__avatar-action"
+          disabled
+          aria-label="Изменение аватара недоступно"
+        >
+          <svg
+            aria-hidden="true"
+            width="14"
+            height="14"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.75"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"></path>
+            <circle cx="12" cy="13" r="3"></circle>
+          </svg>
+        </button>
+      }
+    </div>
   </div>
 
   <div class="profile-card__content">
-    <div class="profile-card__header">
-      <div>
-        <h1 id="profile-card-title" class="profile-card__title">
-          {{ displayName() }}
-        </h1>
-
-        <div class="profile-card__meta">
-          <span class="profile-card__meta-item">
-            <svg
-              aria-hidden="true"
-              width="16"
-              height="16"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="1.75"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            >
-              <rect width="18" height="14" x="3" y="7" rx="2"></rect>
-              <path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-            </svg>
-            {{ roleLabel() }}
-          </span>
-
-          <span class="profile-card__meta-item">
-            <svg
-              aria-hidden="true"
-              width="16"
-              height="16"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="1.75"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            >
-              <path d="M8 2v4"></path>
-              <path d="M16 2v4"></path>
-              <rect width="18" height="18" x="3" y="4" rx="2"></rect>
-              <path d="M3 10h18"></path>
-            </svg>
-            {{ registrationLabel() }}
-          </span>
-
-          <span class="profile-card__meta-item">
-            <svg
-              aria-hidden="true"
-              width="16"
-              height="16"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="1.75"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            >
-              <rect width="20" height="16" x="2" y="4" rx="2"></rect>
-              <path d="m22 7-10 6L2 7"></path>
-            </svg>
-            {{ email() }}
-          </span>
-        </div>
+    <div class="profile-card__header" [class.profile-card__header--editing]="editing()">
+      <div class="profile-card__identity">
+        @if (editing()) {
+          <ng-content select="[profileEditName]" />
+        } @else {
+          <h1 id="profile-card-title" class="profile-card__title">
+            {{ displayName() }}
+          </h1>
+        }
       </div>
 
-      <ui-button type="button" [disabled]="true">Редактировать</ui-button>
+      @if (editing()) {
+        <ng-content select="[profileEditActions]" />
+      } @else {
+        <div class="profile-card__toolbar">
+          <ui-button type="button" (clicked)="onEdit()">Редактировать</ui-button>
+        </div>
+      }
     </div>
 
-    <p class="profile-card__bio">О себе пока ничего не указано</p>
+    <div class="profile-card__meta">
+      <span class="profile-card__meta-item">
+        <svg
+          aria-hidden="true"
+          width="16"
+          height="16"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.75"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <rect width="18" height="14" x="3" y="7" rx="2"></rect>
+          <path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+        </svg>
+        {{ roleLabel() }}
+      </span>
 
-    <div class="profile-card__rating" aria-label="Рейтинг: 0 из 5">
-      <span class="profile-card__stars" aria-hidden="true">☆☆☆☆☆</span>
-      <span>0.0</span>
+      <span class="profile-card__meta-item">
+        <svg
+          aria-hidden="true"
+          width="16"
+          height="16"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.75"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <path d="M8 2v4"></path>
+          <path d="M16 2v4"></path>
+          <rect width="18" height="18" x="3" y="4" rx="2"></rect>
+          <path d="M3 10h18"></path>
+        </svg>
+        {{ registrationLabel() }}
+      </span>
+
+      <span class="profile-card__meta-item profile-card__verified">
+        <svg
+          aria-hidden="true"
+          width="16"
+          height="16"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.75"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <path d="M3.85 8.62a4 4 0 0 1 4.78-4.77 4 4 0 0 1 6.74 0 4 4 0 0 1 4.78 4.78 4 4 0 0 1 0 6.74 4 4 0 0 1-4.77 4.78 4 4 0 0 1-6.75 0 4 4 0 0 1-4.78-4.77 4 4 0 0 1 0-6.76Z"></path>
+          <path d="m9 12 2 2 4-4"></path>
+        </svg>
+        {{ verifiedLabel }}
+      </span>
     </div>
 
-    <div class="profile-card__skills">
-      <h2 class="profile-card__skills-title">Навыки</h2>
-      <p class="profile-card__skills-empty">Навыки пока не указаны</p>
+    <div class="profile-card__body">
+      @if (editing()) {
+        <ng-content select="[profileEditFields]" />
+      } @else {
+        <p class="profile-card__bio">{{ bio() }}</p>
+      }
+
+      <div class="profile-card__details">
+        @if (!editing()) {
+          <span class="profile-card__meta-item">
+          <svg
+            aria-hidden="true"
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.75"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path d="M8 2v4"></path>
+            <path d="M16 2v4"></path>
+            <rect width="18" height="18" x="3" y="4" rx="2"></rect>
+            <path d="M3 10h18"></path>
+          </svg>
+          {{ birthdayLabel() }}
+          </span>
+        }
+
+        <span class="profile-card__meta-item">
+          <svg
+            aria-hidden="true"
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.75"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <rect width="20" height="16" x="2" y="4" rx="2"></rect>
+            <path d="m22 7-10 6L2 7"></path>
+          </svg>
+          {{ email() }}
+        </span>
+      </div>
+
+      <div class="profile-card__rating" [attr.aria-label]="ratingAriaLabel()">
+        <span class="profile-card__score">
+          <span class="profile-card__stars" aria-hidden="true">
+            @for (star of stars(); track star.index) {
+              <span class="profile-card__star" [attr.data-fill]="star.fill">★</span>
+            }
+          </span>
+          <span>{{ ratingLabel() }}</span>
+        </span>
+        @if (isFreelancer() && !editing()) {
+          <span class="profile-card__rate">{{ rateLabel() }}</span>
+        }
+      </div>
+
+      @if (isFreelancer()) {
+        <div class="profile-card__skills">
+          <h2 class="profile-card__skills-title">Навыки</h2>
+          <p class="profile-card__skills-empty">{{ skillsLabel() }}</p>
+        </div>
+      }
     </div>
   </div>
 </section>
