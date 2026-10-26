@@ -2,7 +2,7 @@ import { inject, Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { API_BASE_URL } from '@freelance-platform/http';
-import { UserResponse } from '@freelance-platform/shared-types';
+import { UpdateUserRecord, UserResponse } from '@freelance-platform/shared-types';
 
 @Injectable({ providedIn: 'root' })
 export class UserApi {
@@ -11,5 +11,9 @@ export class UserApi {
 
   findOne(id: string): Observable<UserResponse> {
     return this.http.get<UserResponse>(`${this.apiBaseUrl}/users/${id}`);
+  }
+
+  update(id: string, body: UpdateUserRecord): Observable<UserResponse> {
+    return this.http.patch<UserResponse>(`${this.apiBaseUrl}/users/${id}`, body);
   }
 }

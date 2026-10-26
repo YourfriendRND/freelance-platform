@@ -1,0 +1,76 @@
+<form class="profile-edit-form" [formGroup]="form" (ngSubmit)="onSubmit()" novalidate>
+  @let profileData = view();
+
+  <app-profile-card
+    [editing]="true"
+    [displayName]="profileData.displayName"
+    [email]="profileData.email"
+    [roleLabel]="profileData.roleLabel"
+    [registrationLabel]="profileData.registrationLabel"
+    [bio]="profileData.bio"
+    [birthdayLabel]="profileData.birthdayLabel"
+    [rating]="profileData.rating"
+    [reviewsCount]="profileData.reviewsCount"
+    [isFreelancer]="profileData.isFreelancer"
+    [rateLabel]="profileData.rateLabel"
+  >
+    <div profileEditName class="profile-edit-form__names">
+      <ui-text-field
+        formControlName="firstName"
+        inputId="profile-first-name"
+        label="Имя"
+        autocomplete="given-name"
+        [required]="true"
+        [error]="fieldError('firstName')"
+      />
+
+      <ui-text-field
+        formControlName="lastName"
+        inputId="profile-last-name"
+        label="Фамилия"
+        autocomplete="family-name"
+        [error]="fieldError('lastName')"
+      />
+    </div>
+
+    <div profileEditActions class="profile-edit-form__actions">
+      <ui-button type="submit" [disabled]="submitting()">Сохранить</ui-button>
+      <ui-button type="button" variant="muted" [disabled]="submitting()" (clicked)="onCancel()">
+        Отмена
+      </ui-button>
+    </div>
+
+    <div profileEditFields class="profile-edit-form__fields">
+      @if (submitError(); as message) {
+        <p class="profile-edit-form__error" role="alert">{{ message }}</p>
+      }
+
+      <ui-text-field
+        formControlName="bio"
+        inputId="profile-bio"
+        label="О себе"
+        [multiline]="true"
+        [maxLength]="2000"
+        [error]="fieldError('bio')"
+      />
+
+      <ui-text-field
+        formControlName="birthday"
+        inputId="profile-birthday"
+        label="День рождения"
+        type="date"
+        [error]="fieldError('birthday')"
+      />
+
+      @if (profileData.isFreelancer) {
+        <ui-text-field
+          formControlName="rate"
+          inputId="profile-rate"
+          label="Ставка, ₽/час"
+          type="number"
+          [error]="fieldError('rate')"
+        />
+      }
+    </div>
+  </app-profile-card>
+</form>
