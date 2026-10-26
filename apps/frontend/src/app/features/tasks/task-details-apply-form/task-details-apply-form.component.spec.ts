@@ -5,6 +5,7 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { TaskApplicationStore } from '@freelance-platform/client-state';
 import { createMockTaskApplicationResponse, MOCK_TASK_ID } from '@freelance-platform/shared-mock';
 import { formatTaskBudget } from '../../../format';
+import { setField } from '../../../testing/set-field';
 import { TaskDetailsApplyFormComponent } from './task-details-apply-form.component';
 
 describe('TaskDetailsApplyFormComponent testing', () => {
@@ -45,12 +46,6 @@ describe('TaskDetailsApplyFormComponent testing', () => {
 
   function root(): HTMLElement {
     return fixture.nativeElement as HTMLElement;
-  }
-
-  function setInput(selector: string, value: string): void {
-    const field = root().querySelector(selector) as HTMLInputElement | HTMLTextAreaElement;
-    field.value = value;
-    field.dispatchEvent(new Event('input', { bubbles: true }));
   }
 
   it('should render the apply form in a modal', () => {
@@ -107,8 +102,8 @@ describe('TaskDetailsApplyFormComponent testing', () => {
     const closed = vi.fn();
     fixture.componentInstance.closed.subscribe(closed);
 
-    setInput('#task-apply-price', '2500');
-    setInput('#task-apply-message', 'а'.repeat(40));
+    setField(fixture, '#task-apply-price', '2500');
+    setField(fixture, '#task-apply-message', 'а'.repeat(40));
     fixture.detectChanges();
 
     (root().querySelector('button[type="submit"]') as HTMLButtonElement).click();
@@ -123,9 +118,9 @@ describe('TaskDetailsApplyFormComponent testing', () => {
   });
 
   it('should send a timeline of 2 to 100 characters', () => {
-    setInput('#task-apply-price', '2500');
-    setInput('#task-apply-message', 'а'.repeat(40));
-    setInput('#task-apply-timeline', '2 недели');
+    setField(fixture, '#task-apply-price', '2500');
+    setField(fixture, '#task-apply-message', 'а'.repeat(40));
+    setField(fixture, '#task-apply-timeline', '2 недели');
     fixture.detectChanges();
 
     (root().querySelector('button[type="submit"]') as HTMLButtonElement).click();
@@ -140,9 +135,9 @@ describe('TaskDetailsApplyFormComponent testing', () => {
   });
 
   it('should reject a timeline shorter than 2 characters', () => {
-    setInput('#task-apply-price', '2500');
-    setInput('#task-apply-message', 'а'.repeat(40));
-    setInput('#task-apply-timeline', 'я');
+    setField(fixture, '#task-apply-price', '2500');
+    setField(fixture, '#task-apply-message', 'а'.repeat(40));
+    setField(fixture, '#task-apply-timeline', 'я');
     fixture.detectChanges();
 
     (root().querySelector('button[type="submit"]') as HTMLButtonElement).click();
@@ -153,9 +148,9 @@ describe('TaskDetailsApplyFormComponent testing', () => {
   });
 
   it('should reject a timeline longer than 100 characters', () => {
-    setInput('#task-apply-price', '2500');
-    setInput('#task-apply-message', 'а'.repeat(40));
-    setInput('#task-apply-timeline', 'я'.repeat(101));
+    setField(fixture, '#task-apply-price', '2500');
+    setField(fixture, '#task-apply-message', 'а'.repeat(40));
+    setField(fixture, '#task-apply-timeline', 'я'.repeat(101));
     fixture.detectChanges();
 
     (root().querySelector('button[type="submit"]') as HTMLButtonElement).click();
@@ -179,8 +174,8 @@ describe('TaskDetailsApplyFormComponent testing', () => {
     );
     submitError.set('Вы уже откликались на эту задачу');
 
-    setInput('#task-apply-price', '2500');
-    setInput('#task-apply-message', 'а'.repeat(40));
+    setField(fixture, '#task-apply-price', '2500');
+    setField(fixture, '#task-apply-message', 'а'.repeat(40));
     fixture.detectChanges();
 
     (root().querySelector('button[type="submit"]') as HTMLButtonElement).click();

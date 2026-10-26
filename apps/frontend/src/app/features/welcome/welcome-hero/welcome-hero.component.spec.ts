@@ -5,6 +5,7 @@ import { AuthStore } from '@freelance-platform/client-state';
 import { createMockUserResponse, mockFreelancerUserResponse } from '@freelance-platform/shared-mock';
 import { UserResponse, UserRole } from '@freelance-platform/shared-types';
 import { of } from 'rxjs';
+import { findButtonByLabel } from '../../../testing/button-by-label';
 import { WelcomeHeroComponent } from './welcome-hero.component';
 
 describe('WelcomeHeroComponent testing', () => {
@@ -71,11 +72,7 @@ describe('WelcomeHeroComponent testing', () => {
     await setup({ user: null, sessionResolved: true });
     const router = TestBed.inject(Router);
     const navigateByUrl = vi.spyOn(router, 'navigateByUrl').mockResolvedValue(true);
-    const findWork = Array.from(root().querySelectorAll('button')).find(
-      (button) => button.textContent?.trim() === 'Найти работу',
-    );
-
-    findWork?.click();
+    findButtonByLabel(root(), 'Найти работу').click();
 
     expect(navigateByUrl).toHaveBeenCalledWith('/tasks');
   });

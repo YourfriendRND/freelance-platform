@@ -20,6 +20,7 @@ import {
   UserResponse,
 } from '@freelance-platform/shared-types';
 import { of, throwError } from 'rxjs';
+import { findButtonByLabel } from '../../../testing/button-by-label';
 import { formatTaskDate } from '../../../format';
 import { AnalyticsPageComponent } from './analytics-page.component';
 
@@ -140,11 +141,7 @@ describe('AnalyticsPageComponent testing', () => {
       const router = TestBed.inject(Router);
       const navigate = vi.spyOn(router, 'navigate').mockResolvedValue(true);
 
-      const createButton = Array.from(root().querySelectorAll('button')).find(
-        (button) => button.textContent?.trim() === 'Новая задача',
-      );
-
-      createButton?.click();
+      findButtonByLabel(root(), 'Новая задача').click();
 
       expect(navigate).toHaveBeenCalledWith(['/tasks/create']);
     });
@@ -193,13 +190,9 @@ describe('AnalyticsPageComponent testing', () => {
     it('should open the application card from the details button', () => {
       const router = TestBed.inject(Router);
       const navigate = vi.spyOn(router, 'navigate').mockResolvedValue(true);
-      const detailsButton = Array.from(
-        root().querySelectorAll<HTMLButtonElement>(
-          'app-analytics-pending-applications button',
-        ),
-      ).find((button) => button.textContent?.trim() === 'Смотреть детали');
+      const applications = root().querySelector('app-analytics-pending-applications');
 
-      detailsButton?.click();
+      findButtonByLabel(applications as ParentNode, 'Смотреть детали').click();
 
       expect(navigate).toHaveBeenCalledWith(['/applications', newestApplication.id]);
     });
@@ -243,11 +236,7 @@ describe('AnalyticsPageComponent testing', () => {
       const router = TestBed.inject(Router);
       const navigate = vi.spyOn(router, 'navigate').mockResolvedValue(true);
 
-      const browseButton = Array.from(root().querySelectorAll('button')).find(
-        (button) => button.textContent?.trim() === 'Смотреть задачи',
-      );
-
-      browseButton?.click();
+      findButtonByLabel(root(), 'Смотреть задачи').click();
 
       expect(navigate).toHaveBeenCalledWith(['/tasks']);
     });

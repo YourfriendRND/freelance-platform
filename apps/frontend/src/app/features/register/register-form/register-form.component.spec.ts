@@ -6,6 +6,7 @@ import { of, Subject, throwError } from 'rxjs';
 import { AuthApi } from '@freelance-platform/client-api';
 import { MOCK_USER_EMAIL, mockClientUserResponse } from '@freelance-platform/shared-mock';
 import { UserResponse, UserRole } from '@freelance-platform/shared-types';
+import { setField } from '../../../testing/set-field';
 import { RegisterFormComponent } from './register-form.component';
 import { passwordMatchValidator } from './register-form.validation';
 
@@ -34,12 +35,6 @@ describe('RegisterFormComponent testing', () => {
     return fixture.nativeElement as HTMLElement;
   }
 
-  function setInput(selector: string, value: string): void {
-    const input = root().querySelector(selector) as HTMLInputElement;
-    input.value = value;
-    input.dispatchEvent(new Event('input', { bubbles: true }));
-  }
-
   function setSelect(selector: string, value: string): void {
     const select = root().querySelector(selector) as HTMLSelectElement;
     select.value = value;
@@ -54,10 +49,10 @@ describe('RegisterFormComponent testing', () => {
 
   function fillValidForm(): void {
     setSelect('#register-role', UserRole.Client);
-    setInput('#register-first-name', user.firstName);
-    setInput('#register-email', MOCK_USER_EMAIL);
-    setInput('#register-password', 'password1');
-    setInput('#register-confirm-password', 'password1');
+    setField(fixture, '#register-first-name', user.firstName);
+    setField(fixture, '#register-email', MOCK_USER_EMAIL);
+    setField(fixture, '#register-password', 'password1');
+    setField(fixture, '#register-confirm-password', 'password1');
     setCheckbox('#register-accept-terms', true);
     fixture.detectChanges();
   }
@@ -81,8 +76,7 @@ describe('RegisterFormComponent testing', () => {
 
   it('should show a mismatch error when passwords do not match', () => {
     fillValidForm();
-    setInput('#register-confirm-password', 'password2');
-    fixture.detectChanges();
+    setField(fixture, '#register-confirm-password', 'password2');
     submit();
 
     expect(join).not.toHaveBeenCalled();
@@ -110,8 +104,7 @@ describe('RegisterFormComponent testing', () => {
     vi.spyOn(router, 'navigate').mockResolvedValue(true);
 
     fillValidForm();
-    setInput('#register-last-name', 'Петров');
-    fixture.detectChanges();
+    setField(fixture, '#register-last-name', 'Петров');
     submit();
 
     expect(join).toHaveBeenCalledWith({

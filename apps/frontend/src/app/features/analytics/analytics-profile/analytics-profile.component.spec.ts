@@ -1,5 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter, Router } from '@angular/router';
+import { findButtonByLabel } from '../../../testing/button-by-label';
 import { AnalyticsProfileComponent } from './analytics-profile.component';
 
 describe('AnalyticsProfileComponent testing', () => {
@@ -42,11 +43,7 @@ describe('AnalyticsProfileComponent testing', () => {
     const router = TestBed.inject(Router);
     const navigate = vi.spyOn(router, 'navigate').mockResolvedValue(true);
 
-    const editButton = Array.from(root().querySelectorAll('button')).find(
-      (button) => button.textContent?.trim() === 'Редактировать профиль',
-    );
-
-    editButton?.click();
+    findButtonByLabel(root(), 'Редактировать профиль').click();
 
     expect(navigate).toHaveBeenCalledWith(['/profile']);
   });
