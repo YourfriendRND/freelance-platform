@@ -30,7 +30,8 @@ apps/
         _breakpoints.scss  # планшет 960px, телефон 640px
       app/
         features/       # feature-first
-        format/         # вспомогательные функции форматирования 
+        format/         # вспомогательные функции форматирования
+        testing/        # общие помощники unit-тестов: setField, findButtonByLabel
         app.routes.ts   # lazy load feature-маршрутов
   frontend-e2e/         # e2e frontend (Playwright)
 libs/
