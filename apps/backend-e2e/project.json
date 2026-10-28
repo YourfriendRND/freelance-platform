@@ -10,7 +10,10 @@
         "command": "vitest run",
         "cwd": "apps/backend-e2e"
       },
-      "dependsOn": ["backend:build", "backend:serve"]
+      "dependsOn": ["backend:build", "backend:serve"],
+      "configurations": {
+        "e2e": {}
+      }
     }
   }
 }

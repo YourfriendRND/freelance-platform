@@ -12,7 +12,10 @@
         "command": "playwright test",
         "cwd": "apps/frontend-e2e"
       },
-      "dependsOn": ["backend:serve", "frontend:serve"]
+      "dependsOn": ["backend:serve", "frontend:serve"],
+      "configurations": {
+        "e2e": {}
+      }
     }
   }
 }

@@ -47,7 +47,7 @@ libs/
 docs/
   backend_change_log.md
   frontend_change_log.md
-.github/workflows/   # CI/CD (GitHub Actions)
+.github/workflows/   # CI/CD и E2E (GitHub Actions)
 ```
 
 ## Требования
@@ -65,6 +65,8 @@ cp .env.example .env   # заполнить значения
 ```
 
 Переменные окружения хранятся в `.env` в корне репозитория (сейчас используются backend).
+
+Для E2E в `.env` нужна `DB_NAME_E2E` - имя базы отдельно от `DB_NAME`. Пример есть в `.env.example`.
 
 Помимо БД (`DB_*`) для auth нужны:
 
@@ -133,6 +135,10 @@ docker compose --env-file .env up -d --build
 
 Деплой стартует только если оба набора unit-тестов прошли.
 
+При `push` в `main` отдельный workflow (`.github/workflows/e2e.yml`) запускает `yarn backend:e2e` и `yarn frontend:e2e` параллельно. Деплой от него не зависит, и E2E деплой не ждет.
+
+На runner серверного `.env` нет. В workflow заданы `DB_HOST=localhost`, `DB_NAME_E2E=freelance_platform_e2e` и параметры сессии. Если PostgreSQL на runner нет, скрипт поднимает его сам. Для frontend дополнительно ставятся браузеры Playwright.
+
 Нужны repository secrets: `SSH_HOST`, `SSH_USERNAME`, `SSH_PRIVATE_KEY`, `DEPLOY_PATH`.
 
 ## База данных
@@ -183,9 +189,9 @@ yarn seed               # применить новые сиды
 - **Unit frontend** - Vitest через Angular (`yarn frontend:test`)
 - **E2E frontend** - Playwright (`apps/frontend-e2e`): живое Angular-приложение, auth-сценарии через UI
 
-E2E backend поднимает `backend:serve` через Nx; нужен доступный PostgreSQL и применённые миграции. Ожидание API и axios идут на `127.0.0.1`, чтобы на Windows не ловить отказ IPv6 у `localhost`.
+`yarn backend:e2e` и `yarn frontend:e2e` сами проверяют PostgreSQL. Если порт закрыт, поднимается `docker-compose.local.yml`. Дальше создается база из `DB_NAME_E2E`, затем миграции и сиды только в нее. `yarn start` эту базу не открывает и по-прежнему использует `DB_NAME`.
 
-E2E frontend поднимает `backend:serve` и `frontend:serve`, после прогона останавливает их. Нужен PostgreSQL, миграции и браузеры Playwright (`yarn playwright install`). Dev-сервер фронта и прокси API слушают `127.0.0.1`. Auth-спеки идут только в Chromium.
+E2E backend слушает `127.0.0.1:3001`. E2E frontend слушает `127.0.0.1:4201`, прокси API ведет на порт 3001. Ожидание API и axios идут на `127.0.0.1`, чтобы на Windows не ловить отказ IPv6 у `localhost`. После прогона Nx останавливает эти процессы. Локально для frontend нужны браузеры Playwright (`yarn playwright install`). Auth-спеки идут только в Chromium, пример в конфиге Playwright дополнительно открывается в Firefox и WebKit.
 
 ```bash
 yarn backend:test    # unit backend
