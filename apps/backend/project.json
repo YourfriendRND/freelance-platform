@@ -59,6 +59,9 @@
         "development": {
           "buildTarget": "backend:build:development"
         },
+        "e2e": {
+          "buildTarget": "backend:build:development"
+        },
         "production": {
           "buildTarget": "backend:build:production"
         }

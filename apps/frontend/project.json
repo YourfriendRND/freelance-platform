@@ -64,6 +64,11 @@
         "development": {
           "buildTarget": "frontend:build:development",
           "proxyConfig": "apps/frontend/proxy.conf.json"
+        },
+        "e2e": {
+          "buildTarget": "frontend:build:development",
+          "port": 4201,
+          "proxyConfig": "apps/frontend/proxy.e2e.conf.json"
         }
       }
     },
