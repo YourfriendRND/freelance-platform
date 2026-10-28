@@ -137,7 +137,7 @@ docker compose --env-file .env up -d --build
 
 При `push` в `main` отдельный workflow (`.github/workflows/e2e.yml`) запускает `yarn backend:e2e` и `yarn frontend:e2e` параллельно. Деплой от него не зависит, и E2E деплой не ждет.
 
-На runner серверного `.env` нет. В workflow заданы `DB_HOST=localhost`, `DB_NAME_E2E=freelance_platform_e2e` и параметры сессии. Если PostgreSQL на runner нет, скрипт поднимает его сам. Для frontend дополнительно ставятся браузеры Playwright.
+На runner серверного `.env` нет. В workflow заданы `DB_HOST=localhost`, `DB_NAME_E2E=freelance_platform_e2e` и параметры сессии. Если PostgreSQL на runner нет, скрипт поднимает его сам. Для frontend дополнительно ставятся браузеры Playwright. Там же выключены демон Nx, кэш нативного модуля и compile cache Node: на Node 22.16 иначе падает загрузка Playwright-пресета.
 
 Нужны repository secrets: `SSH_HOST`, `SSH_USERNAME`, `SSH_PRIVATE_KEY`, `DEPLOY_PATH`.
 
