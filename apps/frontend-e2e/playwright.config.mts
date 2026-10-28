@@ -3,6 +3,25 @@ import { defineConfig, devices } from '@playwright/test';
 const baseURL = process.env['BASE_URL'] || 'http://127.0.0.1:4200';
 const ci = !!process.env['CI'];
 const outputRoot = '../../dist/.playwright/apps/frontend-e2e';
+const reporter = [
+  ['list'],
+  [
+    'html',
+    {
+      outputFolder: `${outputRoot}/playwright-report`,
+      open: 'never',
+    },
+  ],
+];
+
+if (ci) {
+  reporter.push([
+    'blob',
+    {
+      outputDir: `${outputRoot}/blob-report`,
+    },
+  ]);
+}
 
 export default defineConfig({
   testDir: './src',
@@ -12,26 +31,7 @@ export default defineConfig({
   retries: ci ? 2 : 0,
   workers: ci ? 1 : undefined,
   globalSetup: './src/support/global-setup.ts',
-  reporter: [
-    ['list'],
-    [
-      'html',
-      {
-        outputFolder: `${outputRoot}/playwright-report`,
-        open: 'never',
-      },
-    ],
-    ...(ci
-      ? [
-          [
-            'blob',
-            {
-              outputDir: `${outputRoot}/blob-report`,
-            },
-          ] as const,
-        ]
-      : []),
-  ],
+  reporter,
   use: {
     baseURL,
     trace: 'on-first-retry',
