@@ -16,6 +16,24 @@ import { DuplicateTaskApplicationError } from './errors';
 
 const UNIQUE_VIOLATION_CODE = '23505';
 
+const SHORT_TASK_COLUMNS = `
+            tasks.title AS task_title,
+            tasks.budget_min AS task_budget_min,
+            tasks.budget_max AS task_budget_max,
+            tasks.deadline AS task_deadline,
+            tasks.execution_type AS task_execution_type,
+            tasks.category_id AS task_category_id,
+            author.id AS author_id,
+            author.email AS author_email,
+            author.first_name AS author_first_name,
+            author.last_name AS author_last_name,
+            author.role AS author_role,
+            author.created_at AS author_created_at`;
+
+const SHORT_TASK_JOIN = `
+        INNER JOIN tasks ON ta.task_id = tasks.id
+        INNER JOIN users AS author ON author.id = tasks.customer_id`;
+
 @Injectable()
 export class TaskApplicationRepository {
   constructor(private readonly database: DatabaseClient) {}
@@ -143,9 +161,10 @@ export class TaskApplicationRepository {
             u.first_name AS user_first_name,
             u.last_name AS user_last_name,
             u.role AS user_role,
-            u.created_at AS user_created_at
+            u.created_at AS user_created_at,
+            ${SHORT_TASK_COLUMNS}
         FROM task_applications AS ta
-        INNER JOIN tasks ON ta.task_id = tasks.id
+        ${SHORT_TASK_JOIN}
         INNER JOIN users AS u ON u.id = ta.performer_id
         WHERE ta.id = $1
       `,
@@ -184,9 +203,11 @@ export class TaskApplicationRepository {
             u.first_name AS user_first_name,
             u.last_name AS user_last_name,
             u.role AS user_role,
-            u.created_at AS user_created_at
+            u.created_at AS user_created_at,
+            ${SHORT_TASK_COLUMNS}
         FROM task_applications AS ta
         INNER JOIN users AS u ON u.id = ta.performer_id
+        ${SHORT_TASK_JOIN}
         WHERE ta.performer_id = $1
         ORDER BY ta.created_at DESC, ta.id DESC
       `,
@@ -214,10 +235,11 @@ export class TaskApplicationRepository {
             u.first_name AS user_first_name,
             u.last_name AS user_last_name,
             u.role AS user_role,
-            u.created_at AS user_created_at
+            u.created_at AS user_created_at,
+            ${SHORT_TASK_COLUMNS}
         FROM task_applications AS ta
-        INNER JOIN tasks ON ta.task_id = tasks.id
         INNER JOIN users AS u ON u.id = ta.performer_id
+        ${SHORT_TASK_JOIN}
         WHERE tasks.customer_id = $1
         ORDER BY ta.created_at DESC, ta.id DESC
       `,
@@ -248,10 +270,11 @@ export class TaskApplicationRepository {
             u.first_name AS user_first_name,
             u.last_name AS user_last_name,
             u.role AS user_role,
-            u.created_at AS user_created_at
+            u.created_at AS user_created_at,
+            ${SHORT_TASK_COLUMNS}
         FROM task_applications AS ta
-        INNER JOIN tasks ON ta.task_id = tasks.id
         INNER JOIN users AS u ON u.id = ta.performer_id
+        ${SHORT_TASK_JOIN}
         WHERE tasks.customer_id = $1 AND ta.task_id = $2
         ORDER BY ta.created_at DESC, ta.id DESC
       `,
