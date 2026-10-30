@@ -46,6 +46,8 @@ describe('TaskRepository findAll testing', () => {
     expect(selectCall[0]).toContain('status IN ($1, $2)');
     expect(selectCall[0]).toContain('ORDER BY tasks.created_at DESC, tasks.id DESC');
     expect(selectCall[0]).toContain('AS applications_count');
+    expect(selectCall[0]).toContain('AS views_count');
+    expect(selectCall[0]).toContain('FROM task_views');
     expect(selectCall[0]).toContain('INNER JOIN users AS u ON u.id = tasks.customer_id');
     expect(selectCall[0]).toContain('LIMIT $3');
     expect(selectCall[0]).toContain('OFFSET $4');
@@ -111,6 +113,7 @@ describe('TaskRepository findAll testing', () => {
           ...taskRow,
           has_applied: false,
           applications_count: '2',
+          views_count: '5',
           author_id: taskRow.customer_id,
           author_email: 'client@example.com',
           author_first_name: 'Иван',
@@ -128,11 +131,12 @@ describe('TaskRepository findAll testing', () => {
     expect(sql).toContain('tasks.id IN (');
     expect(sql).toContain('WHERE performer_id = $3');
     expect(sql).toContain('AS has_applied');
+    expect(sql).toContain('AS views_count');
     expect(sql).toContain('status IN ($1, $2)');
     expect(params[2]).toBe(performerId);
     expect(task.hasApplied).toBe(false);
     expect(task.applicationsCount).toBe(2);
-    expect(task.viewsCount).toBe(0);
+    expect(task.viewsCount).toBe(5);
     expect(task.author).toMatchObject({
       id: taskRow.customer_id,
       email: 'client@example.com',
@@ -157,7 +161,12 @@ describe('TaskRepository findAll testing', () => {
     database.query
       .mockReset()
       .mockResolvedValueOnce({
-        rows: [{ ...taskRow, status: TaskStatus.Draft, applications_count: '0' }],
+        rows: [{
+          ...taskRow,
+          status: TaskStatus.Draft,
+          applications_count: '0',
+          views_count: '1',
+        }],
       })
       .mockResolvedValueOnce({ rows: [{ total: '1' }] });
 
@@ -167,6 +176,7 @@ describe('TaskRepository findAll testing', () => {
     const [sql, params] = database.query.mock.calls[0];
 
     expect(sql).toContain('customer_id = $1');
+    expect(sql).toContain('AS views_count');
     expect(sql).toContain('status = $2');
     expect(sql).not.toContain('status IN ($1, $2)');
     expect(sql).not.toContain('AS has_applied');
@@ -175,7 +185,7 @@ describe('TaskRepository findAll testing', () => {
     expect(result.items[0].status).toBe(TaskStatus.Draft);
     expect(result.items[0].hasApplied).toBeUndefined();
     expect(result.items[0].applicationsCount).toBe(0);
-    expect(result.items[0].viewsCount).toBe(0);
+    expect(result.items[0].viewsCount).toBe(1);
   });
 
   it('should add hasApplied when loading one task for a performer', async () => {
@@ -190,6 +200,8 @@ describe('TaskRepository findAll testing', () => {
     expect(sql).toContain('AS has_applied');
     expect(sql).toContain('WHERE tasks.id = $1');
     expect(params).toEqual([taskRow.id, performerId]);
+    expect(sql).toContain('AS views_count');
+    expect(sql).toContain('FROM task_views');
     expect(result?.hasApplied).toBe(true);
     expect(result?.applicationsCount).toBe(1);
     expect(result?.viewsCount).toBe(0);
@@ -203,7 +215,43 @@ describe('TaskRepository findAll testing', () => {
 
     expect(sql).not.toContain('AS has_applied');
     expect(params).toEqual([taskRow.id]);
+    expect(sql).toContain('AS views_count');
     expect(result?.hasApplied).toBeUndefined();
+    expect(result?.viewsCount).toBe(0);
+  });
+
+  it('should map views_count from the task row', async () => {
+    database.query.mockReset().mockResolvedValue({
+      rows: [{ ...taskRow, applications_count: '1', views_count: '4' }],
+    });
+
+    const result = await repository.findById(taskRow.id);
+
+    expect(result?.viewsCount).toBe(4);
+  });
+});
+
+describe('TaskRepository recordView testing', () => {
+  let database: { query: ReturnType<typeof vi.fn> };
+  let repository: TaskRepository;
+
+  const userId = 'b7e14a02-91c3-4d58-8a6f-1c2d3e4f5a61';
+  const taskId = '5c8e1a97-0a01-4b62-8d11-7e9f0a1b2c01';
+
+  beforeEach(() => {
+    database = { query: vi.fn().mockResolvedValue({ rows: [] }) };
+    repository = new TaskRepository(database as unknown as DatabaseClient);
+  });
+
+  it('should insert a view and refresh updated_at on conflict', async () => {
+    await repository.recordView(userId, taskId);
+
+    const [sql, params] = database.query.mock.calls[0];
+
+    expect(sql).toContain('INSERT INTO task_views (user_id, task_id)');
+    expect(sql).toContain('ON CONFLICT (user_id, task_id)');
+    expect(sql).toContain('DO UPDATE SET updated_at = now()');
+    expect(params).toEqual([userId, taskId]);
   });
 });
 

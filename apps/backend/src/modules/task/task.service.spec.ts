@@ -21,6 +21,7 @@ describe('TaskService testing', () => {
     findAll: ReturnType<typeof vi.fn>;
     findAllByCustomer: ReturnType<typeof vi.fn>;
     findById: ReturnType<typeof vi.fn>;
+    recordView: ReturnType<typeof vi.fn>;
     update: ReturnType<typeof vi.fn>;
     deleteById: ReturnType<typeof vi.fn>;
     countCustomerStats: ReturnType<typeof vi.fn>;
@@ -94,6 +95,7 @@ describe('TaskService testing', () => {
       findAll: vi.fn(),
       findAllByCustomer: vi.fn(),
       findById: vi.fn(),
+      recordView: vi.fn(),
       update: vi.fn(),
       deleteById: vi.fn(),
       countCustomerStats: vi.fn(),
@@ -216,7 +218,9 @@ describe('TaskService testing', () => {
     const result = await service.findOne(taskId, freelancerAuthUser);
 
     expect(result).toBe(openTask);
+    expect(taskRepository.recordView).toHaveBeenCalledWith(freelancerId, taskId);
     expect(taskRepository.findById).toHaveBeenCalledWith(taskId, freelancerId);
+    expect(taskRepository.findById).toHaveBeenCalledTimes(2);
   });
 
   it('should load one task without performer id for a customer', async () => {
@@ -224,7 +228,24 @@ describe('TaskService testing', () => {
 
     await service.findOne(taskId, authUser);
 
+    expect(taskRepository.recordView).toHaveBeenCalledWith(customerId, taskId);
     expect(taskRepository.findById).toHaveBeenCalledWith(taskId);
+    expect(taskRepository.findById).toHaveBeenCalledTimes(2);
+  });
+
+  it('should return the task loaded after the view is recorded', async () => {
+    const openTask = new TaskEntity({ ...task, status: TaskStatus.Open });
+    const viewedTask = new TaskEntity({ ...task, status: TaskStatus.Open });
+    openTask.viewsCount = 0;
+    viewedTask.viewsCount = 1;
+    taskRepository.findById
+      .mockResolvedValueOnce(openTask)
+      .mockResolvedValueOnce(viewedTask);
+
+    const result = await service.findOne(taskId, authUser);
+
+    expect(taskRepository.recordView).toHaveBeenCalledWith(customerId, taskId);
+    expect(result).toBe(viewedTask);
   });
 
   it('should return the customer tasks including a draft filter', async () => {
@@ -275,7 +296,9 @@ describe('TaskService testing', () => {
     const result = await service.findOne(taskId);
 
     expect(result).toBe(openTask);
+    expect(taskRepository.recordView).not.toHaveBeenCalled();
     expect(taskRepository.findById).toHaveBeenCalledWith(taskId);
+    expect(taskRepository.findById).toHaveBeenCalledTimes(1);
   });
 
   it('should throw NotFoundException when task is missing', async () => {
@@ -284,6 +307,7 @@ describe('TaskService testing', () => {
     await expect(service.findOne(taskId)).rejects.toThrow(
       `Задача с "${taskId}" не найдена`,
     );
+    expect(taskRepository.recordView).not.toHaveBeenCalled();
   });
 
   it('should update a draft task by owner', async () => {
@@ -396,6 +420,7 @@ describe('TaskService testing', () => {
       await expect(service.findOne(taskId)).rejects.toThrow(
         `Задача с "${taskId}" не найдена`,
       );
+      expect(taskRepository.recordView).not.toHaveBeenCalled();
     });
 
     it('should hide a draft from a freelancer', async () => {
@@ -404,6 +429,7 @@ describe('TaskService testing', () => {
       await expect(service.findOne(taskId, freelancerAuthUser)).rejects.toThrow(
         `Задача с "${taskId}" не найдена`,
       );
+      expect(taskRepository.recordView).not.toHaveBeenCalled();
     });
 
     it('should hide a draft from another customer', async () => {
@@ -412,6 +438,7 @@ describe('TaskService testing', () => {
       await expect(service.findOne(taskId, otherClientAuthUser)).rejects.toThrow(
         `Задача с "${taskId}" не найдена`,
       );
+      expect(taskRepository.recordView).not.toHaveBeenCalled();
     });
 
     it('should return an open task to another customer', async () => {
