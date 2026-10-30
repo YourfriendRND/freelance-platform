@@ -121,7 +121,15 @@ export class TaskService {
       throw new NotFoundException(`Задача с "${id}" не найдена`);
     }
 
-    return task;
+    if (!authUser) {
+      return task;
+    }
+
+    const { user: { id: userId } } = authUser;
+
+    await this.taskRepository.recordView(userId, id);
+
+    return this.getTask(id, performerId);
   }
 
   async getTask(id: string, performerId?: string): Promise<TaskEntity> {

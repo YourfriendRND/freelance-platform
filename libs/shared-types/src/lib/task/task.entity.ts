@@ -51,6 +51,8 @@ export class TaskEntity extends Entity<ITask> {
       task.applicationsCount = Number(row.applications_count);
     }
 
+    task.viewsCount = row.views_count !== undefined ? Number(row.views_count) : 0;
+
     if (
       row.author_id !== undefined &&
       row.author_email !== undefined &&
@@ -67,9 +69,6 @@ export class TaskEntity extends Entity<ITask> {
         createdAt: row.author_created_at,
       });
     }
-
-    // TODO: Добавить учёт просмотров задачи
-    task.viewsCount = 0;
 
     return task;
   }

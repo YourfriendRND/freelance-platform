@@ -563,6 +563,7 @@ describe('Task module e2e testing', () => {
 
       expect(guestGetRes.status).toBe(200);
       expect(guestGetRes.data).not.toHaveProperty('hasApplied');
+      expect(guestGetRes.data.viewsCount).toBe(0);
 
       const customerGetRes = await axios.get(`/api/tasks/${taskId}`, {
         headers: { Cookie: client.sessionCookie },
@@ -570,6 +571,7 @@ describe('Task module e2e testing', () => {
 
       expect(customerGetRes.status).toBe(200);
       expect(customerGetRes.data).not.toHaveProperty('hasApplied');
+      expect(customerGetRes.data.viewsCount).toBe(1);
     });
 
     it('freelancer should receive hasApplied on the list and the card', async () => {
@@ -580,6 +582,7 @@ describe('Task module e2e testing', () => {
       expect(beforeRes.status).toBe(200);
       expect(beforeRes.data.hasApplied).toBe(false);
       expect(beforeRes.data.applicationsCount).toBe(0);
+      expect(beforeRes.data.viewsCount).toBe(2);
 
       const applyRes = await axios.post(
         '/api/task-applications',
@@ -597,7 +600,7 @@ describe('Task module e2e testing', () => {
       expect(listRes.status).toBe(200);
       expect(listed.hasApplied).toBe(true);
       expect(listed.applicationsCount).toBe(1);
-      expect(listed.viewsCount).toBe(0);
+      expect(listed.viewsCount).toBe(2);
       expect(listed.author).toMatchObject({
         id: client.userId,
         rating: 0,
@@ -611,7 +614,76 @@ describe('Task module e2e testing', () => {
       expect(getRes.status).toBe(200);
       expect(getRes.data.hasApplied).toBe(true);
       expect(getRes.data.applicationsCount).toBe(1);
-      expect(getRes.data.viewsCount).toBe(0);
+      expect(getRes.data.viewsCount).toBe(2);
+    });
+  });
+
+  describe('task views count testing', () => {
+    it('should count a unique authorized view and ignore guests and hidden drafts', async () => {
+      const client = await joinAndLogin(UserRole.Client);
+      const freelancer = await joinAndLogin(UserRole.Freelancer);
+      const other = await joinAndLogin(UserRole.Client);
+      const categoriesRes = await axios.get('/api/task-categories');
+
+      expect(categoriesRes.status).toBe(200);
+
+      const [category] = categoriesRes.data;
+      const openRes = await axios.post(
+        '/api/tasks',
+        { ...createTaskBody(category.id), status: TaskStatus.Open },
+        { headers: { Cookie: client.sessionCookie } },
+      );
+      const draftRes = await axios.post(
+        '/api/tasks',
+        createTaskBody(category.id),
+        { headers: { Cookie: client.sessionCookie } },
+      );
+
+      expect(openRes.status).toBe(201);
+      expect(draftRes.status).toBe(201);
+
+      const { id: openId } = openRes.data;
+      const { id: draftId } = draftRes.data;
+      const guestRes = await axios.get(`/api/tasks/${openId}`);
+
+      expect(guestRes.status).toBe(200);
+      expect(guestRes.data.viewsCount).toBe(0);
+
+      const firstRes = await axios.get(`/api/tasks/${openId}`, {
+        headers: { Cookie: freelancer.sessionCookie },
+      });
+      const secondRes = await axios.get(`/api/tasks/${openId}`, {
+        headers: { Cookie: freelancer.sessionCookie },
+      });
+
+      expect(firstRes.status).toBe(200);
+      expect(firstRes.data.viewsCount).toBe(1);
+
+      const listRes = await axios.get(`/api/tasks?limit=${PAGINATION_MAX_LIMIT}`);
+      const listed = listRes.data.items.find((task: { id: string }) => task.id === openId);
+      const myRes = await axios.get(`/api/tasks/my?limit=${PAGINATION_MAX_LIMIT}`, {
+        headers: { Cookie: client.sessionCookie },
+      });
+      const mine = myRes.data.items.find((task: { id: string }) => task.id === openId);
+
+      expect(listRes.status).toBe(200);
+      expect(listed.viewsCount).toBe(1);
+      expect(myRes.status).toBe(200);
+      expect(mine.viewsCount).toBe(1);
+      expect(secondRes.status).toBe(200);
+      expect(secondRes.data.viewsCount).toBe(1);
+
+      const hiddenRes = await axios.get(`/api/tasks/${draftId}`, {
+        headers: { Cookie: other.sessionCookie },
+      });
+      const ownerRes = await axios.get(`/api/tasks/${draftId}`, {
+        headers: { Cookie: client.sessionCookie },
+      });
+
+      expect(hiddenRes.status).toBe(404);
+      expect(hiddenRes.data.message).toBe(`Задача с "${draftId}" не найдена`);
+      expect(ownerRes.status).toBe(200);
+      expect(ownerRes.data.viewsCount).toBe(1);
     });
   });
 
