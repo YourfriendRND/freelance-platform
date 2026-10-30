@@ -13,6 +13,7 @@ export interface TaskDbRow {
   updated_at: Date;
   has_applied?: boolean;
   applications_count?: string;
+  views_count?: string;
   author_id?: string;
   author_email?: string;
   author_first_name?: string;

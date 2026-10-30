@@ -137,6 +137,11 @@ export class TaskRepository {
             FROM task_applications
             WHERE task_applications.task_id = inserted.id
           ) AS applications_count,
+          (
+            SELECT COUNT(*)
+            FROM task_views
+            WHERE task_views.task_id = inserted.id
+          ) AS views_count,
           u.id AS author_id,
           u.email AS author_email,
           u.first_name AS author_first_name,
@@ -278,6 +283,11 @@ export class TaskRepository {
               FROM task_applications
               WHERE task_applications.task_id = tasks.id
             ) AS applications_count,
+            (
+              SELECT COUNT(*)
+              FROM task_views
+              WHERE task_views.task_id = tasks.id
+            ) AS views_count,
             u.id AS author_id,
             u.email AS author_email,
             u.first_name AS author_first_name,
@@ -347,6 +357,11 @@ export class TaskRepository {
             FROM task_applications
             WHERE task_applications.task_id = tasks.id
           ) AS applications_count,
+          (
+            SELECT COUNT(*)
+            FROM task_views
+            WHERE task_views.task_id = tasks.id
+          ) AS views_count,
           u.id AS author_id,
           u.email AS author_email,
           u.first_name AS author_first_name,
@@ -367,6 +382,18 @@ export class TaskRepository {
     }
 
     return TaskEntity.fromDb(row);
+  }
+
+  async recordView(userId: string, taskId: string): Promise<void> {
+    await this.database.query(
+      `
+        INSERT INTO task_views (user_id, task_id)
+        VALUES ($1, $2)
+        ON CONFLICT (user_id, task_id)
+        DO UPDATE SET updated_at = now()
+      `,
+      [userId, taskId],
+    );
   }
 
   async update(id: string, patch: UpdateTaskRecord): Promise<TaskEntity | null> {
@@ -429,6 +456,11 @@ export class TaskRepository {
             FROM task_applications
             WHERE task_applications.task_id = updated.id
           ) AS applications_count,
+          (
+            SELECT COUNT(*)
+            FROM task_views
+            WHERE task_views.task_id = updated.id
+          ) AS views_count,
           u.id AS author_id,
           u.email AS author_email,
           u.first_name AS author_first_name,
