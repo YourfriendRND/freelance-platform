@@ -1,4 +1,8 @@
-import { TaskApplicationStatus, UserEntity } from '@freelance-platform/shared-types';
+import {
+  TaskApplicationStatus,
+  TaskExecutionType,
+  UserEntity,
+} from '@freelance-platform/shared-types';
 import { DatabaseClient } from '../../database/database.client';
 import { DuplicateTaskApplicationError } from './errors';
 import { TaskApplicationRepository } from './task-application.repository';
@@ -52,6 +56,7 @@ describe('TaskApplicationRepository testing', () => {
     expect(result.performerId).toBe(applicationRow.performer_id);
     expect(result.proposedPrice).toBe(applicationRow.proposed_price);
     expect(result.status).toBe(TaskApplicationStatus.Pending);
+    expect(result.task).toBeUndefined();
   });
 
   it('should map the performer returned after create', async () => {
@@ -145,6 +150,7 @@ describe('TaskApplicationRepository testing', () => {
       rating: 0,
       reviewsCount: 0,
     });
+    expect(result?.task).toBeUndefined();
   });
 
   it('should return null when application by id is missing', async () => {
@@ -169,6 +175,66 @@ describe('TaskApplicationRepository testing', () => {
     expect(params).toEqual([applicationRow.id]);
     expect(result?.application.id).toBe(applicationRow.id);
     expect(result?.taskCustomerId).toBe('c8ae551b-9c3f-4781-a99d-4c81de40ab91');
+  });
+
+  it('should map the short task and keep the performer on get by id', async () => {
+    const customerId = 'c8ae551b-9c3f-4781-a99d-4c81de40ab91';
+    const userCreatedAt = new Date('2026-07-03T18:30:00.000Z');
+    const authorCreatedAt = new Date('2026-08-14T00:00:00.000Z');
+    const deadline = new Date('2026-12-01T00:00:00.000Z');
+    database.query.mockResolvedValue({
+      rows: [{
+        ...applicationRow,
+        task_customer_id: customerId,
+        task_title: 'Разработка лендинга',
+        task_budget_min: 10000,
+        task_budget_max: 25000,
+        task_deadline: deadline,
+        task_execution_type: TaskExecutionType.Remote,
+        task_category_id: '1090cd0d-01ba-4cb6-a10d-01000136788e',
+        author_id: customerId,
+        author_email: 'client@example.com',
+        author_first_name: 'Мария',
+        author_last_name: null,
+        author_role: 'client',
+        author_created_at: authorCreatedAt,
+        user_id: applicationRow.performer_id,
+        user_email: 'freelancer@example.com',
+        user_first_name: 'Иван',
+        user_last_name: null,
+        user_role: 'freelancer',
+        user_created_at: userCreatedAt,
+      }],
+    });
+
+    const result = await repository.findByIdWithTaskCustomer(applicationRow.id);
+    const [sql] = database.query.mock.calls[0];
+
+    expect(sql).toContain('INNER JOIN tasks ON ta.task_id = tasks.id');
+    expect(sql).toContain('INNER JOIN users AS author ON author.id = tasks.customer_id');
+    expect(result?.application.user).toMatchObject({
+      id: applicationRow.performer_id,
+      email: 'freelancer@example.com',
+    });
+    expect(result?.application.task).toMatchObject({
+      id: applicationRow.task_id,
+      title: 'Разработка лендинга',
+      budgetMin: 10000,
+      budgetMax: 25000,
+      deadline,
+      executionType: TaskExecutionType.Remote,
+      categoryId: '1090cd0d-01ba-4cb6-a10d-01000136788e',
+    });
+    expect(result?.application.task?.description).toBeUndefined();
+    expect(result?.application.task?.author).toMatchObject({
+      id: customerId,
+      email: 'client@example.com',
+      firstName: 'Мария',
+      role: 'client',
+      rating: 0,
+      reviewsCount: 0,
+    });
+    expect(result?.application.task?.author?.lastName).toBeUndefined();
   });
 
   it('should return performer applications ordered by created_at', async () => {
@@ -210,6 +276,56 @@ describe('TaskApplicationRepository testing', () => {
       lastName: 'Петров',
       role: 'freelancer',
       createdAt: userCreatedAt,
+      rating: 0,
+      reviewsCount: 0,
+    });
+  });
+
+  it('should map the short task on the performer list', async () => {
+    const customerId = 'c8ae551b-9c3f-4781-a99d-4c81de40ab91';
+    const deadline = new Date('2026-12-01T00:00:00.000Z');
+    database.query.mockResolvedValue({
+      rows: [{
+        ...applicationRow,
+        task_title: 'Разработка лендинга',
+        task_budget_min: 10000,
+        task_budget_max: 25000,
+        task_deadline: deadline,
+        task_execution_type: TaskExecutionType.Remote,
+        task_category_id: '1090cd0d-01ba-4cb6-a10d-01000136788e',
+        author_id: customerId,
+        author_email: 'client@example.com',
+        author_first_name: 'Мария',
+        author_last_name: 'Соколова',
+        author_role: 'client',
+        author_created_at: new Date('2026-08-14T00:00:00.000Z'),
+        user_id: applicationRow.performer_id,
+        user_email: 'freelancer@example.com',
+        user_first_name: 'Иван',
+        user_last_name: null,
+        user_role: 'freelancer',
+        user_created_at: new Date('2026-07-03T18:30:00.000Z'),
+      }],
+    });
+
+    const [application] = await repository.findAllByPerformerId(applicationRow.performer_id);
+    const [sql] = database.query.mock.calls[0];
+
+    expect(sql).toContain('INNER JOIN tasks ON ta.task_id = tasks.id');
+    expect(sql).toContain('INNER JOIN users AS author ON author.id = tasks.customer_id');
+    expect(application.user?.id).toBe(applicationRow.performer_id);
+    expect(application.task).toMatchObject({
+      id: applicationRow.task_id,
+      title: 'Разработка лендинга',
+      budgetMin: 10000,
+      budgetMax: 25000,
+      executionType: TaskExecutionType.Remote,
+      categoryId: '1090cd0d-01ba-4cb6-a10d-01000136788e',
+    });
+    expect(application.task?.author).toMatchObject({
+      id: customerId,
+      firstName: 'Мария',
+      lastName: 'Соколова',
       rating: 0,
       reviewsCount: 0,
     });
