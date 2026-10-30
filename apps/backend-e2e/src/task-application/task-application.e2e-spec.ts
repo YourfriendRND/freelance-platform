@@ -471,6 +471,7 @@ describe('Task application module e2e testing', () => {
         },
       });
       expect(createRes.data.user).not.toHaveProperty('password');
+      expect(createRes.data).not.toHaveProperty('task');
 
       applicationId = createRes.data.id;
     });
@@ -488,6 +489,29 @@ describe('Task application module e2e testing', () => {
         reviewsCount: 0,
       });
       expect(listed.timeline).toBe('2 недели');
+      expect(listed.task).toMatchObject({
+        id: taskId,
+        budgetMin: 10000,
+        budgetMax: 25000,
+        executionType: TaskExecutionType.Remote,
+        categoryId,
+        author: {
+          id: client.userId,
+          firstName: 'E2E',
+          lastName: 'Тестов',
+          role: UserRole.Client,
+          rating: 0,
+          reviewsCount: 0,
+        },
+      });
+      const deadline = new Date(listed.task.deadline);
+
+      expect(deadline.getFullYear()).toBe(2026);
+      expect(deadline.getMonth()).toBe(11);
+      expect(deadline.getDate()).toBe(1);
+      expect(listed.task).not.toHaveProperty('description');
+      expect(listed.task).not.toHaveProperty('status');
+      expect(listed.task.author).not.toHaveProperty('password');
 
       const getRes = await axios.get(`/api/task-applications/${applicationId}`, {
         headers: { Cookie: client.sessionCookie },
@@ -500,6 +524,16 @@ describe('Task application module e2e testing', () => {
         rating: 0,
         reviewsCount: 0,
       });
+      expect(getRes.data.task).toMatchObject({
+        id: taskId,
+        categoryId,
+        author: {
+          id: client.userId,
+          role: UserRole.Client,
+        },
+      });
+      expect(getRes.data.task).not.toHaveProperty('description');
+      expect(getRes.data.task).not.toHaveProperty('status');
     });
 
     it('stats: should count the user applications and ignore taskId', async () => {
@@ -522,6 +556,13 @@ describe('Task application module e2e testing', () => {
 
       expect(filteredList.status).toBe(200);
       expect(statsAfterFilter.data).toEqual({ total: 1, pending: 1, accepted: 0 });
+
+      const filtered = filteredList.data.items.find(
+        (item: { id: string }) => item.id === applicationId,
+      );
+
+      expect(filtered.user.id).toBe(freelancer.userId);
+      expect(filtered.task.author.id).toBe(client.userId);
     });
 
     it('update: freelancer should change timeline while pending', async () => {
@@ -534,6 +575,7 @@ describe('Task application module e2e testing', () => {
       expect(updateRes.status).toBe(200);
       expect(updateRes.data.timeline).toBe('3 дня');
       expect(updateRes.data.user.id).toBe(freelancer.userId);
+      expect(updateRes.data).not.toHaveProperty('task');
     });
   });
 });

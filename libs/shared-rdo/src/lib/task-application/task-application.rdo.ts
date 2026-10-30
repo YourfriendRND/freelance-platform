@@ -1,6 +1,7 @@
 import { Expose, Type } from 'class-transformer';
 import { ApiProperty } from '@nestjs/swagger';
 import { TaskApplicationStatus } from '@freelance-platform/shared-types';
+import { ShortTaskRdo } from '../task/short-task.rdo';
 import { UserRdo } from '../user/user.rdo';
 
 export class TaskApplicationRdo {
@@ -77,4 +78,13 @@ export class TaskApplicationRdo {
     type: UserRdo,
   })
   user!: UserRdo;
+
+  @Expose()
+  @Type(() => ShortTaskRdo)
+  @ApiProperty({
+    description: 'Краткие данные задачи. Есть в списке откликов и в отклике по id',
+    type: ShortTaskRdo,
+    required: false,
+  })
+  task?: ShortTaskRdo;
 }

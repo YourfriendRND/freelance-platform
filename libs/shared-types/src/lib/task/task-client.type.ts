@@ -33,6 +33,17 @@ export type TaskResponse = {
   hasApplied?: boolean;
 };
 
+export type ShortTaskResponse = {
+  id: string;
+  title: string;
+  budgetMin: number;
+  budgetMax: number;
+  deadline: string;
+  executionType: TaskExecutionType;
+  categoryId: string;
+  author: UserResponse;
+};
+
 export type TaskListResponse = PaginationResult<TaskResponse>;
 
 export type TaskCategoryResponse = {

@@ -1,4 +1,5 @@
 import { Entity } from '../abstract';
+import { TaskEntity } from '../task/task.entity';
 import { UserEntity } from '../user/user.entity';
 import { UserRole } from '../user/user-role';
 import { ITaskApplication } from './task-application';
@@ -13,6 +14,7 @@ export class TaskApplicationEntity extends Entity<ITaskApplication> {
   timeline!: string | null;
   status!: TaskApplicationStatus;
   user?: UserEntity;
+  task?: TaskEntity;
 
   constructor(props?: Partial<ITaskApplication>) {
     super(props);
@@ -47,6 +49,25 @@ export class TaskApplicationEntity extends Entity<ITaskApplication> {
         ...(row.user_last_name != null && { lastName: row.user_last_name }),
         role: row.user_role as UserRole,
         createdAt: row.user_created_at,
+      });
+    }
+
+    if (row.task_id !== undefined && row.task_title !== undefined) {
+      application.task = TaskEntity.fromDb({
+        id: row.task_id,
+        title: row.task_title,
+        budget_min: row.task_budget_min,
+        budget_max: row.task_budget_max,
+        execution_type: row.task_execution_type,
+        deadline: row.task_deadline,
+        category_id: row.task_category_id,
+        ...(row.author_id !== undefined && { customer_id: row.author_id }),
+        author_id: row.author_id,
+        author_email: row.author_email,
+        author_first_name: row.author_first_name,
+        author_last_name: row.author_last_name,
+        author_role: row.author_role,
+        author_created_at: row.author_created_at,
       });
     }
 
