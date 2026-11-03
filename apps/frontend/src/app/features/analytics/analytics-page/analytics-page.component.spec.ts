@@ -4,6 +4,7 @@ import { provideRouter, Router } from '@angular/router';
 import { TaskApi, TaskApplicationApi } from '@freelance-platform/client-api';
 import { AuthStore } from '@freelance-platform/client-state';
 import {
+  createMockShortTaskResponse,
   createMockTaskApplicationResponse,
   createMockTaskListResponse,
   createMockTaskResponse,
@@ -33,7 +34,6 @@ describe('AnalyticsPageComponent testing', () => {
   };
   let getStats: ReturnType<typeof vi.fn>;
   let findAll: ReturnType<typeof vi.fn>;
-  let findOne: ReturnType<typeof vi.fn>;
   let getCustomerStats: ReturnType<typeof vi.fn>;
   let findMine: ReturnType<typeof vi.fn>;
 
@@ -53,11 +53,16 @@ describe('AnalyticsPageComponent testing', () => {
     title: 'Современный интернет-магазин',
   });
 
+  const shortTask = createMockShortTaskResponse({
+    title: task.title,
+  });
+
   const olderApplication = createMockTaskApplicationResponse({
     id: 'b4252672-a116-41ee-b78c-d694b236db01',
     taskId: task.id,
     createdAt: '2026-05-01T12:00:00.000Z',
     proposedPrice: 1000,
+    task: shortTask,
   });
 
   const newestApplication = createMockTaskApplicationResponse({
@@ -65,6 +70,7 @@ describe('AnalyticsPageComponent testing', () => {
     taskId: task.id,
     createdAt: '2026-05-28T12:00:00.000Z',
     proposedPrice: 2800,
+    task: shortTask,
   });
 
   const acceptedApplication = createMockTaskApplicationResponse({
@@ -73,6 +79,7 @@ describe('AnalyticsPageComponent testing', () => {
     status: TaskApplicationStatus.Accept,
     createdAt: '2026-06-01T12:00:00.000Z',
     message: 'Этот отклик уже принят',
+    task: shortTask,
   });
 
   const stats: TaskApplicationStatsResponse = {
@@ -100,7 +107,6 @@ describe('AnalyticsPageComponent testing', () => {
         items: [olderApplication, newestApplication, acceptedApplication],
       }),
     );
-    findOne = vi.fn(() => of(task));
     getCustomerStats = vi.fn(() => of(customerStats));
     findMine = vi.fn(() => of(createMockTaskListResponse({ items: [task], total: 1 })));
 
@@ -113,7 +119,7 @@ describe('AnalyticsPageComponent testing', () => {
           provide: TaskApplicationApi,
           useValue: { getStats, findAll },
         },
-        { provide: TaskApi, useValue: { findOne, getCustomerStats, findMine } },
+        { provide: TaskApi, useValue: { getCustomerStats, findMine } },
       ],
     }).compileComponents();
 
@@ -226,8 +232,6 @@ describe('AnalyticsPageComponent testing', () => {
 
       expect(viewAll?.textContent?.trim()).toBe('Смотреть все');
       expect(viewAll?.hasAttribute('disabled')).toBe(true);
-      expect(findOne).toHaveBeenCalledTimes(1);
-      expect(findOne).toHaveBeenCalledWith(task.id);
       expect(getCustomerStats).not.toHaveBeenCalled();
       expect(findMine).not.toHaveBeenCalled();
     });

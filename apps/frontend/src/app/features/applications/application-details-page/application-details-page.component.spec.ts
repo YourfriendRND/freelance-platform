@@ -1,11 +1,11 @@
 import { signal } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ActivatedRoute, convertToParamMap, provideRouter } from '@angular/router';
-import { TaskApi } from '@freelance-platform/client-api';
 import { AuthStore, TaskApplicationStore } from '@freelance-platform/client-state';
 import {
+  createMockShortTaskResponse,
   createMockTaskApplicationResponse,
-  createMockTaskResponse,
+  createMockUserResponse,
   MOCK_TASK_APPLICATION_ID,
   mockFreelancerUserResponse,
 } from '@freelance-platform/shared-mock';
@@ -21,14 +21,14 @@ describe('ApplicationDetailsPageComponent testing', () => {
   let loadById: ReturnType<typeof vi.fn>;
   let clearSelected: ReturnType<typeof vi.fn>;
 
-  const application = createMockTaskApplicationResponse();
-  const task = createMockTaskResponse({
-    author: {
-      ...createMockTaskResponse().author,
+  const task = createMockShortTaskResponse({
+    author: createMockUserResponse({
       rating: 4.8,
       reviewsCount: 12,
-    },
+    }),
   });
+
+  const application = createMockTaskApplicationResponse({ task });
 
   beforeEach(async () => {
     selectedApplication = signal<TaskApplicationResponse | null>(null);
@@ -64,10 +64,6 @@ describe('ApplicationDetailsPageComponent testing', () => {
             loadById,
             clearSelected,
           },
-        },
-        {
-          provide: TaskApi,
-          useValue: { findOne: () => of(task) },
         },
       ],
     }).compileComponents();
@@ -126,11 +122,20 @@ describe('ApplicationDetailsPageComponent testing', () => {
   });
 
   it('should show a dash when the application has no timeline', () => {
-    selectedApplication.set(createMockTaskApplicationResponse({ timeline: null }));
+    selectedApplication.set(createMockTaskApplicationResponse({ task, timeline: null }));
     fixture.detectChanges();
 
     expect(root().textContent).toContain('—');
     expect(root().textContent).toContain('4.8 · 12 отзывов');
+  });
+
+  it('should show dashes when the nested task is missing', () => {
+    selectedApplication.set(createMockTaskApplicationResponse({ task: undefined }));
+    fixture.detectChanges();
+
+    expect(root().querySelector('.application-details-card__title')?.textContent).toBe('—');
+    expect(root().querySelector('.application-details-client__name')?.textContent).toBe('—');
+    expect(root().querySelector('.application-details-client__rating')?.textContent).toBe('—');
   });
 
   it('should clear the selected application on destroy', () => {

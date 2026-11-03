@@ -1,12 +1,12 @@
 import { signal } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter, Router } from '@angular/router';
-import { TaskApi, TaskApplicationApi, TaskCategoryApi } from '@freelance-platform/client-api';
+import { TaskApplicationApi, TaskCategoryApi } from '@freelance-platform/client-api';
 import { AuthStore, TaskApplicationStore } from '@freelance-platform/client-state';
 import {
+  createMockShortTaskResponse,
   createMockTaskApplicationResponse,
   createMockTaskCategoryResponse,
-  createMockTaskResponse,
   createMockUserResponse,
   mockFreelancerUserResponse,
 } from '@freelance-platform/shared-mock';
@@ -43,18 +43,16 @@ describe('ApplicationsPageComponent testing', () => {
     lastName: 'Волкова',
   });
 
-  const designTask = createMockTaskResponse({
+  const designTask = createMockShortTaskResponse({
     id: '5c8e1a97-0a01-4b62-8d11-7e9f0a1b2c11',
     title: 'Дизайн современного интернет-магазина',
-    customerId: ivan.id,
     categoryId: category.id,
     author: ivan,
   });
 
-  const campaignTask = createMockTaskResponse({
+  const campaignTask = createMockShortTaskResponse({
     id: '5c8e1a97-0a01-4b62-8d11-7e9f0a1b2c12',
     title: 'Кампания в социальных сетях',
-    customerId: maria.id,
     categoryId: category.id,
     author: maria,
   });
@@ -63,12 +61,14 @@ describe('ApplicationsPageComponent testing', () => {
     id: 'b4252672-a116-41ee-b78c-d694b236db01',
     taskId: designTask.id,
     status: TaskApplicationStatus.Pending,
+    task: designTask,
   });
 
   const acceptedApplication = createMockTaskApplicationResponse({
     id: 'b4252672-a116-41ee-b78c-d694b236db02',
     taskId: campaignTask.id,
     status: TaskApplicationStatus.Accept,
+    task: campaignTask,
   });
 
   beforeEach(async () => {
@@ -92,13 +92,6 @@ describe('ApplicationsPageComponent testing', () => {
         {
           provide: TaskApplicationStore,
           useValue: { applications, isLoading, isLoaded, error, load },
-        },
-        {
-          provide: TaskApi,
-          useValue: {
-            findOne: (id: string) =>
-              of(id === campaignTask.id ? campaignTask : designTask),
-          },
         },
         {
           provide: TaskApplicationApi,
@@ -125,7 +118,6 @@ describe('ApplicationsPageComponent testing', () => {
     isLoading.set(false);
     isLoaded.set(true);
     applications.set([pendingApplication, acceptedApplication]);
-    fixture.detectChanges();
     fixture.detectChanges();
   }
 
@@ -168,13 +160,27 @@ describe('ApplicationsPageComponent testing', () => {
     ]);
     isLoaded.set(true);
     fixture.detectChanges();
-    fixture.detectChanges();
 
     const timeline = Array.from(root().querySelectorAll('.application-item__metric')).find((metric) =>
       metric.textContent?.includes('Срок'),
     );
 
     expect(timeline?.textContent).toContain('—');
+  });
+
+  it('should show dashes when the nested task is missing', () => {
+    applications.set([
+      createMockTaskApplicationResponse({
+        ...pendingApplication,
+        task: undefined,
+      }),
+    ]);
+    isLoaded.set(true);
+    fixture.detectChanges();
+
+    expect(root().textContent).not.toContain(designTask.title);
+    expect(root().textContent).not.toContain('Иван Смирнов');
+    expect(root().textContent).toContain('—');
   });
 
   it('should filter applications by status tab', () => {
