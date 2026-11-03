@@ -78,6 +78,14 @@ describe('customer analytics model', () => {
     expect(selected[0]?.performerName).toBe('Иван Петров');
     expect(selected[0]?.performerRole).toBe('freelancer');
     expect(selected[0]?.timeline).toBe('2 недели');
-    expect(selected[0]?.taskTitle).toBe('');
+    expect(selected[0]?.taskTitle).toBe('Разработка адаптивного лендинга');
+  });
+
+  it('should use a fallback title when the nested task is missing', () => {
+    const [selected] = selectCustomerApplications([
+      createMockTaskApplicationResponse({ task: undefined }),
+    ]);
+
+    expect(selected?.taskTitle).toBe('Без названия');
   });
 });

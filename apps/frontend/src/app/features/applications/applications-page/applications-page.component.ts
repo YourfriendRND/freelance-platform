@@ -2,22 +2,19 @@ import {
   ChangeDetectionStrategy,
   Component,
   computed,
-  effect,
   inject,
   signal,
 } from '@angular/core';
 import { Router } from '@angular/router';
-import { TaskApi, TaskApplicationApi, TaskCategoryApi } from '@freelance-platform/client-api';
+import { TaskApplicationApi, TaskCategoryApi } from '@freelance-platform/client-api';
 import { TaskApplicationStore } from '@freelance-platform/client-state';
 import {
   TaskApplicationResponse,
   TaskApplicationStatsResponse,
   TaskCategoryResponse,
-  TaskResponse,
 } from '@freelance-platform/shared-types';
 import { formatUserName } from '../../../format';
 import { UiButtonComponent, UiDashboardWrapperComponent } from '@freelance-platform/ui';
-import { catchError, forkJoin, map, of } from 'rxjs';
 import { AppHeaderComponent } from '../../../app-header/app-header.component';
 import { DashboardSidebarComponent } from '../../../dashboard/dashboard-sidebar/dashboard-sidebar.component';
 import { ApplicationItemComponent } from '../application-item/application-item.component';
@@ -32,9 +29,7 @@ import { ApplicationsSummaryComponent } from '../applications-summary/applicatio
 import { ApplicationsToolbarComponent } from '../applications-toolbar/applications-toolbar.component';
 
 const UNKNOWN_CATEGORY_TITLE = 'Без категории';
-const PENDING_TASK_TITLE = 'Загрузка';
-const PENDING_CLIENT_NAME = 'Загрузка';
-const MISSING_TIMELINE_LABEL = '—';
+const MISSING_LABEL = '—';
 
 @Component({
   selector: 'app-applications-page',
@@ -55,14 +50,11 @@ const MISSING_TIMELINE_LABEL = '—';
 export class ApplicationsPageComponent {
   private readonly router = inject(Router);
   private readonly taskApplicationStore = inject(TaskApplicationStore);
-  private readonly taskApi = inject(TaskApi);
   private readonly taskApplicationApi = inject(TaskApplicationApi);
   private readonly taskCategoryApi = inject(TaskCategoryApi);
-  private readonly requestedTaskIds = new Set<string>();
 
   protected readonly activeTab = signal<ApplicationsTab>(APPLICATIONS_ALL_TAB);
   protected readonly search = signal('');
-  private readonly tasksById = signal<ReadonlyMap<string, TaskResponse>>(new Map());
   private readonly categories = signal<readonly TaskCategoryResponse[]>([]);
   private readonly stats = signal<TaskApplicationStatsResponse>({
     total: 0,
@@ -82,13 +74,12 @@ export class ApplicationsPageComponent {
   protected readonly applications = computed<readonly ApplicationListItem[]>(() => {
     const tab = this.activeTab();
     const query = this.search().trim().toLowerCase();
-    const tasksById = this.tasksById();
     const categoryTitleById = new Map(
       this.categories().map(({ id, title }) => [id, title]),
     );
 
     return this.taskApplicationStore.applications().flatMap((application) => {
-      const item = this.toListItem(application, tasksById, categoryTitleById);
+      const item = this.toListItem(application, categoryTitleById);
       const matchesTab = tab === APPLICATIONS_ALL_TAB || item.status === tab;
 
       if (!matchesTab) {
@@ -138,10 +129,6 @@ export class ApplicationsPageComponent {
 
     this.taskApplicationStore.load();
     this.loadStats();
-
-    effect(() => {
-      this.loadTasks(this.taskApplicationStore.applications());
-    });
   }
 
   protected onTabChange(tab: ApplicationsTab): void {
@@ -154,40 +141,6 @@ export class ApplicationsPageComponent {
 
   protected onFindTasks(): void {
     void this.router.navigateByUrl('/tasks');
-  }
-
-  private loadTasks(applications: readonly TaskApplicationResponse[]): void {
-    const missingTaskIds = [...new Set(applications.map((item) => item.taskId))].filter(
-      (taskId) => !this.requestedTaskIds.has(taskId),
-    );
-
-    if (missingTaskIds.length === 0) {
-      return;
-    }
-
-    missingTaskIds.forEach((taskId) => this.requestedTaskIds.add(taskId));
-
-    forkJoin(
-      missingTaskIds.map((taskId) =>
-        this.taskApi.findOne(taskId).pipe(
-          map((task) => ({ taskId, task })),
-          catchError(() => {
-            this.requestedTaskIds.delete(taskId);
-            return of({ taskId, task: null });
-          }),
-        ),
-      ),
-    ).subscribe((results) => {
-      const nextTasks = new Map(this.tasksById());
-
-      results.forEach(({ task }) => {
-        if (task) {
-          nextTasks.set(task.id, task);
-        }
-      });
-
-      this.tasksById.set(nextTasks);
-    });
   }
 
   private loadStats(): void {
@@ -203,22 +156,21 @@ export class ApplicationsPageComponent {
 
   private toListItem(
     application: TaskApplicationResponse,
-    tasksById: ReadonlyMap<string, TaskResponse>,
     categoryTitleById: ReadonlyMap<string, string>,
   ): ApplicationListItem {
-    const task = tasksById.get(application.taskId);
+    const task = application.task;
 
     return {
       id: application.id,
-      taskTitle: task?.title ?? PENDING_TASK_TITLE,
+      taskTitle: task?.title ?? MISSING_LABEL,
       status: application.status,
-      clientName: task ? formatUserName(task.author) : PENDING_CLIENT_NAME,
+      clientName: task ? formatUserName(task.author) : MISSING_LABEL,
       clientDetails: task
         ? (categoryTitleById.get(task.categoryId) ?? UNKNOWN_CATEGORY_TITLE)
         : '',
       message: application.message,
       proposedPrice: application.proposedPrice,
-      timelineLabel: application.timeline?.trim() || MISSING_TIMELINE_LABEL,
+      timelineLabel: application.timeline?.trim() || MISSING_LABEL,
       submittedAt: application.createdAt,
     };
   }

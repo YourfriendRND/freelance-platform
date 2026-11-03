@@ -97,7 +97,7 @@ export function selectCustomerApplications(
     .map((application) => ({
       id: application.id,
       taskId: application.taskId,
-      taskTitle: '',
+      taskTitle: application.task?.title ?? 'Без названия',
       performerName: formatUserName(application.user),
       performerRole: application.user.role,
       message: application.message,

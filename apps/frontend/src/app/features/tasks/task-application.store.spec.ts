@@ -108,7 +108,25 @@ describe('TaskApplicationStore testing', () => {
     expect(result).toEqual(created);
     expect(store.applications()).toEqual([created]);
     expect(store.isSubmitting()).toBe(false);
+    expect(store.isLoaded()).toBe(false);
     expect(store.hasApplied(MOCK_TASK_ID)).toBe(true);
+  });
+
+  it('should reload applications after create', () => {
+    taskApplicationApi.findAll.mockReturnValue(of(list));
+    store.load();
+
+    const created = createMockTaskApplicationResponse();
+    taskApplicationApi.create.mockReturnValue(of(created));
+    store.create(body).subscribe();
+
+    const reloaded: TaskApplicationListResponse = { items: [created] };
+    taskApplicationApi.findAll.mockReturnValue(of(reloaded));
+    store.load();
+
+    expect(taskApplicationApi.findAll).toHaveBeenCalledTimes(2);
+    expect(store.applications()).toEqual([created]);
+    expect(store.isLoaded()).toBe(true);
   });
 
   it('should return conflict exception from duplicate application', () => {

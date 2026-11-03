@@ -1,4 +1,5 @@
 import {
+  ShortTaskResponse,
   TaskExecutionType,
   TaskListResponse,
   TaskResponse,
@@ -47,6 +48,19 @@ export function createMockTaskResponse(
 }
 
 export const mockTaskResponse = createMockTaskResponse();
+
+type MockShortTaskResponseOverrides = Partial<ShortTaskResponse>;
+
+export function createMockShortTaskResponse(
+  overrides: MockShortTaskResponseOverrides = {},
+): ShortTaskResponse {
+  const { id, title, budgetMin, budgetMax, deadline, executionType, categoryId, author } =
+    createMockTaskResponse();
+
+  return { id, title, budgetMin, budgetMax, deadline, executionType, categoryId, author, ...overrides };
+}
+
+export const mockShortTaskResponse = createMockShortTaskResponse();
 
 type MockTaskListResponseOverrides = Partial<TaskListResponse>;
 

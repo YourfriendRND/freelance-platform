@@ -52,7 +52,15 @@ describe('freelancer analytics model', () => {
       'b4252672-a116-41ee-b78c-d694b236db03',
       'b4252672-a116-41ee-b78c-d694b236db02',
     ]);
-    expect(recent[0]?.taskTitle).toBe('');
+    expect(recent[0]?.taskTitle).toBe('Разработка адаптивного лендинга');
     expect(recent[0]?.status).toBe(TaskApplicationStatus.Accept);
+  });
+
+  it('should use a fallback title when the nested task is missing', () => {
+    const [recent] = selectRecentApplications([
+      createMockTaskApplicationResponse({ task: undefined }),
+    ]);
+
+    expect(recent?.taskTitle).toBe('Без названия');
   });
 });
