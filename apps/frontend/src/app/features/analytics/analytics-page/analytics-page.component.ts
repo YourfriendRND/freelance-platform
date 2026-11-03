@@ -4,7 +4,6 @@ import { Router } from '@angular/router';
 import { TaskApi, TaskApplicationApi } from '@freelance-platform/client-api';
 import { AuthStore } from '@freelance-platform/client-state';
 import { TaskSort, UserRole } from '@freelance-platform/shared-types';
-import { catchError, forkJoin, map, of } from 'rxjs';
 import { formatUserName } from '../../../format';
 import { UiButtonComponent, UiDashboardWrapperComponent } from '@freelance-platform/ui';
 import { AppHeaderComponent } from '../../../app-header/app-header.component';
@@ -143,18 +142,8 @@ export class AnalyticsPageComponent {
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (list) => {
-          const recent = selectRecentApplications(list.items);
-
-          this.recentApplications.set(recent);
+          this.recentApplications.set(selectRecentApplications(list.items));
           this.applicationsStatus.set(AnalyticsRequestStatus.Ready);
-          this.loadTaskTitles(recent, (titleByTaskId) => {
-            this.recentApplications.update((items) =>
-              items.map((item) => ({
-                ...item,
-                taskTitle: titleByTaskId.get(item.taskId) ?? item.taskTitle,
-              })),
-            );
-          });
         },
         error: () => {
           this.recentApplications.set([]);
@@ -205,48 +194,13 @@ export class AnalyticsPageComponent {
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (list) => {
-          const pending = selectCustomerApplications(list.items);
-
-          this.pendingApplications.set(pending);
+          this.pendingApplications.set(selectCustomerApplications(list.items));
           this.pendingStatus.set(AnalyticsRequestStatus.Ready);
-          this.loadTaskTitles(pending, (titleByTaskId) => {
-            this.pendingApplications.update((items) =>
-              items.map((item) => ({
-                ...item,
-                taskTitle: titleByTaskId.get(item.taskId) ?? item.taskTitle,
-              })),
-            );
-          });
         },
         error: () => {
           this.pendingApplications.set([]);
           this.pendingStatus.set(AnalyticsRequestStatus.Error);
         },
-      });
-  }
-
-  private loadTaskTitles(
-    applications: readonly { taskId: string }[],
-    applyTitles: (titleByTaskId: ReadonlyMap<string, string>) => void,
-  ): void {
-    const taskIds = [...new Set(applications.map((item) => item.taskId))];
-
-    if (taskIds.length === 0) {
-      return;
-    }
-
-    forkJoin(
-      taskIds.map((taskId) =>
-        this.taskApi.findOne(taskId).pipe(
-          map((task) => ({ taskId, title: task.title })),
-          // TODO: Название задачи приходит отдельным запросом и может не загрузиться
-          catchError(() => of({ taskId, title: 'Без названия' })),
-        ),
-      ),
-    )
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe((results) => {
-        applyTitles(new Map(results.map((result) => [result.taskId, result.title])));
       });
   }
 }

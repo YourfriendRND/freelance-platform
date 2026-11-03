@@ -3,15 +3,11 @@ import {
   Component,
   computed,
   DestroyRef,
-  effect,
   inject,
-  signal,
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, RouterLink } from '@angular/router';
-import { TaskApi } from '@freelance-platform/client-api';
 import { TaskApplicationStore } from '@freelance-platform/client-state';
-import { TaskResponse } from '@freelance-platform/shared-types';
 import {
   formatAuthorRating,
   formatTaskBudget,
@@ -28,7 +24,6 @@ import { ApplicationDetailsOverviewComponent } from '../application-details-over
 import { ApplicationsPageContainerComponent } from '../applications-page-container/applications-page-container.component';
 import { ApplicationsPageView } from '../applications-list.model';
 
-const PENDING_LABEL = 'Загрузка';
 const MISSING_LABEL = '—';
 
 @Component({
@@ -51,11 +46,6 @@ export class ApplicationDetailsPageComponent {
   private readonly route = inject(ActivatedRoute);
   private readonly destroyRef = inject(DestroyRef);
   private readonly taskApplicationStore = inject(TaskApplicationStore);
-  private readonly taskApi = inject(TaskApi);
-  private requestedTaskId: string | null = null;
-
-  private readonly task = signal<TaskResponse | null>(null);
-  private readonly taskUnavailable = signal(false);
 
   protected readonly ApplicationsPageView = ApplicationsPageView;
   protected readonly errorMessage = this.taskApplicationStore.selectedError;
@@ -67,36 +57,26 @@ export class ApplicationDetailsPageComponent {
       return null;
     }
 
-    const task = this.task();
-    const taskUnavailable = this.taskUnavailable();
-    const taskLabel = task ? null : taskUnavailable ? MISSING_LABEL : PENDING_LABEL;
+    const task = selected.task;
 
     return {
       id: selected.id,
       status: selected.status,
-      taskTitle: task?.title ?? taskLabel ?? PENDING_LABEL,
+      taskTitle: task?.title ?? MISSING_LABEL,
       submittedAt: selected.createdAt,
       proposedPrice: selected.proposedPrice,
       timelineLabel: selected.timeline?.trim() || MISSING_LABEL,
       taskBudgetLabel: task
         ? formatTaskBudget(task.budgetMin, task.budgetMax)
-        : (taskLabel ?? MISSING_LABEL),
+        : MISSING_LABEL,
       message: selected.message,
       client: {
-        name: task
-          ? formatUserName(task.author)
-          : taskUnavailable
-            ? MISSING_LABEL
-            : PENDING_LABEL,
-        ratingLabel: task
-          ? formatAuthorRating(task.author)
-          : taskUnavailable
-            ? MISSING_LABEL
-            : PENDING_LABEL,
+        name: task ? formatUserName(task.author) : MISSING_LABEL,
+        ratingLabel: task ? formatAuthorRating(task.author) : MISSING_LABEL,
       },
       task: {
-        id: selected.taskId,
-        deadlineLabel: task ? formatTaskDate(task.deadline) : (taskLabel ?? MISSING_LABEL),
+        id: task?.id ?? selected.taskId,
+        deadlineLabel: task ? formatTaskDate(task.deadline) : MISSING_LABEL,
         executionType: task?.executionType ?? null,
       },
     };
@@ -122,52 +102,11 @@ export class ApplicationDetailsPageComponent {
         return;
       }
 
-      this.task.set(null);
-      this.taskUnavailable.set(false);
-      this.requestedTaskId = null;
       this.taskApplicationStore.loadById(id);
-    });
-
-    effect(() => {
-      const selected = this.taskApplicationStore.selectedApplication();
-
-      if (!selected) {
-        return;
-      }
-
-      this.loadTask(selected.taskId);
     });
 
     this.destroyRef.onDestroy(() => {
       this.taskApplicationStore.clearSelected();
     });
-  }
-
-  private loadTask(taskId: string): void {
-    if (this.requestedTaskId === taskId) {
-      return;
-    }
-
-    this.requestedTaskId = taskId;
-
-    this.taskApi
-      .findOne(taskId)
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe({
-        next: (task) => {
-          if (this.taskApplicationStore.selectedApplication()?.taskId !== taskId) {
-            return;
-          }
-
-          this.task.set(task);
-        },
-        error: () => {
-          if (this.taskApplicationStore.selectedApplication()?.taskId !== taskId) {
-            return;
-          }
-
-          this.taskUnavailable.set(true);
-        },
-      });
   }
 }

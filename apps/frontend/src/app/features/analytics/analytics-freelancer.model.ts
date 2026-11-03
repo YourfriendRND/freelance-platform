@@ -79,7 +79,7 @@ export function selectRecentApplications(
     .map((application) => ({
       id: application.id,
       taskId: application.taskId,
-      taskTitle: '',
+      taskTitle: application.task?.title ?? 'Без названия',
       status: application.status,
       createdAt: application.createdAt,
       proposedPrice: application.proposedPrice,

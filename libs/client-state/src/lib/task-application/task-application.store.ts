@@ -70,7 +70,7 @@ export const TaskApplicationStore = signalStore(
           patchState(store, {
             applications: [...applications, application],
             isSubmitting: false,
-            isLoaded: true,
+            isLoaded: false,
             submitError: null,
           });
         }),
