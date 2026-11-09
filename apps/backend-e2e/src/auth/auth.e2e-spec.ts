@@ -19,6 +19,8 @@ describe('Auth e2e', () => {
         email,
         firstName: 'E2E',
         role: UserRole.Client,
+        avatarUrl: null,
+        verified: true,
       });
       expect(joinRes.data).toHaveProperty('id');
       expect(hasSessionCookie(joinRes.headers['set-cookie'])).toBe(false);
@@ -48,6 +50,8 @@ describe('Auth e2e', () => {
       expect(meRes.data).toMatchObject({
         email,
         id: userId,
+        avatarUrl: null,
+        verified: true,
         bio: null,
         birthday: null,
         rate: null,

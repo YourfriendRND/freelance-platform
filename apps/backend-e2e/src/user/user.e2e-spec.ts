@@ -27,6 +27,8 @@ describe('User module e2e testing', () => {
         id: userId,
         email,
         firstName: 'E2E',
+        avatarUrl: null,
+        verified: true,
         bio: null,
         birthday: null,
         rate: null,
@@ -92,6 +94,8 @@ describe('User module e2e testing', () => {
       expect(response.data).toMatchObject({
         id: ownerId,
         firstName: 'Мария',
+        avatarUrl: null,
+        verified: true,
         bio: 'Делаю интерфейсы',
         birthday: '1994-05-12',
         rate: 2500,
@@ -108,12 +112,16 @@ describe('User module e2e testing', () => {
       expect(me.status).toBe(200);
       expect(profile.data).toMatchObject({
         firstName: 'Мария',
+        avatarUrl: null,
+        verified: true,
         bio: 'Делаю интерфейсы',
         birthday: '1994-05-12',
         rate: 2500,
       });
       expect(me.data).toMatchObject({
         firstName: 'Мария',
+        avatarUrl: null,
+        verified: true,
         bio: 'Делаю интерфейсы',
         birthday: '1994-05-12',
         rate: 2500,
