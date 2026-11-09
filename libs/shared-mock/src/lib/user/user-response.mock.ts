@@ -21,6 +21,8 @@ export function createMockUserResponse(
     createdAt: MOCK_USER_CREATED_AT,
     rating: 0,
     reviewsCount: 0,
+    avatarUrl: null,
+    verified: true,
     bio: null,
     birthday: null,
     rate: null,

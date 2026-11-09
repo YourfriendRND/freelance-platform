@@ -22,6 +22,8 @@ export type UserResponse = {
   createdAt: string;
   rating: number;
   reviewsCount: number;
+  avatarUrl: string | null;
+  verified: boolean;
   bio?: string | null;
   birthday?: string | null;
   rate?: number | null;
