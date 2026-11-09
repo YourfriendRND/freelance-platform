@@ -63,6 +63,23 @@ export class UserRdo {
 
   @Expose()
   @ApiProperty({
+    description: 'Ссылка на аватар',
+    example: null,
+    nullable: true,
+  })
+  @Transform(() => null)
+  avatarUrl!: string | null;
+
+  @Expose()
+  @ApiProperty({
+    description: 'Признак подтвержденного профиля',
+    example: true,
+  })
+  @Transform(() => true)
+  verified!: boolean;
+
+  @Expose()
+  @ApiProperty({
     description: 'О себе',
     example: 'Верстаю интерфейсы и собираю дизайн-системы',
     nullable: true,

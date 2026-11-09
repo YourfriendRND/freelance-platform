@@ -47,4 +47,24 @@ describe('UserRdo testing', () => {
 
     expect(result).not.toHaveProperty('password');
   });
+
+  it('should stub avatarUrl as null and verified as true', () => {
+    const filledUser = fillRdo(UserRdo, user);
+    const emptyUser = fillRdo(
+      UserRdo,
+      new UserEntity({
+        id: user.id,
+        email: user.email,
+        firstName: user.firstName,
+        role: user.role,
+        createdAt: user.createdAt,
+        updatedAt: user.updatedAt,
+      }),
+    );
+
+    expect(filledUser.avatarUrl).toBeNull();
+    expect(filledUser.verified).toBe(true);
+    expect(emptyUser.avatarUrl).toBeNull();
+    expect(emptyUser.verified).toBe(true);
+  });
 });
