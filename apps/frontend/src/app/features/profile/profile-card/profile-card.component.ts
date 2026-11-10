@@ -15,6 +15,8 @@ export class ProfileCardComponent {
   readonly roleLabel = input.required<string>();
   readonly registrationLabel = input.required<string>();
   readonly bio = input.required<string>();
+  readonly verified = input.required<boolean>();
+  readonly avatarUrl = input<string | null>(null);
   readonly birthdayLabel = input.required<string>();
   readonly rating = input.required<number>();
   readonly reviewsCount = input.required<number>();
@@ -25,6 +27,13 @@ export class ProfileCardComponent {
   readonly edit = output<void>();
 
   protected readonly verifiedLabel = 'Подтвержден';
+  protected readonly missingAvatarLabel = 'Аватар не добавлен';
+
+  protected readonly avatarAddress = computed(() => {
+    const avatarUrl = this.avatarUrl()?.trim();
+
+    return avatarUrl ? avatarUrl : null;
+  });
 
   protected readonly skillsLabel = computed(() =>
     this.editing() ? 'Навыки пока недоступны' : 'Навыки пока не указаны',

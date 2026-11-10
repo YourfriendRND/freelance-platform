@@ -34,7 +34,12 @@ export class TaskDetailsResponsesComponent {
     return value ? value : '—';
   }
 
-  // TODO: подставить фото исполнителя, когда бэкенд начнёт отдавать avatarUrl
+  protected performerAvatarUrl(avatarUrl: string | null): string | null {
+    const value = avatarUrl?.trim();
+
+    return value ? value : null;
+  }
+
   protected performerInitial(name: string): string {
     const [firstLetter] = name.trim();
 

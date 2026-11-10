@@ -12,6 +12,12 @@ import { ApplicationDetailsClient } from '../application-details.model';
 export class ApplicationDetailsClientComponent {
   readonly client = input.required<ApplicationDetailsClient>();
 
+  protected readonly avatarAddress = computed(() => {
+    const avatarUrl = this.client().avatarUrl?.trim();
+
+    return avatarUrl ? avatarUrl : null;
+  });
+
   protected readonly initial = computed(() => {
     const [firstLetter] = this.client().name.trim();
 

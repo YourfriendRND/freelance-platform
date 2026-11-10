@@ -23,6 +23,7 @@ export type ApplicationListItem = {
   taskTitle: string;
   status: TaskApplicationStatus;
   clientName: string;
+  clientAvatarUrl: string | null;
   clientDetails: string;
   message: string;
   proposedPrice: number | null;

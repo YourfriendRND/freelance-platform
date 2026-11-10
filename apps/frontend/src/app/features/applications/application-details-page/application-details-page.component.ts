@@ -72,6 +72,7 @@ export class ApplicationDetailsPageComponent {
       message: selected.message,
       client: {
         name: task ? formatUserName(task.author) : MISSING_LABEL,
+        avatarUrl: task?.author.avatarUrl ?? null,
         ratingLabel: task ? formatAuthorRating(task.author) : MISSING_LABEL,
       },
       task: {

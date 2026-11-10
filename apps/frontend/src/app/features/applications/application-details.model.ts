@@ -2,6 +2,7 @@ import { TaskApplicationStatus, TaskExecutionType } from '@freelance-platform/sh
 
 export type ApplicationDetailsClient = {
   name: string;
+  avatarUrl: string | null;
   ratingLabel: string;
 };
 

@@ -8,7 +8,13 @@
     </header>
 
     <p class="application-item__client">
-      <span class="application-item__avatar" aria-hidden="true">{{ clientInitial() }}</span>
+      <span class="application-item__avatar" aria-hidden="true">
+        @if (clientAvatarUrl(); as avatarUrl) {
+          <img class="application-item__avatar-image" [src]="avatarUrl" alt="" />
+        } @else {
+          {{ clientInitial() }}
+        }
+      </span>
       <span>{{ application().clientName }} · {{ application().clientDetails }}</span>
     </p>
 
