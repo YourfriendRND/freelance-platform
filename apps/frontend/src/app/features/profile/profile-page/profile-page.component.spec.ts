@@ -100,7 +100,10 @@ describe('ProfilePageComponent testing', () => {
     expect(card?.birthdayLabel()).toBe('День рождения 14.07.1988');
     expect(card?.rating()).toBe(4.8);
     expect(card?.reviewsCount()).toBe(24);
+    expect(card?.verified()).toBe(true);
+    expect(card?.avatarUrl()).toBeNull();
     expect(root().textContent).toContain('Подтвержден');
+    expect(root().querySelector('.profile-card__avatar-image')).toBeNull();
     expect(root().textContent).not.toContain('Навыки');
 
     const statisticValues = Array.from(

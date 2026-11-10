@@ -1,6 +1,7 @@
 import {
   createMockTaskApplicationResponse,
   createMockTaskResponse,
+  createMockUserResponse,
 } from '@freelance-platform/shared-mock';
 import { TaskApplicationStatus, TaskStatus } from '@freelance-platform/shared-types';
 import {
@@ -76,6 +77,9 @@ describe('customer analytics model', () => {
 
     expect(selected.map((item) => item.id)).toEqual([pending.id]);
     expect(selected[0]?.performerName).toBe('Иван Петров');
+    expect(selected[0]?.avatarUrl).toBeNull();
+    expect(selected[0]?.rating).toBe(0);
+    expect(selected[0]?.reviewsCount).toBe(0);
     expect(selected[0]?.performerRole).toBe('freelancer');
     expect(selected[0]?.timeline).toBe('2 недели');
     expect(selected[0]?.taskTitle).toBe('Разработка адаптивного лендинга');
@@ -87,5 +91,31 @@ describe('customer analytics model', () => {
     ]);
 
     expect(selected?.taskTitle).toBe('Без названия');
+  });
+
+  it('should keep the performer avatar address', () => {
+    const [selected] = selectCustomerApplications([
+      createMockTaskApplicationResponse({
+        user: createMockUserResponse({
+          avatarUrl: 'https://cdn.example/avatar.jpg',
+        }),
+      }),
+    ]);
+
+    expect(selected?.avatarUrl).toBe('https://cdn.example/avatar.jpg');
+  });
+
+  it('should keep the performer rating and review count', () => {
+    const [selected] = selectCustomerApplications([
+      createMockTaskApplicationResponse({
+        user: createMockUserResponse({
+          rating: 4.8,
+          reviewsCount: 12,
+        }),
+      }),
+    ]);
+
+    expect(selected?.rating).toBe(4.8);
+    expect(selected?.reviewsCount).toBe(12);
   });
 });

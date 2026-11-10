@@ -1,18 +1,19 @@
 import { ChangeDetectionStrategy, Component, computed, inject, input } from '@angular/core';
 import { Router } from '@angular/router';
 import { UiButtonComponent } from '@freelance-platform/ui';
+import { ratingStars, RatingStar } from '../../../format';
 import { AnalyticsRequestStatus } from '../analytics-freelancer.model';
 import { AnalyticsCustomerApplication } from '../analytics-customer.model';
 
-// TODO: Подставить bio пользователя, когда бэкенд начнет отдавать его в отклике
-const PERFORMER_BIO_STUB = 'О себе пока ничего не указано';
-
 type AnalyticsCustomerApplicationRow = AnalyticsCustomerApplication & {
   titleLabel: string;
+  avatarAddress: string | null;
   initial: string;
   priceLabel: string;
   timelineLabel: string;
-  bioLabel: string;
+  ratingLabel: string;
+  ratingAriaLabel: string;
+  stars: readonly RatingStar[];
 };
 
 @Component({
@@ -34,10 +35,13 @@ export class AnalyticsPendingApplicationsComponent {
     this.applications().map((application) => ({
       ...application,
       titleLabel: application.taskTitle || 'Загрузка',
+      avatarAddress: this.applicationAvatarUrl(application.avatarUrl),
       initial: this.applicationInitial(application.performerName),
       priceLabel: this.formatProposedPrice(application.proposedPrice),
       timelineLabel: application.timeline?.trim() || '—',
-      bioLabel: PERFORMER_BIO_STUB,
+      ratingLabel: this.formatRating(application.rating, application.reviewsCount),
+      ratingAriaLabel: this.formatRatingAriaLabel(application.rating, application.reviewsCount),
+      stars: ratingStars(application.rating),
     })),
   );
 
@@ -45,10 +49,24 @@ export class AnalyticsPendingApplicationsComponent {
     this.router.navigate(['/applications', applicationId]);
   }
 
+  private applicationAvatarUrl(avatarUrl: string | null): string | null {
+    const value = avatarUrl?.trim();
+
+    return value ? value : null;
+  }
+
   private applicationInitial(name: string): string {
     const [firstLetter] = name.trim();
 
     return firstLetter ? firstLetter.toUpperCase() : '?';
+  }
+
+  private formatRating(rating: number, reviewsCount: number): string {
+    return `${rating.toFixed(1)} (${reviewsCount})`;
+  }
+
+  private formatRatingAriaLabel(rating: number, reviewsCount: number): string {
+    return `Рейтинг: ${rating.toFixed(1)} из 5, ${reviewsCount} отзывов`;
   }
 
   private formatProposedPrice(proposedPrice: number | null): string {

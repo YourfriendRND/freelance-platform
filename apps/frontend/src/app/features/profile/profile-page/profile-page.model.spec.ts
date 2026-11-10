@@ -16,6 +16,8 @@ describe('toProfileCardView testing', () => {
       roleLabel: 'Заказчик',
       registrationLabel: 'На платформе с 04.09.2026',
       bio: 'О себе пока ничего не указано',
+      verified: true,
+      avatarUrl: null,
       birthdayLabel: 'Дата рождения не указана',
       rating: 0,
       reviewsCount: 0,
@@ -86,5 +88,17 @@ describe('toProfileCardView testing', () => {
     expect(view.bio).toBe('О себе пока ничего не указано');
     expect(view.birthdayLabel).toBe('Дата рождения не указана');
     expect(view.registrationLabel).toBe('Дата регистрации не указана');
+  });
+
+  it('should map the verification flag and trim the avatar address', () => {
+    const view = toProfileCardView(
+      createMockUserResponse({
+        verified: false,
+        avatarUrl: ' https://cdn.example/avatar.jpg ',
+      }),
+    );
+
+    expect(view.verified).toBe(false);
+    expect(view.avatarUrl).toBe('https://cdn.example/avatar.jpg');
   });
 });

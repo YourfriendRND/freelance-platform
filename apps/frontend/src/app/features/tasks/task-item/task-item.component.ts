@@ -52,6 +52,12 @@ export class TaskItemComponent {
     return author ? USER_ROLE_LABEL[author.role] : '';
   });
 
+  protected readonly authorAvatarUrl = computed(() => {
+    const avatarUrl = this.author()?.avatarUrl?.trim();
+
+    return avatarUrl ? avatarUrl : null;
+  });
+
   protected readonly authorInitial = computed(() => {
     const name = this.authorName();
 

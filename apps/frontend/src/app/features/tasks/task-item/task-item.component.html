@@ -103,7 +103,13 @@
 
     @if (author()) {
       <div class="task-item__author">
-        <span class="task-item__avatar" aria-hidden="true">{{ authorInitial() }}</span>
+        <span class="task-item__avatar" aria-hidden="true">
+          @if (authorAvatarUrl(); as avatarUrl) {
+            <img class="task-item__avatar-image" [src]="avatarUrl" alt="" />
+          } @else {
+            {{ authorInitial() }}
+          }
+        </span>
         <span class="task-item__author-text">
           <span class="task-item__author-name">{{ authorName() }}</span>
           <span class="task-item__author-role">{{ authorRoleLabel() }}</span>

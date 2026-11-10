@@ -30,6 +30,9 @@ export type AnalyticsCustomerApplication = {
   taskId: string;
   taskTitle: string;
   performerName: string;
+  avatarUrl: string | null;
+  rating: number;
+  reviewsCount: number;
   performerRole: UserRole;
   message: string;
   proposedPrice: number | null;
@@ -99,6 +102,9 @@ export function selectCustomerApplications(
       taskId: application.taskId,
       taskTitle: application.task?.title ?? 'Без названия',
       performerName: formatUserName(application.user),
+      avatarUrl: application.user.avatarUrl,
+      rating: application.user.rating,
+      reviewsCount: application.user.reviewsCount,
       performerRole: application.user.role,
       message: application.message,
       proposedPrice: application.proposedPrice,

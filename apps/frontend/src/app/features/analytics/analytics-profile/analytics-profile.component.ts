@@ -12,19 +12,33 @@ import { ratingStars } from '../../../format';
 })
 export class AnalyticsProfileComponent {
   readonly displayName = input.required<string>();
+  readonly bio = input<string | null>(null);
+  readonly avatarUrl = input<string | null>(null);
   readonly rating = input.required<number>();
   readonly reviewsCount = input.required<number>();
+  readonly rate = input<number | null>(null);
 
   private readonly router = inject(Router);
+  private readonly missingBioLabel = 'О себе пока ничего не указано';
+  private readonly missingRateLabel = 'Ставка не указана';
+  private readonly rateFormatter = new Intl.NumberFormat('ru-RU');
 
-  // TODO: Подставить описание профиля, когда бэкенд начнет отдавать bio
-  protected readonly bioLabel = 'О себе пока ничего не указано';
+  protected readonly bioLabel = computed(() => {
+    const bio = this.bio()?.trim();
+
+    return bio ? bio : this.missingBioLabel;
+  });
+
+  protected readonly avatarAddress = computed(() => {
+    const avatarUrl = this.avatarUrl()?.trim();
+
+    return avatarUrl ? avatarUrl : null;
+  });
 
   // TODO: Подставить число завершенных заказов, когда появится сущность orders
   protected readonly completedLabel = '0 завершено';
 
-  // TODO: Подставить ставку, когда бэкенд начнет ее отдавать
-  protected readonly rateLabel = '0 ₽/час';
+  protected readonly rateLabel = computed(() => this.formatRate(this.rate()));
 
   // TODO: Подставить навыки, когда бэкенд начнет их отдавать
   protected readonly skillsLabel = 'Навыки не указаны';
@@ -45,5 +59,13 @@ export class AnalyticsProfileComponent {
 
   protected onEditProfile(): void {
     this.router.navigate(['/profile']);
+  }
+
+  private formatRate(rate: number | null): string {
+    if (rate === null) {
+      return this.missingRateLabel;
+    }
+
+    return `${this.rateFormatter.format(rate)} ₽/час`;
   }
 }

@@ -17,6 +17,7 @@ describe('TaskDetailsResponsesComponent', () => {
       {
         id: 'response-1',
         performerName: 'Мария Сидорова',
+        avatarUrl: null,
         rating: 4.8,
         reviewsCount: 12,
         price: 45000,
@@ -42,6 +43,7 @@ describe('TaskDetailsResponsesComponent', () => {
     expect(element.querySelector('.task-responses__title')?.textContent).toContain('Отклики (3)');
     expect(text).toContain('Мария Сидорова');
     expect(element.querySelector('.task-response__avatar')?.textContent).toContain('М');
+    expect(element.querySelector('.task-response__avatar-image')).toBeNull();
     expect(text).toContain('4.8 (12)');
     expect(
       Array.from(element.querySelectorAll('.task-response__star')).map((star) =>
@@ -69,6 +71,7 @@ describe('TaskDetailsResponsesComponent', () => {
       {
         id: 'response-1',
         performerName: 'Мария Сидорова',
+        avatarUrl: null,
         rating: 0,
         reviewsCount: 0,
         price: null,
@@ -94,6 +97,7 @@ describe('TaskDetailsResponsesComponent', () => {
       {
         id: 'response-1',
         performerName: 'Мария Сидорова',
+        avatarUrl: ' https://cdn.example/avatar.jpg ',
         rating: 4.8,
         reviewsCount: 12,
         price: 45000,
@@ -114,5 +118,10 @@ describe('TaskDetailsResponsesComponent', () => {
     expect(element.textContent).not.toContain('Принять');
     expect(element.textContent).not.toContain('Отклонить');
     expect(element.querySelector('button[disabled]')?.textContent).toContain('Написать');
+
+    const image = element.querySelector('.task-response__avatar-image') as HTMLImageElement | null;
+
+    expect(image?.getAttribute('src')).toBe('https://cdn.example/avatar.jpg');
+    expect(image?.closest('.task-response__avatar')?.textContent?.trim()).toBe('');
   });
 });

@@ -25,6 +25,8 @@ describe('ProfileCardComponent testing', () => {
       'На платформе с 08.09.2026',
     );
     fixture.componentRef.setInput('bio', 'Ищу исполнителей для своих проектов');
+    fixture.componentRef.setInput('verified', true);
+    fixture.componentRef.setInput('avatarUrl', null);
     fixture.componentRef.setInput('birthdayLabel', 'День рождения 14.07.1988');
     fixture.componentRef.setInput('rating', 4.8);
     fixture.componentRef.setInput('reviewsCount', 24);
@@ -47,6 +49,7 @@ describe('ProfileCardComponent testing', () => {
     expect(root().querySelector('.profile-card__avatar')?.getAttribute('aria-label')).toBe(
       'Аватар не добавлен',
     );
+    expect(root().querySelector('.profile-card__avatar-image')).toBeNull();
     expect(root().querySelectorAll('.profile-card__star[data-fill="full"]')).toHaveLength(4);
     expect(root().querySelectorAll('.profile-card__star[data-fill="half"]')).toHaveLength(1);
     expect(root().textContent).not.toContain('Навыки');
@@ -84,6 +87,8 @@ describe('ProfileCardComponent testing', () => {
     fixture.componentRef.setInput('roleLabel', 'Заказчик');
     fixture.componentRef.setInput('registrationLabel', 'На платформе с 08.09.2026');
     fixture.componentRef.setInput('bio', 'О себе пока ничего не указано');
+    fixture.componentRef.setInput('verified', true);
+    fixture.componentRef.setInput('avatarUrl', null);
     fixture.componentRef.setInput('birthdayLabel', 'Дата рождения не указана');
     fixture.componentRef.setInput('rating', 0);
     fixture.componentRef.setInput('reviewsCount', 0);
@@ -94,6 +99,21 @@ describe('ProfileCardComponent testing', () => {
     expect(root().textContent).toContain('О себе пока ничего не указано');
     expect(root().textContent).toContain('Дата рождения не указана');
     expect(root().textContent).toContain('0.0 (0)');
+  });
+
+  it('should hide the verified mark and show the avatar photo', () => {
+    setProfileInputs();
+    fixture.componentRef.setInput('verified', false);
+    fixture.componentRef.setInput('avatarUrl', ' https://cdn.example/avatar.jpg ');
+    fixture.detectChanges();
+
+    const image = root().querySelector('.profile-card__avatar-image') as HTMLImageElement | null;
+
+    expect(root().querySelector('.profile-card__verified')).toBeNull();
+    expect(root().textContent).not.toContain('Подтвержден');
+    expect(image?.getAttribute('src')).toBe('https://cdn.example/avatar.jpg');
+    expect(image?.getAttribute('alt')).toBe('Аватар');
+    expect(root().querySelector('.profile-card__avatar')?.getAttribute('aria-label')).toBeNull();
   });
 
   it('should request profile editing', () => {

@@ -165,6 +165,7 @@ export class ApplicationsPageComponent {
       taskTitle: task?.title ?? MISSING_LABEL,
       status: application.status,
       clientName: task ? formatUserName(task.author) : MISSING_LABEL,
+      clientAvatarUrl: task?.author.avatarUrl ?? null,
       clientDetails: task
         ? (categoryTitleById.get(task.categoryId) ?? UNKNOWN_CATEGORY_TITLE)
         : '',

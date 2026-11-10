@@ -23,6 +23,8 @@ export type ProfileCardView = {
   readonly roleLabel: string;
   readonly registrationLabel: string;
   readonly bio: string;
+  readonly verified: boolean;
+  readonly avatarUrl: string | null;
   readonly birthdayLabel: string;
   readonly rating: number;
   readonly reviewsCount: number;
@@ -43,6 +45,8 @@ export function toProfileCardView(user: UserResponse): ProfileCardView {
       ? `На платформе с ${formatTaskDate(user.createdAt)}`
       : 'Дата регистрации не указана',
     bio: user.bio?.trim() || MISSING_BIO,
+    verified: user.verified,
+    avatarUrl: user.avatarUrl?.trim() || null,
     birthdayLabel: birthday ? `День рождения ${birthday}` : MISSING_BIRTHDAY,
     rating: user.rating,
     reviewsCount: user.reviewsCount,

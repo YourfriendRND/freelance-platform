@@ -34,6 +34,12 @@ export class ApplicationItemComponent {
     formatTaskDate(this.application().submittedAt),
   );
 
+  protected readonly clientAvatarUrl = computed(() => {
+    const avatarUrl = this.application().clientAvatarUrl?.trim();
+
+    return avatarUrl ? avatarUrl : null;
+  });
+
   protected readonly clientInitial = computed(() => {
     const [firstLetter] = this.application().clientName.trim();
 

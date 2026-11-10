@@ -7,6 +7,7 @@ import { formatUserName } from '../../../format/format-user-name';
 export type TaskDetailsResponseCard = {
   id: string;
   performerName: string;
+  avatarUrl: string | null;
   rating: number;
   reviewsCount: number;
   price: number | null;
@@ -23,6 +24,7 @@ export function toTaskDetailsResponseCard(
   return {
     id: application.id,
     performerName: formatUserName(application.user),
+    avatarUrl: application.user.avatarUrl,
     // TODO: рейтинг и число отзывов исполнителя в отклике пока всегда 0, бэкенд их не выбирает
     rating: application.user.rating,
     reviewsCount: application.user.reviewsCount,

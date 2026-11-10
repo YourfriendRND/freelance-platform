@@ -45,10 +45,30 @@
             <li class="analytics-panel__item">
               <div class="analytics-panel__top">
                 <div class="analytics-panel__person">
-                  <span class="analytics-panel__avatar" aria-hidden="true">{{ application.initial }}</span>
+                  <span class="analytics-panel__avatar" aria-hidden="true">
+                    @if (application.avatarAddress) {
+                      <img
+                        class="analytics-panel__avatar-image"
+                        [src]="application.avatarAddress"
+                        alt=""
+                      />
+                    } @else {
+                      {{ application.initial }}
+                    }
+                  </span>
                   <div class="analytics-panel__person-text">
                     <p class="analytics-panel__name">{{ application.performerName }}</p>
-                    <p class="analytics-panel__bio">{{ application.bioLabel }}</p>
+                    <p
+                      class="analytics-panel__rating"
+                      [attr.aria-label]="application.ratingAriaLabel"
+                    >
+                      <span class="analytics-panel__stars" aria-hidden="true">
+                        @for (star of application.stars; track star.index) {
+                          <span class="analytics-panel__star" [attr.data-fill]="star.fill">★</span>
+                        }
+                      </span>
+                      <span>{{ application.ratingLabel }}</span>
+                    </p>
                   </div>
                 </div>
                 <div class="analytics-panel__offer">

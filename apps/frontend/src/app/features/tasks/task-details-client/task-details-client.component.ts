@@ -2,12 +2,6 @@ import { ChangeDetectionStrategy, Component, computed, input } from '@angular/co
 import { UserResponse } from '@freelance-platform/shared-types';
 import { formatUserName, ratingStars } from '../../../format';
 
-// TODO: подставить описание заказчика, когда бэкенд начнёт отдавать bio
-const BIO_STUB = 'О себе пока ничего не указано';
-
-// TODO: подставить признак верификации, когда бэкенд начнёт его отдавать
-const VERIFIED_STUB = 'Подтвержден';
-
 @Component({
   selector: 'app-task-details-client',
   templateUrl: './task-details-client.component.html',
@@ -17,12 +11,16 @@ const VERIFIED_STUB = 'Подтвержден';
 export class TaskDetailsClientComponent {
   readonly author = input.required<UserResponse>();
 
-  protected readonly bioLabel = BIO_STUB;
-  protected readonly verifiedLabel = VERIFIED_STUB;
+  protected readonly verifiedLabel = 'Подтвержден';
 
   protected readonly authorName = computed(() => formatUserName(this.author()));
 
-  // TODO: подставить фото заказчика, когда бэкенд начнёт отдавать avatarUrl
+  protected readonly authorAvatarUrl = computed(() => {
+    const avatarUrl = this.author().avatarUrl?.trim();
+
+    return avatarUrl ? avatarUrl : null;
+  });
+
   protected readonly authorInitial = computed(() => {
     const name = this.authorName();
 

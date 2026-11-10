@@ -3,7 +3,11 @@
 
   <div class="task-details-client__body">
     <span class="task-details-client__avatar" aria-hidden="true">
-      {{ authorInitial() }}
+      @if (authorAvatarUrl(); as avatarUrl) {
+        <img class="task-details-client__avatar-image" [src]="avatarUrl" alt="" />
+      } @else {
+        {{ authorInitial() }}
+      }
     </span>
 
     <div class="task-details-client__info">
@@ -18,27 +22,27 @@
         <span>{{ ratingLabel() }} {{ reviewsLabel() }}</span>
       </p>
 
-      <p class="task-details-client__bio">{{ bioLabel }}</p>
-
       <p class="task-details-client__meta">
         <span>{{ memberSinceLabel() }}</span>
-        <span class="task-details-client__verified">
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="14"
-            height="14"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2.5"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            aria-hidden="true"
-          >
-            <path d="M20 6 9 17l-5-5"></path>
-          </svg>
-          {{ verifiedLabel }}
-        </span>
+        @if (author().verified) {
+          <span class="task-details-client__verified">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              aria-hidden="true"
+            >
+              <path d="M20 6 9 17l-5-5"></path>
+            </svg>
+            {{ verifiedLabel }}
+          </span>
+        }
       </p>
     </div>
   </div>

@@ -15,7 +15,11 @@
         <li class="task-response">
           <article class="task-response__card">
             <span class="task-response__avatar" aria-hidden="true">
-              {{ performerInitial(response.performerName) }}
+              @if (performerAvatarUrl(response.avatarUrl); as avatarUrl) {
+                <img class="task-response__avatar-image" [src]="avatarUrl" alt="" />
+              } @else {
+                {{ performerInitial(response.performerName) }}
+              }
             </span>
 
             <div class="task-response__heading">

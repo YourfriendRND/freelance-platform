@@ -7,11 +7,17 @@
   </header>
 
   <div class="analytics-profile__main">
-    <span class="analytics-profile__avatar" aria-hidden="true">{{ initial() }}</span>
+    <span class="analytics-profile__avatar" aria-hidden="true">
+      @if (avatarAddress(); as avatarUrl) {
+        <img class="analytics-profile__avatar-image" [src]="avatarUrl" alt="" />
+      } @else {
+        {{ initial() }}
+      }
+    </span>
 
     <div class="analytics-profile__body">
       <p class="analytics-profile__name">{{ displayName() }}</p>
-      <p class="analytics-profile__bio">{{ bioLabel }}</p>
+      <p class="analytics-profile__bio">{{ bioLabel() }}</p>
       <p class="analytics-profile__rating" [attr.aria-label]="ratingAriaLabel()">
         <span class="analytics-profile__stars" aria-hidden="true">
           @for (star of stars(); track star.index) {
@@ -21,7 +27,7 @@
         <span>{{ ratingLabel() }}</span>
         <span>({{ reviewsCount() }})</span>
         <span>{{ completedLabel }}</span>
-        <span>{{ rateLabel }}</span>
+        <span class="analytics-profile__rate">{{ rateLabel() }}</span>
       </p>
       <p class="analytics-profile__skills">
         <span class="analytics-profile__skill">{{ skillsLabel }}</span>

@@ -97,6 +97,12 @@ export class AnalyticsPageComponent {
     this.isFreelancer() ? 'Смотреть задачи' : 'Новая задача',
   );
 
+  protected readonly userBio = computed(() => this.authStore.user()?.bio ?? null);
+
+  protected readonly userAvatarUrl = computed(() => this.authStore.user()?.avatarUrl ?? null);
+
+  protected readonly userRate = computed(() => this.authStore.user()?.rate ?? null);
+
   protected readonly rating = computed(() => this.authStore.user()?.rating ?? 0);
 
   protected readonly reviewsCount = computed(
