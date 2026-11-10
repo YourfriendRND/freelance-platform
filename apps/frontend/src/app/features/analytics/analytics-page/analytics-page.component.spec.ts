@@ -47,6 +47,8 @@ describe('AnalyticsPageComponent testing', () => {
     lastName: 'Петров',
     rating: 4.9,
     reviewsCount: 87,
+    bio: 'Делаю интерфейсы',
+    rate: 2500,
   });
 
   const task: TaskResponse = createMockTaskResponse({
@@ -175,7 +177,10 @@ describe('AnalyticsPageComponent testing', () => {
       expect(text).not.toContain('Ваш профиль');
       expect(text).toContain('Современный интернет-магазин');
       expect(text).toContain('Опубликовано');
-      expect(text).toContain('О себе пока ничего не указано');
+      expect(text).not.toContain('О себе пока ничего не указано');
+      expect(root().querySelector('.analytics-panel__bio')).toBeNull();
+      expect(root().querySelector('.analytics-panel__avatar')?.textContent?.trim()).toBe('И');
+      expect(root().querySelector('.analytics-panel__avatar-image')).toBeNull();
       expect(text).not.toContain('Готов выполнить задачу в указанные сроки и рассказать о подходе');
       expect(text).toContain('2 недели');
       expect(text).toContain('Смотреть детали');
@@ -220,6 +225,14 @@ describe('AnalyticsPageComponent testing', () => {
       expect(text).toContain('Смотреть задачи');
       expect(summaryValues).toEqual(['0', '1', '0', '0 ₽']);
       expect(text).toContain('Ваш профиль');
+      expect(root().querySelector('.analytics-profile__bio')?.textContent?.trim()).toBe(
+        'Делаю интерфейсы',
+      );
+      expect(root().querySelector('.analytics-profile__avatar')?.textContent).toContain('И');
+      expect(root().querySelector('.analytics-profile__avatar-image')).toBeNull();
+      expect(root().querySelector('.analytics-profile__rate')?.textContent?.trim()).toBe(
+        `${new Intl.NumberFormat('ru-RU').format(2500)} ₽/час`,
+      );
       expect(text).toContain('4.9');
       expect(text).toContain('(87)');
       expect(text).toContain('Современный интернет-магазин');

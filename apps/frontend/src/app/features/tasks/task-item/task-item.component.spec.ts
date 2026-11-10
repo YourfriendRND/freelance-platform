@@ -83,5 +83,20 @@ describe('TaskItemComponent testing', () => {
       'Заказчик',
     );
     expect(root.querySelector('.task-item__avatar')?.textContent).toContain('И');
+    expect(root.querySelector('.task-item__avatar-image')).toBeNull();
+  });
+
+  it('should render the author photo when avatarUrl is set', () => {
+    const root = render({
+      ...task,
+      author: {
+        ...author,
+        avatarUrl: ' https://cdn.example/avatar.jpg ',
+      },
+    });
+    const image = root.querySelector('.task-item__avatar-image') as HTMLImageElement | null;
+
+    expect(image?.getAttribute('src')).toBe('https://cdn.example/avatar.jpg');
+    expect(image?.closest('.task-item__avatar')?.textContent?.trim()).toBe('');
   });
 });

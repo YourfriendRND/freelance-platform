@@ -29,14 +29,47 @@ describe('AnalyticsProfileComponent testing', () => {
     expect(text).toContain('Ваш профиль');
     expect(text).toContain('Иван Петров');
     expect(text).toContain('И');
+    expect(root().querySelector('.analytics-profile__avatar-image')).toBeNull();
     expect(text).toContain('4.9');
     expect(text).toContain('(87)');
-    expect(text).toContain('О себе пока ничего не указано');
+    expect(root().querySelector('.analytics-profile__bio')?.textContent?.trim()).toBe(
+      'О себе пока ничего не указано',
+    );
     expect(text).toContain('0 завершено');
-    expect(text).toContain('0 ₽/час');
+    expect(root().querySelector('.analytics-profile__rate')?.textContent?.trim()).toBe(
+      'Ставка не указана',
+    );
     expect(text).toContain('Навыки не указаны');
     expect(root().querySelector('.ui-button--muted')).not.toBeNull();
     expect(root().querySelectorAll('.analytics-profile__star[data-fill="full"]')).toHaveLength(4);
+  });
+
+  it('should render the profile bio and photo from the user', () => {
+    fixture.componentRef.setInput('bio', '  Делаю интерфейсы  ');
+    fixture.componentRef.setInput('avatarUrl', ' https://cdn.example/avatar.jpg ');
+    fixture.detectChanges();
+
+    const image = root().querySelector('.analytics-profile__avatar-image') as HTMLImageElement | null;
+
+    expect(root().querySelector('.analytics-profile__bio')?.textContent?.trim()).toBe(
+      'Делаю интерфейсы',
+    );
+    expect(image?.getAttribute('src')).toBe('https://cdn.example/avatar.jpg');
+    expect(image?.closest('.analytics-profile__avatar')?.textContent?.trim()).toBe('');
+  });
+
+  it('should render the hourly rate from the user', () => {
+    fixture.componentRef.setInput('rate', 2500);
+    fixture.detectChanges();
+
+    expect(root().querySelector('.analytics-profile__rate')?.textContent?.trim()).toBe(
+      `${new Intl.NumberFormat('ru-RU').format(2500)} ₽/час`,
+    );
+
+    fixture.componentRef.setInput('rate', 0);
+    fixture.detectChanges();
+
+    expect(root().querySelector('.analytics-profile__rate')?.textContent?.trim()).toBe('0 ₽/час');
   });
 
   it('should navigate to the profile page', () => {

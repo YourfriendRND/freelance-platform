@@ -113,12 +113,34 @@ describe('ApplicationDetailsPageComponent testing', () => {
     expect(text).toContain('25 000 – 40 000 ₽');
     expect(text).toContain('Ждём ответа заказчика');
     expect(text).toContain('Иван Петров');
+    expect(root().querySelector('.application-details-client__avatar')?.textContent?.trim()).toBe('И');
+    expect(root().querySelector('.application-details-client__avatar-image')).toBeNull();
     expect(text).toContain('Удалённо');
     expect(text).toContain('2 недели');
     expect(text).toContain('4.8 · 12 отзывов');
     expect(links).toContain('/applications');
     expect(links).toContain(`/tasks/${task.id}`);
     expect(messageButton?.disabled).toBe(true);
+  });
+
+  it('should show the client photo when the avatar address is set', () => {
+    selectedApplication.set(
+      createMockTaskApplicationResponse({
+        task: createMockShortTaskResponse({
+          author: createMockUserResponse({
+            avatarUrl: ' https://cdn.example/avatar.jpg ',
+          }),
+        }),
+      }),
+    );
+    fixture.detectChanges();
+
+    const image = root().querySelector(
+      '.application-details-client__avatar-image',
+    ) as HTMLImageElement | null;
+
+    expect(image?.getAttribute('src')).toBe('https://cdn.example/avatar.jpg');
+    expect(image?.closest('.application-details-client__avatar')?.textContent?.trim()).toBe('');
   });
 
   it('should show a dash when the application has no timeline', () => {

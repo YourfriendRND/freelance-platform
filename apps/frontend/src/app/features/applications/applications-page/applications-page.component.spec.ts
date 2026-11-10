@@ -41,6 +41,7 @@ describe('ApplicationsPageComponent testing', () => {
     id: 'c8f25b13-a2d4-5e69-b337-2d3e4f5a6b02',
     firstName: 'Мария',
     lastName: 'Волкова',
+    avatarUrl: ' https://cdn.example/maria.jpg ',
   });
 
   const designTask = createMockShortTaskResponse({
@@ -149,6 +150,13 @@ describe('ApplicationsPageComponent testing', () => {
     expect(root().textContent).toContain('Мария Волкова');
     expect(root().textContent).toContain('2 недели');
     expect(root().textContent).toContain(category.title);
+
+    const avatars = Array.from(root().querySelectorAll('.application-item__avatar'));
+    const mariaAvatar = avatars[1]?.querySelector('img');
+
+    expect(avatars[0]?.textContent?.trim()).toBe('И');
+    expect(avatars[0]?.querySelector('img')).toBeNull();
+    expect(mariaAvatar?.getAttribute('src')).toBe('https://cdn.example/maria.jpg');
   });
 
   it('should show a dash when the application has no timeline', () => {
