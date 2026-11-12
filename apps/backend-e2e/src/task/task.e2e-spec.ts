@@ -606,6 +606,7 @@ describe('Task module e2e testing', () => {
         rating: 0,
         reviewsCount: 0,
       });
+      expect(listed.author).not.toHaveProperty('skills');
 
       const getRes = await axios.get(`/api/tasks/${taskId}`, {
         headers: { Cookie: freelancer.sessionCookie },
@@ -615,6 +616,7 @@ describe('Task module e2e testing', () => {
       expect(getRes.data.hasApplied).toBe(true);
       expect(getRes.data.applicationsCount).toBe(1);
       expect(getRes.data.viewsCount).toBe(2);
+      expect(getRes.data.author).not.toHaveProperty('skills');
     });
   });
 

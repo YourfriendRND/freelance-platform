@@ -93,7 +93,14 @@ describe('Task category popular e2e testing', () => {
     expect(unchanged).toEqual(before);
 
     const topCount = before[0]?.taskCount ?? 0;
-    const openTasksToCreate = topCount + 1;
+    const existingOpenRes = await axios.get(
+      `/api/tasks?categoryId=${quiet.id}&status=${TaskStatus.Open}&limit=1`,
+    );
+
+    expect(existingOpenRes.status).toBe(200);
+
+    const existingOpenCount = existingOpenRes.data.total as number;
+    const openTasksToCreate = topCount - existingOpenCount + 1;
 
     for (let index = 0; index < openTasksToCreate; index += 1) {
       const openRes = await axios.post(
@@ -116,7 +123,7 @@ describe('Task category popular e2e testing', () => {
     expect(isSortedByTaskCount(after)).toBe(true);
     expect(leader).toMatchObject({
       id: quiet.id,
-      taskCount: openTasksToCreate,
+      taskCount: existingOpenCount + openTasksToCreate,
     });
 
     if (before.length === 8) {
