@@ -42,6 +42,49 @@ describe('UserRdo testing', () => {
     expect(result.rate).toBeNull();
   });
 
+  it('should expose an empty skill list', () => {
+    const profile = new UserEntity({
+      id: user.id,
+      email: user.email,
+      firstName: user.firstName,
+      role: user.role,
+      createdAt: user.createdAt,
+      updatedAt: user.updatedAt,
+    });
+    profile.skills = [];
+
+    const result = fillRdo(UserRdo, profile);
+
+    expect(result.skills).toEqual([]);
+  });
+
+  it('should keep skill order', () => {
+    const profile = new UserEntity({
+      id: user.id,
+      email: user.email,
+      firstName: user.firstName,
+      role: user.role,
+      createdAt: user.createdAt,
+      updatedAt: user.updatedAt,
+    });
+    profile.skills = [
+      { id: '1c2a8e14-5d93-4f1b-9b27-2e5d8c01f101', name: 'nodejs' },
+      { id: '2c2a8e14-5d93-4f1b-9b27-2e5d8c01f102', name: 'typescript' },
+    ];
+
+    const result = fillRdo(UserRdo, profile);
+
+    expect(result.skills).toEqual(profile.skills);
+  });
+
+  it('should omit skills when they were not loaded', () => {
+    const result = fillRdo(UserRdo, user);
+    const serialized = JSON.parse(JSON.stringify(result)) as Record<string, unknown>;
+
+    expect(result.skills).toBeUndefined();
+    expect(serialized).not.toHaveProperty('skills');
+  });
+
   it('should hide the password', () => {
     const result = fillRdo(UserRdo, user);
 

@@ -1,4 +1,5 @@
 import { Entity } from '../abstract';
+import { UserSkill } from '../skill/user-skill.type';
 import { UserDbRow } from './user.db-row';
 import { IUser } from './user';
 import { UserRole } from './user-role';
@@ -15,6 +16,7 @@ export class UserEntity extends Entity<IUser> {
   // TODO: Добавить таблицы рейтинга и отзывов
   rating = 0;
   reviewsCount = 0;
+  skills?: UserSkill[];
 
   constructor(props?: Partial<IUser>) {
     super(props);

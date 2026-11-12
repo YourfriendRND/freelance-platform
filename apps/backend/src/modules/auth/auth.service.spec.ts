@@ -22,6 +22,7 @@ describe('AuthService testing', () => {
     findByEmail: ReturnType<typeof vi.fn>;
     createUser: ReturnType<typeof vi.fn>;
     findAuthCredentialsById: ReturnType<typeof vi.fn>;
+    findOne: ReturnType<typeof vi.fn>;
   };
   let sessionService: {
     createUserSession: ReturnType<typeof vi.fn>;
@@ -54,6 +55,7 @@ describe('AuthService testing', () => {
       findByEmail: vi.fn(),
       createUser: vi.fn(),
       findAuthCredentialsById: vi.fn(),
+      findOne: vi.fn(),
     };
     sessionService = {
       createUserSession: vi.fn(),
@@ -152,5 +154,27 @@ describe('AuthService testing', () => {
     ).rejects.toBeInstanceOf(NotFoundException);
 
     expect(userService.findAuthCredentialsById).not.toHaveBeenCalled();
+  });
+
+  it('should load the current user with skills', async () => {
+    const profile = new UserEntity({
+      id: user.id,
+      email: user.email,
+      firstName: user.firstName,
+      role: user.role,
+      createdAt: user.createdAt,
+      updatedAt: user.updatedAt,
+    });
+    profile.skills = [];
+    userService.findOne.mockResolvedValue(profile);
+
+    const result = await service.getCurrentUser({
+      user,
+      sessionId: session.id,
+      token: session.token,
+    });
+
+    expect(userService.findOne).toHaveBeenCalledWith(user.id, { withSkills: true });
+    expect(result.skills).toEqual([]);
   });
 });

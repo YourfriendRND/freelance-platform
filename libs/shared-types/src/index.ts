@@ -4,4 +4,5 @@ export * from './lib/auth';
 export * from './lib/session';
 export * from './lib/task';
 export * from './lib/task-application';
+export * from './lib/skill';
 export * from './lib/common';

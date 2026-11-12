@@ -32,6 +32,7 @@ describe('User module e2e testing', () => {
         bio: null,
         birthday: null,
         rate: null,
+        skills: [],
       });
       expect(userRes.data).not.toHaveProperty('password');
     });
@@ -100,6 +101,7 @@ describe('User module e2e testing', () => {
         birthday: '1994-05-12',
         rate: 2500,
       });
+      expect(response.data).not.toHaveProperty('skills');
     });
 
     it('find and me: should return the updated profile', async () => {
@@ -117,6 +119,7 @@ describe('User module e2e testing', () => {
         bio: 'Делаю интерфейсы',
         birthday: '1994-05-12',
         rate: 2500,
+        skills: [],
       });
       expect(me.data).toMatchObject({
         firstName: 'Мария',
@@ -125,6 +128,7 @@ describe('User module e2e testing', () => {
         bio: 'Делаю интерфейсы',
         birthday: '1994-05-12',
         rate: 2500,
+        skills: [],
       });
     });
   });

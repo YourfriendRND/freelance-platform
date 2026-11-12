@@ -512,6 +512,8 @@ describe('Task application module e2e testing', () => {
       expect(listed.task).not.toHaveProperty('description');
       expect(listed.task).not.toHaveProperty('status');
       expect(listed.task.author).not.toHaveProperty('password');
+      expect(listed.user).not.toHaveProperty('skills');
+      expect(listed.task.author).not.toHaveProperty('skills');
 
       const getRes = await axios.get(`/api/task-applications/${applicationId}`, {
         headers: { Cookie: client.sessionCookie },
@@ -534,6 +536,8 @@ describe('Task application module e2e testing', () => {
       });
       expect(getRes.data.task).not.toHaveProperty('description');
       expect(getRes.data.task).not.toHaveProperty('status');
+      expect(getRes.data.user).not.toHaveProperty('skills');
+      expect(getRes.data.task.author).not.toHaveProperty('skills');
     });
 
     it('stats: should count the user applications and ignore taskId', async () => {
