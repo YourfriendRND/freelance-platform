@@ -37,7 +37,7 @@ export class UserController {
   async findUser(
     @Param('id', ParseUUIDPipe) id: string
   ): Promise<UserRdo> {
-    const user = await this.userService.findOne(id);
+    const user = await this.userService.findOne(id, { withSkills: true });
 
     return fillRdo(UserRdo, user);
   }

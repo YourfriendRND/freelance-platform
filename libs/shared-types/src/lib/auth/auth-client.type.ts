@@ -1,3 +1,4 @@
+import { UserSkill } from '../skill/user-skill.type';
 import { UserRole } from '../user/user-role';
 
 export type CreateUserRequest = {
@@ -27,4 +28,5 @@ export type UserResponse = {
   bio?: string | null;
   birthday?: string | null;
   rate?: number | null;
+  skills?: UserSkill[];
 };

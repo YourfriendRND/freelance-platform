@@ -5,6 +5,11 @@ import { AuthUserPayload, UpdateUserRecord, UserAuthCredentials, UserEntity } fr
 import { CreateUserDto, UpdateUserDto } from '@freelance-platform/shared-dto';
 import { authConfig } from '@freelance-platform/shared-config';
 import { hashPassword } from '../../common/hash-password';
+import { SkillService } from '../skill/skill.service';
+
+type FindUserOptions = {
+  withSkills?: boolean;
+};
 
 @Injectable()
 export class UserService {
@@ -12,13 +17,18 @@ export class UserService {
     private readonly userRepository: UserRepository,
     @Inject(authConfig.KEY)
     private readonly authConfiguration: ConfigType<typeof authConfig>,
+    private readonly skillService: SkillService,
   ) {}
 
-  async findOne(id: string): Promise<UserEntity> {
+  async findOne(id: string, { withSkills = false }: FindUserOptions = {}): Promise<UserEntity> {
     const user = await this.userRepository.findById(id);
 
     if (!user) {
       throw new NotFoundException(`Пользователь с "${id}" не найден`);
+    }
+
+    if (withSkills) {
+      user.skills = await this.skillService.findByUserId(user.id);
     }
 
     return user;

@@ -1,7 +1,8 @@
-import { Expose, Transform } from 'class-transformer';
+import { Expose, Transform, Type } from 'class-transformer';
 import { ApiProperty } from '@nestjs/swagger';
 import { UserRole } from '@freelance-platform/shared-types';
 import { formatBirthday } from './format-birthday';
+import { UserSkillRdo } from './user-skill.rdo';
 
 export class UserRdo {
   @Expose()
@@ -104,4 +105,13 @@ export class UserRdo {
   })
   @Transform(({ value }) => value ?? null)
   rate!: number | null;
+
+  @Expose()
+  @Type(() => UserSkillRdo)
+  @ApiProperty({
+    description: 'Навыки пользователя',
+    type: [UserSkillRdo],
+    required: false,
+  })
+  skills?: UserSkillRdo[];
 }

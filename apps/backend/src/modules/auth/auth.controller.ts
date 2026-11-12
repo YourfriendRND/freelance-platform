@@ -70,7 +70,9 @@ export class AuthController {
   async getCurrentUser(
     @CurrentUser() authUser: AuthUserPayload,
   ): Promise<UserRdo> {
-    return fillRdo(UserRdo, authUser.user);
+    const user = await this.authService.getCurrentUser(authUser);
+
+    return fillRdo(UserRdo, user);
   }
 
   @Post('/join')

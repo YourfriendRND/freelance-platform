@@ -39,6 +39,12 @@ export class AuthService {
     return this.userService.createUser(dto);
   }
 
+  async getCurrentUser(authUser: AuthUserPayload): Promise<UserEntity> {
+    const { user } = authUser;
+
+    return this.userService.findOne(user.id, { withSkills: true });
+  }
+
   async loginUser(
     dto: LoginUserDto,
   ): Promise<SuccessLoginUser> {
