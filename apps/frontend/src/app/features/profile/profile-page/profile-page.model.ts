@@ -30,7 +30,19 @@ export type ProfileCardView = {
   readonly reviewsCount: number;
   readonly isFreelancer: boolean;
   readonly rateLabel: string;
+  readonly skills: readonly string[];
 };
+
+export function keepProfileSkills(previous: UserResponse, next: UserResponse): UserResponse {
+  if (next.skills !== undefined || previous.skills === undefined) {
+    return next;
+  }
+
+  return {
+    ...next,
+    skills: previous.skills,
+  };
+}
 
 export function toProfileCardView(user: UserResponse): ProfileCardView {
   const registrationDate = new Date(user.createdAt);
@@ -52,7 +64,12 @@ export function toProfileCardView(user: UserResponse): ProfileCardView {
     reviewsCount: user.reviewsCount,
     isFreelancer: user.role === UserRole.Freelancer,
     rateLabel: formatRate(user.rate),
+    skills: user.role === UserRole.Freelancer ? skillNames(user.skills) : [],
   };
+}
+
+function skillNames(skills: UserResponse['skills']): readonly string[] {
+  return (skills ?? []).map((skill) => skill.name);
 }
 
 function formatRate(rate: number | null | undefined): string {

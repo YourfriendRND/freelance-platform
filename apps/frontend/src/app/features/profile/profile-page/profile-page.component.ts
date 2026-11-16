@@ -18,7 +18,7 @@ import { ProfileEditFormComponent } from '../profile-edit-form/profile-edit-form
 import { ProfileCardComponent } from '../profile-card/profile-card.component';
 import { ProfilePageContainerComponent } from '../profile-page-container/profile-page-container.component';
 import { ProfileStatisticsComponent } from '../profile-statistics/profile-statistics.component';
-import { ProfilePageView, toProfileCardView } from './profile-page.model';
+import { keepProfileSkills, ProfilePageView, toProfileCardView } from './profile-page.model';
 
 const PROFILE_LOAD_ERROR = 'Не удалось загрузить профиль';
 
@@ -81,8 +81,11 @@ export class ProfilePageComponent {
   }
 
   protected onProfileSaved(user: UserResponse): void {
-    this.profileUser.set(user);
-    this.authStore.setUser(user);
+    const current = this.profileUser();
+    const savedUser = current ? keepProfileSkills(current, user) : user;
+
+    this.profileUser.set(savedUser);
+    this.authStore.setUser(savedUser);
     this.isEditing.set(false);
   }
 

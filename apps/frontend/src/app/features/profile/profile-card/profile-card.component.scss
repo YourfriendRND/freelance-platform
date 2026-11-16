@@ -179,6 +179,25 @@
   line-height: 1.5;
 }
 
+.profile-card__skill-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin: 0.75rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.profile-card__skill {
+  padding: 0.25rem 0.625rem;
+  border-radius: 999px;
+  background: var(--color-input-background);
+  color: var(--color-text-muted);
+  font-size: 0.75rem;
+  line-height: 1.25rem;
+  overflow-wrap: anywhere;
+}
+
 .profile-card__stars {
   display: inline-flex;
   gap: 0.125rem;

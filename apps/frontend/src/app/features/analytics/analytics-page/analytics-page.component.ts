@@ -109,6 +109,10 @@ export class AnalyticsPageComponent {
     () => this.authStore.user()?.reviewsCount ?? 0,
   );
 
+  protected readonly userSkills = computed(() =>
+    (this.authStore.user()?.skills ?? []).map((skill) => skill.name),
+  );
+
   constructor() {
     const role = this.authStore.user()?.role;
 
