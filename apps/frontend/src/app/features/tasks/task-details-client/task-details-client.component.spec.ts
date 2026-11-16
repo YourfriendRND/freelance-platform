@@ -9,6 +9,7 @@ describe('TaskDetailsClientComponent testing', () => {
     ...mockAuthorUserResponse,
     rating: 4.8,
     reviewsCount: 24,
+    skills: [{ id: 'b4252672-a116-41ee-b78c-d694b236db32', name: 'TypeScript' }],
   };
 
   beforeEach(async () => {
@@ -48,6 +49,8 @@ describe('TaskDetailsClientComponent testing', () => {
     );
     expect(root.querySelector('.task-details-client__avatar')?.textContent).toContain('И');
     expect(root.querySelector('.task-details-client__avatar-image')).toBeNull();
+    expect(root.textContent).not.toContain('Навыки');
+    expect(root.textContent).not.toContain('TypeScript');
   });
 
   it('should render the avatar image when avatarUrl is set', () => {

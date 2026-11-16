@@ -49,6 +49,10 @@ describe('AnalyticsPageComponent testing', () => {
     reviewsCount: 87,
     bio: 'Делаю интерфейсы',
     rate: 2500,
+    skills: [
+      { id: 'b4252672-a116-41ee-b78c-d694b236db32', name: 'TypeScript' },
+      { id: 'c5363783-b227-52ff-c89d-e805c347ec43', name: 'Angular' },
+    ],
   });
 
   const task: TaskResponse = createMockTaskResponse({
@@ -175,6 +179,7 @@ describe('AnalyticsPageComponent testing', () => {
       expect(text).toContain('Черновики');
       expect(text).not.toContain('Всего откликов');
       expect(text).not.toContain('Ваш профиль');
+      expect(text).not.toContain('Навыки');
       expect(text).toContain('Современный интернет-магазин');
       expect(text).toContain('Опубликовано');
       expect(text).not.toContain('О себе пока ничего не указано');
@@ -233,6 +238,12 @@ describe('AnalyticsPageComponent testing', () => {
       expect(root().querySelector('.analytics-profile__rate')?.textContent?.trim()).toBe(
         `${new Intl.NumberFormat('ru-RU').format(2500)} ₽/час`,
       );
+      expect(
+        Array.from(
+          root().querySelectorAll('.analytics-profile__skill'),
+          (element) => element.textContent?.trim(),
+        ),
+      ).toEqual(['TypeScript', 'Angular']);
       expect(text).toContain('4.9');
       expect(text).toContain('(87)');
       expect(text).toContain('Современный интернет-магазин');
@@ -247,6 +258,14 @@ describe('AnalyticsPageComponent testing', () => {
       expect(viewAll?.hasAttribute('disabled')).toBe(true);
       expect(getCustomerStats).not.toHaveBeenCalled();
       expect(findMine).not.toHaveBeenCalled();
+    });
+
+    it('should show the empty skill label when the session has no skills', () => {
+      authStore.user.set({ ...freelancer, skills: [] });
+      fixture.detectChanges();
+
+      expect(root().textContent).toContain('Навыки не указаны');
+      expect(root().textContent).not.toContain('TypeScript');
     });
 
     it('should navigate to the task list from the header button', () => {
