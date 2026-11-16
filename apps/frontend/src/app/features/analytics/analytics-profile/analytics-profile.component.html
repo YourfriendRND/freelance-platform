@@ -30,7 +30,13 @@
         <span class="analytics-profile__rate">{{ rateLabel() }}</span>
       </p>
       <p class="analytics-profile__skills">
-        <span class="analytics-profile__skill">{{ skillsLabel }}</span>
+        @if (skills().length === 0) {
+          <span class="analytics-profile__skill">Навыки не указаны</span>
+        } @else {
+          @for (skill of skills(); track skill) {
+            <span class="analytics-profile__skill">{{ skill }}</span>
+          }
+        }
       </p>
     </div>
   </div>

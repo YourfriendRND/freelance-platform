@@ -22,6 +22,7 @@ export class ProfileCardComponent {
   readonly reviewsCount = input.required<number>();
   readonly isFreelancer = input.required<boolean>();
   readonly rateLabel = input.required<string | null>();
+  readonly skills = input<readonly string[]>([]);
   readonly editing = input(false);
 
   readonly edit = output<void>();
@@ -34,10 +35,6 @@ export class ProfileCardComponent {
 
     return avatarUrl ? avatarUrl : null;
   });
-
-  protected readonly skillsLabel = computed(() =>
-    this.editing() ? 'Навыки пока недоступны' : 'Навыки пока не указаны',
-  );
 
   protected readonly ratingLabel = computed(
     () => `${this.rating().toFixed(1)} (${this.reviewsCount()})`,

@@ -54,6 +54,12 @@ describe('ProfileCardComponent testing', () => {
     expect(root().querySelectorAll('.profile-card__star[data-fill="half"]')).toHaveLength(1);
     expect(root().textContent).not.toContain('Навыки');
     expect(root().textContent).not.toContain('Ставка не указана');
+
+    fixture.componentRef.setInput('skills', ['TypeScript']);
+    fixture.detectChanges();
+
+    expect(root().textContent).not.toContain('Навыки');
+    expect(root().textContent).not.toContain('TypeScript');
   });
 
   it('should render the freelancer rate and skills placeholder', () => {
@@ -66,6 +72,24 @@ describe('ProfileCardComponent testing', () => {
     expect(root().textContent).toContain('2 500 ₽/час');
     expect(root().textContent).toContain('Навыки');
     expect(root().textContent).toContain('Навыки пока не указаны');
+    expect(root().querySelector('.profile-card__skill-list')).toBeNull();
+  });
+
+  it('should render freelancer skill names', () => {
+    setProfileInputs();
+    fixture.componentRef.setInput('roleLabel', 'Исполнитель');
+    fixture.componentRef.setInput('isFreelancer', true);
+    fixture.componentRef.setInput('rateLabel', '2 500 ₽/час');
+    fixture.componentRef.setInput('skills', ['TypeScript', 'Angular']);
+    fixture.detectChanges();
+
+    const skills = Array.from(
+      root().querySelectorAll('.profile-card__skill'),
+      (element) => element.textContent?.trim(),
+    );
+
+    expect(skills).toEqual(['TypeScript', 'Angular']);
+    expect(root().textContent).not.toContain('Навыки пока не указаны');
   });
 
   it('should mark freelancer skills unavailable while editing', () => {
@@ -73,10 +97,12 @@ describe('ProfileCardComponent testing', () => {
     fixture.componentRef.setInput('roleLabel', 'Исполнитель');
     fixture.componentRef.setInput('isFreelancer', true);
     fixture.componentRef.setInput('rateLabel', '2 500 ₽/час');
+    fixture.componentRef.setInput('skills', ['TypeScript']);
     fixture.componentRef.setInput('editing', true);
     fixture.detectChanges();
 
     expect(root().textContent).toContain('Навыки пока недоступны');
+    expect(root().textContent).not.toContain('TypeScript');
     expect(root().textContent).not.toContain('2 500 ₽/час');
     expect(root().textContent).not.toContain('Навыки пока не указаны');
   });

@@ -115,21 +115,55 @@ describe('ProfilePageComponent testing', () => {
     expect(card?.isFreelancer()).toBe(false);
   });
 
+  it('should hide skills when the customer response includes them', async () => {
+    const customer = createMockUserResponse({
+      ...profileUser,
+      skills: [{ id: 'b4252672-a116-41ee-b78c-d694b236db32', name: 'TypeScript' }],
+    });
+
+    await setup(sessionUser, of(customer));
+
+    expect(profileCard()?.skills()).toEqual([]);
+    expect(root().textContent).not.toContain('Навыки');
+    expect(root().textContent).not.toContain('TypeScript');
+  });
+
   it('should show the freelancer rate and skills from the profile response', async () => {
     const freelancer = createMockUserResponse({
       role: UserRole.Freelancer,
       rate: 2500,
       createdAt: '2026-09-04T10:00:00.000Z',
+      skills: [
+        { id: 'b4252672-a116-41ee-b78c-d694b236db32', name: 'TypeScript' },
+        { id: 'c5363783-b227-52ff-c89d-e805c347ec43', name: 'Angular' },
+      ],
     });
 
     await setup(sessionUser, of(freelancer));
 
     const card = profileCard();
     const formattedRate = `${new Intl.NumberFormat('ru-RU').format(2500)} ₽/час`;
+    const skills = Array.from(
+      root().querySelectorAll('.profile-card__skill'),
+      (element) => element.textContent?.trim(),
+    );
 
     expect(card?.isFreelancer()).toBe(true);
     expect(card?.rateLabel()).toBe(formattedRate);
+    expect(card?.skills()).toEqual(['TypeScript', 'Angular']);
     expect(root().textContent).toContain(formattedRate);
+    expect(skills).toEqual(['TypeScript', 'Angular']);
+  });
+
+  it('should show the empty freelancer skill label', async () => {
+    const freelancer = createMockUserResponse({
+      role: UserRole.Freelancer,
+      rate: null,
+      skills: [],
+    });
+
+    await setup(sessionUser, of(freelancer));
+
     expect(root().textContent).toContain('Навыки пока не указаны');
   });
 
@@ -199,5 +233,31 @@ describe('ProfilePageComponent testing', () => {
     });
     expect(setUser).toHaveBeenCalledWith(updatedUser);
     expect(profileCard()?.displayName()).toBe('Мария');
+  });
+
+  it('should keep loaded skills when the saved profile omits them', async () => {
+    const skills = [{ id: 'b4252672-a116-41ee-b78c-d694b236db32', name: 'TypeScript' }];
+    const freelancer = createMockUserResponse({
+      role: UserRole.Freelancer,
+      skills,
+    });
+    const updatedUser: UserResponse = {
+      ...freelancer,
+      firstName: 'Мария',
+    };
+    delete updatedUser.skills;
+
+    await setup(sessionUser, of(freelancer));
+    userApi.update.mockReturnValue(of(updatedUser));
+
+    findButtonByLabel(root(), 'Редактировать').click();
+    fixture.detectChanges();
+    setField(fixture, '#profile-first-name', 'Мария');
+    findButtonByLabel(root(), 'Сохранить').click();
+    fixture.detectChanges();
+
+    expect(setUser).toHaveBeenCalledWith({ ...updatedUser, skills });
+    expect(profileCard()?.skills()).toEqual(['TypeScript']);
+    expect(root().textContent).toContain('TypeScript');
   });
 });

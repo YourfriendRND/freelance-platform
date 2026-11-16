@@ -1,6 +1,6 @@
 import { createMockUserResponse } from '@freelance-platform/shared-mock';
 import { UserRole } from '@freelance-platform/shared-types';
-import { toProfileCardView } from './profile-page.model';
+import { keepProfileSkills, toProfileCardView } from './profile-page.model';
 
 describe('toProfileCardView testing', () => {
   it('should map profile fields from the user response', () => {
@@ -23,6 +23,7 @@ describe('toProfileCardView testing', () => {
       reviewsCount: 0,
       isFreelancer: false,
       rateLabel: 'Ставка не указана',
+      skills: [],
     });
   });
 
@@ -53,6 +54,66 @@ describe('toProfileCardView testing', () => {
     );
 
     expect(missingRate.rateLabel).toBe('Ставка не указана');
+  });
+
+  it('should map freelancer skill names in the given order', () => {
+    const view = toProfileCardView(
+      createMockUserResponse({
+        role: UserRole.Freelancer,
+        skills: [
+          { id: 'b4252672-a116-41ee-b78c-d694b236db32', name: 'TypeScript' },
+          { id: 'c5363783-b227-52ff-c89d-e805c347ec43', name: 'Angular' },
+        ],
+      }),
+    );
+
+    expect(view.skills).toEqual(['TypeScript', 'Angular']);
+  });
+
+  it('should use an empty skill list when skills are missing', () => {
+    const view = toProfileCardView(
+      createMockUserResponse({
+        role: UserRole.Freelancer,
+      }),
+    );
+
+    expect(view.skills).toEqual([]);
+  });
+
+  it('should hide skills for a customer', () => {
+    const view = toProfileCardView(
+      createMockUserResponse({
+        role: UserRole.Client,
+        skills: [{ id: 'b4252672-a116-41ee-b78c-d694b236db32', name: 'TypeScript' }],
+      }),
+    );
+
+    expect(view.skills).toEqual([]);
+  });
+
+  it('should keep loaded skills when the saved profile omits them', () => {
+    const previous = createMockUserResponse({
+      role: UserRole.Freelancer,
+      skills: [{ id: 'b4252672-a116-41ee-b78c-d694b236db32', name: 'TypeScript' }],
+    });
+    const next = createMockUserResponse({
+      role: UserRole.Freelancer,
+      firstName: 'Мария',
+    });
+
+    expect(keepProfileSkills(previous, next).skills).toEqual(previous.skills);
+    expect(keepProfileSkills(previous, next).firstName).toBe('Мария');
+  });
+
+  it('should prefer skills from the saved profile when they are present', () => {
+    const previous = createMockUserResponse({
+      skills: [{ id: 'b4252672-a116-41ee-b78c-d694b236db32', name: 'TypeScript' }],
+    });
+    const next = createMockUserResponse({
+      skills: [],
+    });
+
+    expect(keepProfileSkills(previous, next)).toBe(next);
   });
 
   it('should map bio, birthday and rating from the user response', () => {

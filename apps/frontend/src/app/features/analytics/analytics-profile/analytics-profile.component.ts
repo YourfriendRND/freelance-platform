@@ -17,6 +17,7 @@ export class AnalyticsProfileComponent {
   readonly rating = input.required<number>();
   readonly reviewsCount = input.required<number>();
   readonly rate = input<number | null>(null);
+  readonly skills = input<readonly string[]>([]);
 
   private readonly router = inject(Router);
   private readonly missingBioLabel = 'О себе пока ничего не указано';
@@ -39,9 +40,6 @@ export class AnalyticsProfileComponent {
   protected readonly completedLabel = '0 завершено';
 
   protected readonly rateLabel = computed(() => this.formatRate(this.rate()));
-
-  // TODO: Подставить навыки, когда бэкенд начнет их отдавать
-  protected readonly skillsLabel = 'Навыки не указаны';
 
   protected readonly initial = computed(() => {
     const [firstLetter] = this.displayName().trim();

@@ -40,6 +40,7 @@ describe('AnalyticsProfileComponent testing', () => {
       'Ставка не указана',
     );
     expect(text).toContain('Навыки не указаны');
+    expect(root().querySelectorAll('.analytics-profile__skill')).toHaveLength(1);
     expect(root().querySelector('.ui-button--muted')).not.toBeNull();
     expect(root().querySelectorAll('.analytics-profile__star[data-fill="full"]')).toHaveLength(4);
   });
@@ -56,6 +57,19 @@ describe('AnalyticsProfileComponent testing', () => {
     );
     expect(image?.getAttribute('src')).toBe('https://cdn.example/avatar.jpg');
     expect(image?.closest('.analytics-profile__avatar')?.textContent?.trim()).toBe('');
+  });
+
+  it('should render skill names in the given order', () => {
+    fixture.componentRef.setInput('skills', ['TypeScript', 'Angular']);
+    fixture.detectChanges();
+
+    const skills = Array.from(
+      root().querySelectorAll('.analytics-profile__skill'),
+      (element) => element.textContent?.trim(),
+    );
+
+    expect(skills).toEqual(['TypeScript', 'Angular']);
+    expect(root().textContent).not.toContain('Навыки не указаны');
   });
 
   it('should render the hourly rate from the user', () => {

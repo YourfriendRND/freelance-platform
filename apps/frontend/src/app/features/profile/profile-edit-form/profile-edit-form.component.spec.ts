@@ -86,12 +86,14 @@ describe('ProfileEditFormComponent testing', () => {
       rate: 2500,
       bio: user.bio,
       birthday: user.birthday,
+      skills: [{ id: 'b4252672-a116-41ee-b78c-d694b236db32', name: 'TypeScript' }],
     });
     fixture.componentRef.setInput('user', freelancer);
     fixture.detectChanges();
 
     expect(root().querySelector('#profile-rate')).not.toBeNull();
     expect(root().textContent).toContain('Навыки пока недоступны');
+    expect(root().textContent).not.toContain('TypeScript');
     expect(root().textContent).not.toContain('Добавить навык');
 
     setField(fixture, '#profile-rate', '1800');
