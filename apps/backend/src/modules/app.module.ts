@@ -7,7 +7,7 @@ import { AuthModule } from './auth/auth.module';
 import { TaskCategoryModule } from './task-category/task-category.module';
 import { TaskModule } from './task/task.module';
 import { TaskApplicationModule } from './task-application/task-application.module';
-import { SkillModule } from './skill/skill.module';
+import { SkillApiModule } from './skill-api/skill-api.module';
 
 @Module({
   imports: [
@@ -21,7 +21,7 @@ import { SkillModule } from './skill/skill.module';
     TaskCategoryModule,
     TaskModule,
     TaskApplicationModule,
-    SkillModule,
+    SkillApiModule,
   ],
 })
 export class AppModule {}

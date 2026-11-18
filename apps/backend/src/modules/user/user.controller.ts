@@ -24,19 +24,17 @@ export class UserController {
 
   @Get(':id')
   @ApiOperation({
-    description: 'Получение данных пользователя по его id'
+    description: 'Получение данных пользователя по его id',
   })
   @ApiOkResponse({
     description: 'Данные пользователя',
-    type: UserRdo
+    type: UserRdo,
   })
   @ApiNotFoundResponse({
     description: 'Пользователь не найден',
-    example: `Пользователь с "b4252672-a116-41ee-b78c-d694b236db32" не найден`
+    example: `Пользователь с "b4252672-a116-41ee-b78c-d694b236db32" не найден`,
   })
-  async findUser(
-    @Param('id', ParseUUIDPipe) id: string
-  ): Promise<UserRdo> {
+  async findUser(@Param('id', ParseUUIDPipe) id: string): Promise<UserRdo> {
     const user = await this.userService.findOne(id, { withSkills: true });
 
     return fillRdo(UserRdo, user);
@@ -46,7 +44,8 @@ export class UserController {
   @AuthCheck()
   @ApiOperation({
     summary: 'Редактирование профиля',
-    description: 'Меняет данные только своего профиля. Пустые поля в теле запроса не меняются, null очищает фамилию, описание, дату рождения и ставку',
+    description:
+      'Меняет данные только своего профиля. Пустые поля в теле запроса не меняются, null очищает фамилию, описание, дату рождения и ставку. Поле skills целиком заменяет набор навыков и доступно только исполнителю',
   })
   @ApiBody({ type: UpdateUserDto })
   @ApiOkResponse({
@@ -62,7 +61,8 @@ export class UserController {
     },
   })
   @ApiForbiddenResponse({
-    description: 'Недостаточно прав для изменения профиля',
+    description:
+      'Чужой профиль или сохранение навыков заказчиком. Навыки может сохранять только исполнитель',
     example: {
       statusCode: 403,
       message: 'Изменять профиль может только владелец',
