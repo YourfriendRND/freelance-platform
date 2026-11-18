@@ -1,5 +1,6 @@
 import { validate } from 'class-validator';
 import { UpdateUserDto } from '@freelance-platform/shared-dto';
+import { SKILL_NAME_MAX_LENGTH } from '@freelance-platform/shared-types';
 
 function createDto(data: Partial<UpdateUserDto>): UpdateUserDto {
   return Object.assign(new UpdateUserDto(), data);
@@ -30,6 +31,24 @@ describe('UpdateUserDto testing', () => {
     const errors = await validate(createDto({ rate: -1 }));
 
     expect(errors.some((error) => error.property === 'rate')).toBe(true);
+  });
+
+  it('should reject an empty skill name', async () => {
+    const errors = await validate(createDto({ skills: [''] }));
+    const [error] = errors;
+
+    expect(error?.property).toBe('skills');
+    expect(error?.constraints?.minLength).toBe('Название навыка не может быть пустым');
+  });
+
+  it('should reject a skill name longer than the limit', async () => {
+    const errors = await validate(createDto({ skills: ['a'.repeat(SKILL_NAME_MAX_LENGTH + 1)] }));
+    const [error] = errors;
+
+    expect(error?.property).toBe('skills');
+    expect(error?.constraints?.maxLength).toBe(
+      `Название навыка не длиннее ${SKILL_NAME_MAX_LENGTH} символов`,
+    );
   });
 
   it('should reject a null first name', async () => {

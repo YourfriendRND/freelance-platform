@@ -1,3 +1,4 @@
+export * from './skill.constants';
 export * from './skill';
 export * from './skill.db-row';
 export * from './skill.entity';

@@ -7,9 +7,7 @@ import { UserService } from './user.service';
 
 describe('UserService testing', () => {
   const saltWord = 'test-salt-word';
-  const authConfiguration = { saltWord } as ConstructorParameters<
-    typeof UserService
-  >[1];
+  const authConfiguration = { saltWord } as ConstructorParameters<typeof UserService>[1];
 
   let userRepository: {
     findById: ReturnType<typeof vi.fn>;
@@ -20,6 +18,7 @@ describe('UserService testing', () => {
   };
   let skillService: {
     findByUserId: ReturnType<typeof vi.fn>;
+    replaceForUser: ReturnType<typeof vi.fn>;
   };
   let service: UserService;
 
@@ -42,6 +41,7 @@ describe('UserService testing', () => {
     };
     skillService = {
       findByUserId: vi.fn(),
+      replaceForUser: vi.fn(),
     };
     delete user.skills;
 
@@ -108,9 +108,7 @@ describe('UserService testing', () => {
   it('should throw NotFoundException when user is missing', async () => {
     userRepository.findById.mockResolvedValue(null);
 
-    await expect(service.findOne('missing-id')).rejects.toBeInstanceOf(
-      NotFoundException,
-    );
+    await expect(service.findOne('missing-id')).rejects.toBeInstanceOf(NotFoundException);
   });
 
   describe('update', () => {
@@ -127,6 +125,8 @@ describe('UserService testing', () => {
       const result = await service.update(user.id, { firstName: 'Anna' }, authUser);
 
       expect(result).toBe(updated);
+      expect(result.skills).toBeUndefined();
+      expect(skillService.replaceForUser).not.toHaveBeenCalled();
       expect(userRepository.update).toHaveBeenCalledWith(user.id, { firstName: 'Anna' });
     });
 
@@ -145,6 +145,48 @@ describe('UserService testing', () => {
 
       expect(userRepository.update).not.toHaveBeenCalled();
       expect(userRepository.findById).not.toHaveBeenCalled();
+    });
+
+    it('should reject skills for a customer before writing the profile', async () => {
+      skillService.replaceForUser.mockRejectedValue(
+        new ForbiddenException('Навыки может сохранять только исполнитель'),
+      );
+
+      await expect(
+        service.update(user.id, { skills: ['TypeScript'], firstName: 'Anna' }, authUser),
+      ).rejects.toBeInstanceOf(ForbiddenException);
+
+      expect(userRepository.update).not.toHaveBeenCalled();
+      expect(userRepository.findById).not.toHaveBeenCalled();
+    });
+
+    it('should return the replaced skills for a freelancer', async () => {
+      const freelancer = new UserEntity({
+        ...user.toObject(),
+        role: UserRole.Freelancer,
+      });
+      const skills = [{ id: '1c2a8e14-5d93-4f1b-9b27-2e5d8c01f101', name: 'TypeScript' }];
+      const freelancerAuth: AuthUserPayload = {
+        user: freelancer,
+        sessionId: 'session-id',
+        token: 'token',
+      };
+      skillService.replaceForUser.mockResolvedValue(skills);
+      userRepository.findById.mockResolvedValue(freelancer);
+
+      const result = await service.update(
+        freelancer.id,
+        { skills: ['TypeScript'] },
+        freelancerAuth,
+      );
+
+      expect(skillService.replaceForUser).toHaveBeenCalledWith(
+        freelancer.id,
+        ['TypeScript'],
+        UserRole.Freelancer,
+      );
+      expect(userRepository.update).not.toHaveBeenCalled();
+      expect(result.skills).toEqual(skills);
     });
 
     it('should return the current user without writing an empty patch', async () => {

@@ -1,6 +1,16 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsInt, IsOptional, IsString, Max, MaxLength, Min, MinLength, ValidateIf } from 'class-validator';
-import { USER_RATE_MAX } from '@freelance-platform/shared-types';
+import {
+  IsArray,
+  IsInt,
+  IsOptional,
+  IsString,
+  Max,
+  MaxLength,
+  Min,
+  MinLength,
+  ValidateIf,
+} from 'class-validator';
+import { SKILL_NAME_MAX_LENGTH, USER_RATE_MAX } from '@freelance-platform/shared-types';
 import { IsBirthday } from './is-birthday.decorator';
 
 export class UpdateUserDto {
@@ -66,4 +76,22 @@ export class UpdateUserDto {
   @Min(0)
   @Max(USER_RATE_MAX)
   rate?: number | null;
+
+  @ApiProperty({
+    description: 'Навыки исполнителя. Список целиком заменяет текущий набор',
+    example: ['TypeScript', 'Angular'],
+    required: false,
+    type: [String],
+    minLength: 1,
+    maxLength: SKILL_NAME_MAX_LENGTH,
+  })
+  @ValidateIf((dto: UpdateUserDto) => dto.skills !== undefined)
+  @IsArray()
+  @IsString({ each: true })
+  @MinLength(1, { each: true, message: 'Название навыка не может быть пустым' })
+  @MaxLength(SKILL_NAME_MAX_LENGTH, {
+    each: true,
+    message: `Название навыка не длиннее ${SKILL_NAME_MAX_LENGTH} символов`,
+  })
+  skills?: string[];
 }

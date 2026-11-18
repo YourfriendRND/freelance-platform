@@ -1,7 +1,12 @@
 import { ForbiddenException, Injectable, NotFoundException, Inject } from '@nestjs/common';
 import { ConfigType } from '@nestjs/config';
 import { UserRepository } from './user.repository';
-import { AuthUserPayload, UpdateUserRecord, UserAuthCredentials, UserEntity } from '@freelance-platform/shared-types';
+import {
+  AuthUserPayload,
+  UpdateUserRecord,
+  UserAuthCredentials,
+  UserEntity,
+} from '@freelance-platform/shared-types';
 import { CreateUserDto, UpdateUserDto } from '@freelance-platform/shared-dto';
 import { authConfig } from '@freelance-platform/shared-config';
 import { hashPassword } from '../../common/hash-password';
@@ -35,7 +40,7 @@ export class UserService {
   }
 
   async findByEmail(email: string): Promise<UserEntity> {
-    const user = await this.userRepository.findByEmail(email)
+    const user = await this.userRepository.findByEmail(email);
 
     if (!user) {
       throw new NotFoundException(`Пользователь с "${email}" не найден`);
@@ -67,22 +72,36 @@ export class UserService {
   }
 
   async update(id: string, dto: UpdateUserDto, authUser: AuthUserPayload): Promise<UserEntity> {
-    const { user: { id: userId } } = authUser;
+    const {
+      user: { id: userId, role },
+    } = authUser;
 
     if (userId !== id) {
       throw new ForbiddenException('Изменять профиль может только владелец');
     }
 
+    const { skills: skillNames } = dto;
+    const skills =
+      skillNames === undefined
+        ? undefined
+        : await this.skillService.replaceForUser(userId, skillNames, role);
     const patch = this.toUpdateRecord(dto);
+    const hasProfilePatch = Object.keys(patch).length > 0;
 
-    if (!Object.keys(patch).length) {
+    if (!hasProfilePatch && skills === undefined) {
       return this.findOne(id);
     }
 
-    const user = await this.userRepository.update(id, patch);
+    const user = hasProfilePatch
+      ? await this.userRepository.update(id, patch)
+      : await this.userRepository.findById(id);
 
     if (!user) {
       throw new NotFoundException(`Пользователь с "${id}" не найден`);
+    }
+
+    if (skills !== undefined) {
+      user.skills = skills;
     }
 
     return user;
@@ -99,5 +118,4 @@ export class UserService {
       ...(rate !== undefined && { rate }),
     };
   }
-
 }

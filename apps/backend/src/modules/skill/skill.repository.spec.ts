@@ -1,3 +1,4 @@
+import { SKILL_SUGGESTION_LIMIT } from '@freelance-platform/shared-types';
 import { DatabaseClient } from '../../database/database.client';
 import { SkillRepository } from './skill.repository';
 
@@ -43,6 +44,60 @@ describe('SkillRepository findByUserId testing', () => {
 
     const result = await repository.findByUserId(userId);
 
+    expect(result).toEqual([]);
+  });
+
+  it('should return an exact match without a prefix search', async () => {
+    database.query.mockResolvedValue({ rows: [firstSkill] });
+
+    const result = await repository.findSuggestions('NodeJS');
+    const [sql, values] = database.query.mock.calls[0];
+
+    expect(database.query).toHaveBeenCalledTimes(1);
+    expect(sql).toContain('lower(name) = lower($1)');
+    expect(sql).not.toContain('LIKE');
+    expect(sql).not.toContain('created_by');
+    expect(values).toEqual(['NodeJS']);
+    expect(result).toEqual([{ id: firstSkill.id, name: firstSkill.name }]);
+  });
+
+  it('should limit prefix matches and escape like wildcards', async () => {
+    database.query.mockResolvedValueOnce({ rows: [] }).mockResolvedValueOnce({
+      rows: [firstSkill],
+    });
+
+    const result = await repository.findSuggestions('100%_node');
+    const [sql, values] = database.query.mock.calls[1];
+
+    expect(database.query).toHaveBeenCalledTimes(2);
+    expect(sql).toContain("LIKE lower($1) || '%'");
+    expect(sql).toContain("ESCAPE '\\'");
+    expect(sql).not.toContain('created_by');
+    expect(values).toEqual(['100\\%\\_node', SKILL_SUGGESTION_LIMIT]);
+    expect(result).toEqual([{ id: firstSkill.id, name: firstSkill.name }]);
+  });
+
+  it('should replace links and store the author only on insert', async () => {
+    database.query.mockResolvedValue({ rows: [firstSkill] });
+
+    const result = await repository.replaceForUser(userId, ['NodeJS']);
+    const [sql, values] = database.query.mock.calls[0];
+
+    expect(sql).toContain('DELETE FROM user_skills');
+    expect(sql).toContain('INSERT INTO skills (name, created_by)');
+    expect(sql).toContain('SELECT upserted.id, upserted.name');
+    expect(sql).not.toContain('upserted.created_by');
+    expect(values).toEqual([userId, ['NodeJS']]);
+    expect(result).toEqual([{ id: firstSkill.id, name: firstSkill.name }]);
+  });
+
+  it('should clear links when the next set is empty', async () => {
+    database.query.mockResolvedValue({ rows: [] });
+
+    const result = await repository.replaceForUser(userId, []);
+    const [, values] = database.query.mock.calls[0];
+
+    expect(values).toEqual([userId, []]);
     expect(result).toEqual([]);
   });
 });
