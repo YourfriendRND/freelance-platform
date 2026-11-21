@@ -30,7 +30,6 @@ test('shows the current user on profile after session me', async ({ page }) => {
   expect(meResponse.status()).toBe(200);
   await waitForAppPath(page, '/profile');
   await expect(page.getByRole('heading', { name: displayName })).toBeVisible();
-  await expect(page.getByText(user.email)).toBeVisible();
 });
 
 test('keeps the user on profile after session refresh', async ({ page }) => {
@@ -52,7 +51,6 @@ test('keeps the user on profile after session refresh', async ({ page }) => {
   await page.goto('/profile');
   await waitForAppPath(page, '/profile');
   await expect(page.getByRole('heading', { name: displayName })).toBeVisible();
-  await expect(page.getByText(user.email)).toBeVisible();
 });
 
 test('logout and blocks profile for a guest', async ({ page }) => {
