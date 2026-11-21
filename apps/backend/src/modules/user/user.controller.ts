@@ -10,7 +10,7 @@ import {
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
 import { UpdateUserDto } from '@freelance-platform/shared-dto';
-import { UserRdo } from '@freelance-platform/shared-rdo';
+import { PublicUserRdo, UserRdo } from '@freelance-platform/shared-rdo';
 import { AuthUserPayload } from '@freelance-platform/shared-types';
 import { fillRdo } from '../../common/fill-rdo';
 import { AuthCheck } from '../auth/decorators/auth-check.decorator';
@@ -22,22 +22,48 @@ import { UserService } from './user.service';
 export class UserController {
   constructor(private readonly userService: UserService) {}
 
-  @Get(':id')
+  @Get('me')
+  @AuthCheck()
   @ApiOperation({
-    description: 'Получение данных пользователя по его id',
+    summary: 'Личные данные',
+    description:
+      'Возвращает данные текущего пользователя по cookie-сессии, включая email. Если сессия отсутствует или просрочена - 401',
   })
   @ApiOkResponse({
-    description: 'Данные пользователя',
+    description: 'Личные данные текущего пользователя',
     type: UserRdo,
+  })
+  @ApiUnauthorizedResponse({
+    description: 'Сессия не найдена, cookie отсутствует или сессия просрочена',
+    example: {
+      statusCode: 401,
+      message: 'Пользователь не авторизован. Cookie не найден',
+      error: 'Unauthorized',
+    },
+  })
+  async getMe(@CurrentUser() authUser: AuthUserPayload): Promise<UserRdo> {
+    const { user } = authUser;
+    const profile = await this.userService.findOne(user.id, { withSkills: true });
+
+    return fillRdo(UserRdo, profile);
+  }
+
+  @Get(':id')
+  @ApiOperation({
+    description: 'Публичный профиль пользователя по его id. Email в ответе отсутствует',
+  })
+  @ApiOkResponse({
+    description: 'Публичный профиль пользователя',
+    type: PublicUserRdo,
   })
   @ApiNotFoundResponse({
     description: 'Пользователь не найден',
     example: `Пользователь с "b4252672-a116-41ee-b78c-d694b236db32" не найден`,
   })
-  async findUser(@Param('id', ParseUUIDPipe) id: string): Promise<UserRdo> {
+  async findUser(@Param('id', ParseUUIDPipe) id: string): Promise<PublicUserRdo> {
     const user = await this.userService.findOne(id, { withSkills: true });
 
-    return fillRdo(UserRdo, user);
+    return fillRdo(PublicUserRdo, user);
   }
 
   @Patch(':id')
