@@ -11,6 +11,7 @@ export type ProfileEditValue = {
 export function toProfileUpdateRecord(
   value: ProfileEditValue,
   isFreelancer: boolean,
+  skills: readonly string[] = [],
 ): UpdateUserRecord {
   const record: UpdateUserRecord = {
     firstName: value.firstName.trim(),
@@ -26,6 +27,7 @@ export function toProfileUpdateRecord(
   return {
     ...record,
     rate: parseRate(value.rate),
+    skills: [...skills],
   };
 }
 

@@ -75,5 +75,14 @@
         />
       }
     </div>
+
+    @if (profileData.isFreelancer) {
+      <app-profile-skills-editor
+        profileEditSkills
+        [skills]="skillNames()"
+        (skillAdded)="onSkillAdded($event)"
+        (skillRemoved)="onSkillRemoved($event)"
+      />
+    }
   </app-profile-card>
 </form>

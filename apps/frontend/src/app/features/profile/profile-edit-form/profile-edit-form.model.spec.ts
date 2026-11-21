@@ -29,8 +29,8 @@ describe('toProfileUpdateRecord testing', () => {
     });
   });
 
-  it('should keep a filled customer profile without a rate', () => {
-    expect(toProfileUpdateRecord(filledProfile, false)).toEqual({
+  it('should keep a filled customer profile without a rate or skills', () => {
+    expect(toProfileUpdateRecord(filledProfile, false, ['TypeScript'])).toEqual({
       firstName: 'Иван',
       lastName: 'Петров',
       bio: 'Ищу исполнителей',
@@ -38,9 +38,17 @@ describe('toProfileUpdateRecord testing', () => {
     });
   });
 
-  it('should send a freelancer rate as a number and clear an empty rate', () => {
-    expect(toProfileUpdateRecord(filledProfile, true).rate).toBe(2500);
-    expect(toProfileUpdateRecord({ ...filledProfile, rate: ' 0 ' }, true).rate).toBe(0);
+  it('should send a freelancer rate and the full skill list', () => {
+    expect(toProfileUpdateRecord(filledProfile, true, ['TypeScript', 'Angular'])).toEqual({
+      firstName: 'Иван',
+      lastName: 'Петров',
+      bio: 'Ищу исполнителей',
+      birthday: '1988-07-14',
+      rate: 2500,
+      skills: ['TypeScript', 'Angular'],
+    });
+    expect(toProfileUpdateRecord({ ...filledProfile, rate: ' 0 ' }, true, []).rate).toBe(0);
+    expect(toProfileUpdateRecord({ ...filledProfile, rate: '   ' }, true).skills).toEqual([]);
     expect(toProfileUpdateRecord({ ...filledProfile, rate: '   ' }, true).rate).toBeNull();
   });
 });

@@ -92,7 +92,7 @@ describe('ProfileCardComponent testing', () => {
     expect(root().textContent).not.toContain('Навыки пока не указаны');
   });
 
-  it('should mark freelancer skills unavailable while editing', () => {
+  it('should leave freelancer skills for the editor while editing', () => {
     setProfileInputs();
     fixture.componentRef.setInput('roleLabel', 'Исполнитель');
     fixture.componentRef.setInput('isFreelancer', true);
@@ -101,10 +101,12 @@ describe('ProfileCardComponent testing', () => {
     fixture.componentRef.setInput('editing', true);
     fixture.detectChanges();
 
-    expect(root().textContent).toContain('Навыки пока недоступны');
+    expect(root().textContent).toContain('Навыки');
+    expect(root().textContent).not.toContain('Навыки пока недоступны');
     expect(root().textContent).not.toContain('TypeScript');
     expect(root().textContent).not.toContain('2 500 ₽/час');
     expect(root().textContent).not.toContain('Навыки пока не указаны');
+    expect(root().querySelector('.profile-card__skill-list')).toBeNull();
   });
 
   it('should render empty bio and birthday labels', () => {

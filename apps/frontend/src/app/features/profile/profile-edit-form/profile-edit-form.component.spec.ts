@@ -1,6 +1,6 @@
 import { HttpErrorResponse } from '@angular/common/http';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { UserApi } from '@freelance-platform/client-api';
+import { SkillApi, UserApi } from '@freelance-platform/client-api';
 import { createMockUserResponse } from '@freelance-platform/shared-mock';
 import { UserResponse, UserRole } from '@freelance-platform/shared-types';
 import { of, throwError } from 'rxjs';
@@ -26,7 +26,10 @@ describe('ProfileEditFormComponent testing', () => {
 
     await TestBed.configureTestingModule({
       imports: [ProfileEditFormComponent],
-      providers: [{ provide: UserApi, useValue: { update } }],
+      providers: [
+        { provide: UserApi, useValue: { update } },
+        { provide: SkillApi, useValue: { findSuggestions: vi.fn(() => of([])) } },
+      ],
     }).compileComponents();
 
     fixture = TestBed.createComponent(ProfileEditFormComponent);
@@ -71,6 +74,7 @@ describe('ProfileEditFormComponent testing', () => {
     fixture.detectChanges();
 
     expect(root().querySelector('#profile-rate')).toBeNull();
+    expect(root().querySelector('#profile-skill-name')).toBeNull();
     expect(update).toHaveBeenCalledWith(user.id, {
       firstName: 'Иван',
       lastName: null,
@@ -80,7 +84,7 @@ describe('ProfileEditFormComponent testing', () => {
     expect(saved).toEqual(user);
   });
 
-  it('should send the freelancer rate and keep skills unavailable', () => {
+  it('should send the freelancer rate and selected skills', () => {
     const freelancer = createMockUserResponse({
       role: UserRole.Freelancer,
       rate: 2500,
@@ -92,9 +96,15 @@ describe('ProfileEditFormComponent testing', () => {
     fixture.detectChanges();
 
     expect(root().querySelector('#profile-rate')).not.toBeNull();
-    expect(root().textContent).toContain('Навыки пока недоступны');
-    expect(root().textContent).not.toContain('TypeScript');
-    expect(root().textContent).not.toContain('Добавить навык');
+    expect(root().querySelector('#profile-skill-name')).not.toBeNull();
+    expect(root().textContent).toContain('TypeScript');
+    expect(root().textContent).not.toContain('Навыки пока недоступны');
+
+    setField(fixture, '#profile-skill-name', 'Angular');
+    findButtonByLabel(root(), 'Добавить').click();
+    fixture.detectChanges();
+
+    expect(root().textContent).toContain('Angular');
 
     setField(fixture, '#profile-rate', '1800');
     findButtonByLabel(root(), 'Сохранить').click();
@@ -106,6 +116,7 @@ describe('ProfileEditFormComponent testing', () => {
       bio: 'Ищу исполнителей для своих проектов',
       birthday: '1988-07-14',
       rate: 1800,
+      skills: ['TypeScript', 'Angular'],
     });
   });
 
@@ -126,7 +137,7 @@ describe('ProfileEditFormComponent testing', () => {
 
     expect(update).toHaveBeenCalledWith(
       user.id,
-      expect.objectContaining({ rate: null }),
+      expect.objectContaining({ rate: null, skills: [] }),
     );
   });
 

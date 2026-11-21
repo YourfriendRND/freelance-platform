@@ -4,4 +4,5 @@ export type UpdateUserRecord = {
   bio?: string | null;
   birthday?: string | null;
   rate?: number | null;
+  skills?: string[];
 };
