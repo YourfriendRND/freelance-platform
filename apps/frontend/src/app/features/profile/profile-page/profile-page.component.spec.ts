@@ -3,7 +3,7 @@ import { signal } from '@angular/core';
 import { By } from '@angular/platform-browser';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
-import { UserApi } from '@freelance-platform/client-api';
+import { SkillApi, UserApi } from '@freelance-platform/client-api';
 import { AuthStore } from '@freelance-platform/client-state';
 import { createMockUserResponse, MOCK_USER_EMAIL } from '@freelance-platform/shared-mock';
 import { UserResponse, UserRole } from '@freelance-platform/shared-types';
@@ -58,6 +58,7 @@ describe('ProfilePageComponent testing', () => {
           },
         },
         { provide: UserApi, useValue: userApi },
+        { provide: SkillApi, useValue: { findSuggestions: vi.fn(() => of([])) } },
       ],
     }).compileComponents();
 
@@ -256,8 +257,47 @@ describe('ProfilePageComponent testing', () => {
     findButtonByLabel(root(), 'Сохранить').click();
     fixture.detectChanges();
 
+    expect(userApi.update).toHaveBeenCalledWith(
+      freelancer.id,
+      expect.objectContaining({ firstName: 'Мария', skills: ['TypeScript'] }),
+    );
     expect(setUser).toHaveBeenCalledWith({ ...updatedUser, skills });
     expect(profileCard()?.skills()).toEqual(['TypeScript']);
     expect(root().textContent).toContain('TypeScript');
+  });
+
+  it('should show skills returned with the saved profile', async () => {
+    const current = [{ id: 'b4252672-a116-41ee-b78c-d694b236db32', name: 'TypeScript' }];
+    const savedSkills = [
+      current[0],
+      { id: '5e9d3b22-7f66-4b1e-8d42-1c8f603b2112', name: 'Angular' },
+    ];
+    const freelancer = createMockUserResponse({
+      role: UserRole.Freelancer,
+      skills: current,
+    });
+    const updatedUser: UserResponse = {
+      ...freelancer,
+      skills: savedSkills,
+    };
+
+    await setup(sessionUser, of(freelancer));
+    userApi.update.mockReturnValue(of(updatedUser));
+
+    findButtonByLabel(root(), 'Редактировать').click();
+    fixture.detectChanges();
+    setField(fixture, '#profile-skill-name', 'Angular');
+    findButtonByLabel(root(), 'Добавить').click();
+    fixture.detectChanges();
+    findButtonByLabel(root(), 'Сохранить').click();
+    fixture.detectChanges();
+
+    expect(userApi.update).toHaveBeenCalledWith(
+      freelancer.id,
+      expect.objectContaining({ skills: ['TypeScript', 'Angular'] }),
+    );
+    expect(setUser).toHaveBeenCalledWith(updatedUser);
+    expect(profileCard()?.skills()).toEqual(['TypeScript', 'Angular']);
+    expect(root().textContent).toContain('Angular');
   });
 });
