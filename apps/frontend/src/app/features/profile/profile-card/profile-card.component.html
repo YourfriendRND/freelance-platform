@@ -187,9 +187,8 @@
       @if (isFreelancer()) {
         <div class="profile-card__skills">
           <h2 class="profile-card__skills-title">Навыки</h2>
-          <!-- TODO: Убрать @if (editing()), когда навыки можно будет редактировать -->
           @if (editing()) {
-            <p class="profile-card__skills-empty">Навыки пока недоступны</p>
+            <ng-content select="[profileEditSkills]" />
           } @else if (skills().length === 0) {
             <p class="profile-card__skills-empty">Навыки пока не указаны</p>
           } @else {

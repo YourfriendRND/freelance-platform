@@ -1,0 +1,86 @@
+<div class="profile-skills-editor__controls">
+  <div class="profile-skills-editor__field">
+    <input
+      id="profile-skill-name"
+      class="profile-skills-editor__input"
+      [class.profile-skills-editor__input--invalid]="draftError()"
+      type="text"
+      role="combobox"
+      placeholder="Добавить навык"
+      autocomplete="off"
+      aria-autocomplete="list"
+      [attr.aria-expanded]="showMenu()"
+      [attr.aria-controls]="showMenu() ? 'profile-skill-options' : null"
+      [attr.aria-invalid]="draftError() ? true : null"
+      [value]="query()"
+      (input)="onQueryInput($event)"
+      (keydown)="onQueryKeydown($event)"
+    />
+  </div>
+
+  @if (showMenu()) {
+    <ul id="profile-skill-options" class="profile-skills-editor__menu" role="listbox">
+      @for (option of options(); track option.name) {
+        <li role="presentation">
+          <button
+            type="button"
+            class="profile-skills-editor__option"
+            role="option"
+            [disabled]="option.added"
+            [attr.aria-selected]="option.added"
+            (click)="onSelect(option)"
+          >
+            <span>{{ option.name }}</span>
+            <span class="profile-skills-editor__option-state">
+              @if (option.added) {
+                ✓ {{ addedLabel }}
+              } @else {
+                {{ existingLabel }}
+              }
+            </span>
+          </button>
+        </li>
+      } @empty {
+        <li role="presentation">
+          <button
+            type="button"
+            class="profile-skills-editor__option"
+            role="option"
+            (click)="onAdd()"
+          >
+            {{ createLabel() }}
+          </button>
+        </li>
+      }
+    </ul>
+  }
+
+  <div class="profile-skills-editor__add">
+    <ui-button type="button" variant="muted" (clicked)="onAdd()">Добавить</ui-button>
+  </div>
+
+  <div class="profile-skills-editor__note">
+    <p class="profile-skills-editor__hint">{{ hint }}</p>
+    @if (draftError(); as message) {
+      <p class="profile-skills-editor__error" role="alert">{{ message }}</p>
+    }
+  </div>
+</div>
+
+@if (skills().length > 0) {
+  <ul class="profile-skills-editor__skills">
+    @for (skill of skills(); track skill) {
+      <li class="profile-skills-editor__skill">
+        <span>{{ skill }}</span>
+        <button
+          type="button"
+          class="profile-skills-editor__remove"
+          [attr.aria-label]="removeLabel(skill)"
+          (click)="onRemove(skill)"
+        >
+          ×
+        </button>
+      </li>
+    }
+  </ul>
+}

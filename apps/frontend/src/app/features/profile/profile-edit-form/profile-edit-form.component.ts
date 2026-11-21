@@ -5,6 +5,7 @@ import {
   DestroyRef,
   inject,
   input,
+  linkedSignal,
   OnInit,
   output,
   signal,
@@ -23,6 +24,7 @@ import {
 import { UiButtonComponent, UiTextFieldComponent } from '@freelance-platform/ui';
 import { finalize } from 'rxjs';
 import { ProfileCardComponent } from '../profile-card/profile-card.component';
+import { ProfileSkillsEditorComponent } from '../profile-skills-editor/profile-skills-editor.component';
 import { toProfileCardView } from '../profile-page/profile-page.model';
 import { toProfileUpdateRecord } from './profile-edit-form.model';
 import {
@@ -42,6 +44,7 @@ const PROFILE_SAVE_ERROR = 'Не удалось сохранить профил�
     UiButtonComponent,
     UiTextFieldComponent,
     ProfileCardComponent,
+    ProfileSkillsEditorComponent,
   ],
   templateUrl: './profile-edit-form.component.html',
   styleUrl: './profile-edit-form.component.scss',
@@ -59,6 +62,10 @@ export class ProfileEditFormComponent implements OnInit {
   protected readonly submitting = signal(false);
   protected readonly submitError = signal<string | null>(null);
   protected readonly view = computed(() => toProfileCardView(this.user()));
+  protected readonly skillNames = linkedSignal({
+    source: () => this.user().skills,
+    computation: (skills: UserResponse['skills']) => (skills ?? []).map((skill) => skill.name),
+  });
 
   protected readonly form = this.formBuilder.group({
     firstName: ['', [requiredTrimmed, trimmedLength(2, 255)]],
@@ -93,6 +100,7 @@ export class ProfileEditFormComponent implements OnInit {
     const body = toProfileUpdateRecord(
       this.form.getRawValue(),
       this.user().role === UserRole.Freelancer,
+      this.skillNames(),
     );
 
     this.submitting.set(true);
@@ -116,6 +124,14 @@ export class ProfileEditFormComponent implements OnInit {
 
   protected onCancel(): void {
     this.cancelled.emit();
+  }
+
+  protected onSkillAdded(name: string): void {
+    this.skillNames.update((skills) => [...skills, name]);
+  }
+
+  protected onSkillRemoved(name: string): void {
+    this.skillNames.update((skills) => skills.filter((skill) => skill !== name));
   }
 
   protected fieldError(controlName: keyof ProfileEditFormComponent['form']['controls']): string | null {
