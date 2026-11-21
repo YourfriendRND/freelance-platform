@@ -19,13 +19,12 @@ describe('User module e2e testing', () => {
       userId = joinRes.data.id;
     });
 
-    it('find: should return empty bio and birthday and hide the password', async () => {
+    it('find: should return a public profile without email and password', async () => {
       const userRes = await axios.get(`/api/users/${userId}`);
 
       expect(userRes.status).toBe(200);
       expect(userRes.data).toMatchObject({
         id: userId,
-        email,
         firstName: 'E2E',
         avatarUrl: null,
         verified: true,
@@ -34,12 +33,14 @@ describe('User module e2e testing', () => {
         rate: null,
         skills: [],
       });
+      expect(userRes.data).not.toHaveProperty('email');
       expect(userRes.data).not.toHaveProperty('password');
     });
   });
 
   describe('update own profile', () => {
     let ownerId: string;
+    let ownerEmail: string;
     let ownerCookie: string;
     let otherCookie: string;
 
@@ -48,6 +49,7 @@ describe('User module e2e testing', () => {
       const other = await joinAndLogin();
 
       ownerId = owner.userId;
+      ownerEmail = owner.email;
       ownerCookie = owner.sessionCookie;
       otherCookie = other.sessionCookie;
     });
@@ -104,15 +106,50 @@ describe('User module e2e testing', () => {
       expect(response.data).not.toHaveProperty('skills');
     });
 
-    it('find and me: should return the updated profile', async () => {
-      const profile = await axios.get(`/api/users/${ownerId}`);
-      const me = await axios.get('/api/auth/me', {
+    it('find: should hide email for the owner and for another user', async () => {
+      const ownProfile = await axios.get(`/api/users/${ownerId}`, {
+        headers: { Cookie: ownerCookie },
+      });
+      const otherProfile = await axios.get(`/api/users/${ownerId}`, {
+        headers: { Cookie: otherCookie },
+      });
+
+      expect(ownProfile.status).toBe(200);
+      expect(otherProfile.status).toBe(200);
+      expect(otherProfile.data).toMatchObject({
+        firstName: 'Мария',
+        avatarUrl: null,
+        verified: true,
+        bio: 'Делаю интерфейсы',
+        birthday: '1994-05-12',
+        rate: 2500,
+        skills: [],
+      });
+      expect(ownProfile.data).not.toHaveProperty('email');
+      expect(otherProfile.data).not.toHaveProperty('email');
+      expect(otherProfile.data).not.toHaveProperty('password');
+    });
+
+    it('me: should reject a request without a session', async () => {
+      const response = await axios.get('/api/users/me');
+
+      expect(response.status).toBe(401);
+      expect(response.data.message).toBe('Пользователь не авторизован. Cookie не найден');
+    });
+
+    it('me: should return personal data of the current user', async () => {
+      const me = await axios.get('/api/users/me', {
+        headers: { Cookie: ownerCookie },
+      });
+      const session = await axios.get('/api/auth/me', {
         headers: { Cookie: ownerCookie },
       });
 
-      expect(profile.status).toBe(200);
       expect(me.status).toBe(200);
-      expect(profile.data).toMatchObject({
+      expect(session.status).toBe(200);
+      expect(me.data).toMatchObject({
+        id: ownerId,
+        email: ownerEmail,
         firstName: 'Мария',
         avatarUrl: null,
         verified: true,
@@ -121,14 +158,11 @@ describe('User module e2e testing', () => {
         rate: 2500,
         skills: [],
       });
-      expect(me.data).toMatchObject({
+      expect(me.data).not.toHaveProperty('password');
+      expect(session.data).toMatchObject({
+        email: ownerEmail,
         firstName: 'Мария',
-        avatarUrl: null,
-        verified: true,
         bio: 'Делаю интерфейсы',
-        birthday: '1994-05-12',
-        rate: 2500,
-        skills: [],
       });
     });
   });

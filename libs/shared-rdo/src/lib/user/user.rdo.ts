@@ -4,20 +4,13 @@ import { UserRole } from '@freelance-platform/shared-types';
 import { formatBirthday } from './format-birthday';
 import { UserSkillRdo } from './user-skill.rdo';
 
-export class UserRdo {
+export class PublicUserRdo {
   @Expose()
   @ApiProperty({
     description: 'Идентификатор пользователя',
     example: 'b4252672-a116-41ee-b78c-d694b236db32'
   })
   id?: string;
-
-  @Expose()
-  @ApiProperty({
-    description: 'Email пользователя',
-    example: 'example_username@example.com'
-  })
-  email?: string;
 
   @Expose()
   @ApiProperty({
@@ -114,4 +107,13 @@ export class UserRdo {
     required: false,
   })
   skills?: UserSkillRdo[];
+}
+
+export class UserRdo extends PublicUserRdo {
+  @Expose()
+  @ApiProperty({
+    description: 'Email пользователя',
+    example: 'example_username@example.com'
+  })
+  email?: string;
 }

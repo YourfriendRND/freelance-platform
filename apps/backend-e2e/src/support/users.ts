@@ -30,6 +30,7 @@ export async function joinAndLogin(role: UserRole = UserRole.Client) {
 
   return {
     userId: joinRes.data.id as string,
+    email,
     sessionCookie: toCookieHeader(loginRes.headers['set-cookie']),
   };
 }

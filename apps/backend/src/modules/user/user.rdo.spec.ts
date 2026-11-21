@@ -1,4 +1,4 @@
-import { UserRdo } from '@freelance-platform/shared-rdo';
+import { PublicUserRdo, UserRdo } from '@freelance-platform/shared-rdo';
 import { UserEntity, UserRole } from '@freelance-platform/shared-types';
 import { fillRdo } from '../../common/fill-rdo';
 
@@ -85,10 +85,20 @@ describe('UserRdo testing', () => {
     expect(serialized).not.toHaveProperty('skills');
   });
 
-  it('should hide the password', () => {
+  it('should hide the password and keep the email', () => {
     const result = fillRdo(UserRdo, user);
 
+    expect(result.email).toBe('user@example.com');
     expect(result).not.toHaveProperty('password');
+  });
+
+  it('should hide email and password in the public profile', () => {
+    const result = fillRdo(PublicUserRdo, user);
+
+    expect(result).not.toHaveProperty('email');
+    expect(result).not.toHaveProperty('password');
+    expect(result.firstName).toBe('Ivan');
+    expect(result.bio).toBe('Верстаю интерфейсы');
   });
 
   it('should stub avatarUrl as null and verified as true', () => {
