@@ -69,7 +69,7 @@ export class ProfilePageComponent {
   });
 
   constructor() {
-    this.loadProfile(this.authStore.user()?.id ?? null);
+    this.loadProfile();
   }
 
   protected onEdit(): void {
@@ -89,10 +89,10 @@ export class ProfilePageComponent {
     this.isEditing.set(false);
   }
 
-  private loadProfile(userId: string | null): void {
+  private loadProfile(): void {
     const request = ++this.requestId;
 
-    if (!userId) {
+    if (!this.authStore.user()) {
       this.profileUser.set(null);
       this.isLoading.set(false);
       this.errorMessage.set(PROFILE_LOAD_ERROR);
@@ -103,7 +103,7 @@ export class ProfilePageComponent {
     this.errorMessage.set(null);
 
     this.userApi
-      .findOne(userId)
+      .me()
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (user) => {
