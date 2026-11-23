@@ -9,6 +9,10 @@ export class UserApi {
   private readonly http = inject(HttpClient);
   private readonly apiBaseUrl = inject(API_BASE_URL);
 
+  me(): Observable<UserResponse> {
+    return this.http.get<UserResponse>(`${this.apiBaseUrl}/users/me`);
+  }
+
   findOne(id: string): Observable<UserResponse> {
     return this.http.get<UserResponse>(`${this.apiBaseUrl}/users/${id}`);
   }

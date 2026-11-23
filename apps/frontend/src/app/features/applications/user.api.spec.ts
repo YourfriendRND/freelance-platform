@@ -33,6 +33,22 @@ describe('UserApi testing', () => {
     http.verify();
   });
 
+  it('should request the personal profile', () => {
+    let result: UserResponse | null = null;
+
+    api.me().subscribe((response) => {
+      result = response;
+    });
+
+    const request = http.expectOne('/api/users/me');
+
+    expect(request.request.method).toBe('GET');
+
+    request.flush(user);
+
+    expect(result).toEqual(user);
+  });
+
   it('should request a user by id', () => {
     let result: UserResponse | null = null;
 
