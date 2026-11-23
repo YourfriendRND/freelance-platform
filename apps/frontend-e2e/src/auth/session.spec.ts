@@ -17,19 +17,27 @@ test('shows the current user on profile after session me', async ({ page }) => {
     password: user.password,
   });
 
-  const meResponsePromise = page.waitForResponse(
+  const sessionResponsePromise = page.waitForResponse(
     (response) =>
       response.url().includes('/api/auth/me') &&
+      response.request().method() === 'GET',
+  );
+  const profileResponsePromise = page.waitForResponse(
+    (response) =>
+      response.url().includes('/api/users/me') &&
       response.request().method() === 'GET',
   );
 
   await page.goto('/profile');
 
-  const meResponse = await meResponsePromise;
+  const sessionResponse = await sessionResponsePromise;
+  const profileResponse = await profileResponsePromise;
 
-  expect(meResponse.status()).toBe(200);
+  expect(sessionResponse.status()).toBe(200);
+  expect(profileResponse.status()).toBe(200);
   await waitForAppPath(page, '/profile');
   await expect(page.getByRole('heading', { name: displayName })).toBeVisible();
+  await expect(page.getByText(user.email)).toBeVisible();
 });
 
 test('keeps the user on profile after session refresh', async ({ page }) => {
@@ -48,9 +56,20 @@ test('keeps the user on profile after session refresh', async ({ page }) => {
 
   expect(refreshResponse.status()).toBe(200);
 
+  const profileResponsePromise = page.waitForResponse(
+    (response) =>
+      response.url().includes('/api/users/me') &&
+      response.request().method() === 'GET',
+  );
+
   await page.goto('/profile');
+
+  const profileResponse = await profileResponsePromise;
+
+  expect(profileResponse.status()).toBe(200);
   await waitForAppPath(page, '/profile');
   await expect(page.getByRole('heading', { name: displayName })).toBeVisible();
+  await expect(page.getByText(user.email)).toBeVisible();
 });
 
 test('logout and blocks profile for a guest', async ({ page }) => {

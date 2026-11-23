@@ -17,7 +17,7 @@ describe('ProfilePageComponent testing', () => {
   let fixture: ComponentFixture<ProfilePageComponent>;
   let setUser: ReturnType<typeof vi.fn>;
   let userApi: {
-    findOne: ReturnType<typeof vi.fn>;
+    me: ReturnType<typeof vi.fn>;
     update: ReturnType<typeof vi.fn>;
   };
 
@@ -40,7 +40,7 @@ describe('ProfilePageComponent testing', () => {
   ): Promise<void> {
     setUser = vi.fn();
     userApi = {
-      findOne: vi.fn(() => response),
+      me: vi.fn(() => response),
       update: vi.fn(() => of(profileUser)),
     };
 
@@ -86,13 +86,13 @@ describe('ProfilePageComponent testing', () => {
     expect(activeItem?.textContent).toContain('Профиль');
   });
 
-  it('should load the profile by the session id', async () => {
+  it('should load the personal profile', async () => {
     await setup(sessionUser);
 
     const card = profileCard();
 
-    expect(userApi.findOne).toHaveBeenCalledTimes(1);
-    expect(userApi.findOne).toHaveBeenCalledWith(sessionUser.id);
+    expect(userApi.me).toHaveBeenCalledTimes(1);
+    expect(userApi.me).toHaveBeenCalledWith();
     expect(card?.displayName()).toBe('Иван Петров');
     expect(card?.email()).toBe(MOCK_USER_EMAIL);
     expect(card?.roleLabel()).toBe('Заказчик');
@@ -168,10 +168,10 @@ describe('ProfilePageComponent testing', () => {
     expect(root().textContent).toContain('Навыки пока не указаны');
   });
 
-  it('should skip the request when the session has no user id', async () => {
+  it('should skip the request when the session has no user', async () => {
     await setup(null);
 
-    expect(userApi.findOne).not.toHaveBeenCalled();
+    expect(userApi.me).not.toHaveBeenCalled();
     expect(profileCard()).toBeNull();
     expect(root().textContent).toContain('Не удалось загрузить профиль');
   });
@@ -188,7 +188,8 @@ describe('ProfilePageComponent testing', () => {
       ),
     );
 
-    expect(userApi.findOne).toHaveBeenCalledWith(sessionUser.id);
+    expect(userApi.me).toHaveBeenCalledTimes(1);
+    expect(userApi.me).toHaveBeenCalledWith();
     expect(profileCard()).toBeNull();
     expect(root().querySelector('app-profile-statistics')).toBeNull();
     expect(root().textContent).toContain('Пользователь не найден');
