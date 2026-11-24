@@ -12,6 +12,7 @@ import {
 } from '@freelance-platform/shared-dto';
 import {
   AuthUserPayload,
+  ReviewStats,
   TaskApplicationEntity,
   TaskApplicationStats,
   TaskApplicationStatus,
@@ -19,6 +20,7 @@ import {
   UpdateTaskApplicationRecord,
   UserRole,
 } from '@freelance-platform/shared-types';
+import { ReviewService } from '../review/review.service';
 import { TaskService } from '../task/task.service';
 import { DuplicateTaskApplicationError } from './errors';
 import { TaskApplicationRepository } from './task-application.repository';
@@ -28,6 +30,7 @@ export class TaskApplicationService {
   constructor(
     private readonly taskApplicationRepository: TaskApplicationRepository,
     private readonly taskService: TaskService,
+    private readonly reviewService: ReviewService,
   ) {}
 
   async findAll(
@@ -42,7 +45,25 @@ export class TaskApplicationService {
         throw new BadRequestException('Параметр taskId доступен только заказчику');
       }
 
-      return this.taskApplicationRepository.findAllByPerformerId(userId);
+      const applications = await this.taskApplicationRepository.findAllByPerformerId(userId);
+
+      const statsByUserId = await this.reviewStatsByUser(applications);
+
+      applications.forEach((application) => {
+        const people = [application.user, application.task?.author];
+
+        people.forEach((person) => {
+          if (!person?.id) {
+            return;
+          }
+
+          const current = statsByUserId.get(person.id);
+          person.rating = current?.rating ?? 0;
+          person.reviewsCount = current?.reviewsCount ?? 0;
+        });
+      });
+
+      return applications;
     }
 
     if (taskId !== undefined) {
@@ -55,13 +76,49 @@ export class TaskApplicationService {
         throw new NotFoundException(`Задача с "${taskId}" не найдена`);
       }
 
-      return this.taskApplicationRepository.findAllByCustomerIdAndTaskId(
+      const applications = await this.taskApplicationRepository.findAllByCustomerIdAndTaskId(
         userId,
         taskId,
       );
+
+      const statsByUserId = await this.reviewStatsByUser(applications);
+
+      applications.forEach((application) => {
+        const people = [application.user, application.task?.author];
+
+        people.forEach((person) => {
+          if (!person?.id) {
+            return;
+          }
+
+          const current = statsByUserId.get(person.id);
+          person.rating = current?.rating ?? 0;
+          person.reviewsCount = current?.reviewsCount ?? 0;
+        });
+      });
+
+      return applications;
     }
 
-    return this.taskApplicationRepository.findAllByCustomerId(userId);
+    const applications = await this.taskApplicationRepository.findAllByCustomerId(userId);
+
+    const statsByUserId = await this.reviewStatsByUser(applications);
+
+    applications.forEach((application) => {
+      const people = [application.user, application.task?.author];
+
+      people.forEach((person) => {
+        if (!person?.id) {
+          return;
+        }
+
+        const current = statsByUserId.get(person.id);
+        person.rating = current?.rating ?? 0;
+        person.reviewsCount = current?.reviewsCount ?? 0;
+      });
+    });
+
+    return applications;
   }
 
   async getStats(authUser: AuthUserPayload): Promise<TaskApplicationStats> {
@@ -92,6 +149,19 @@ export class TaskApplicationService {
       throw new ForbiddenException('Нет доступа к этому отклику');
     }
 
+    const statsByUserId = await this.reviewStatsByUser([application]);
+    const people = [application.user, application.task?.author];
+
+    people.forEach((person) => {
+      if (!person?.id) {
+        return;
+      }
+
+      const current = statsByUserId.get(person.id);
+      person.rating = current?.rating ?? 0;
+      person.reviewsCount = current?.reviewsCount ?? 0;
+    });
+
     return application;
   }
 
@@ -117,13 +187,27 @@ export class TaskApplicationService {
     }
 
     try {
-      return await this.taskApplicationRepository.create({
+      const created = await this.taskApplicationRepository.create({
         taskId,
         performerId,
         message,
         ...(proposedPrice !== undefined && { proposedPrice }),
         ...(timeline !== undefined && { timeline }),
       });
+      const statsByUserId = await this.reviewStatsByUser([created]);
+      const people = [created.user, created.task?.author];
+
+      people.forEach((person) => {
+        if (!person?.id) {
+          return;
+        }
+
+        const current = statsByUserId.get(person.id);
+        person.rating = current?.rating ?? 0;
+        person.reviewsCount = current?.reviewsCount ?? 0;
+      });
+
+      return created;
     } catch (error) {
       if (error instanceof DuplicateTaskApplicationError) {
         throw new ConflictException('Вы уже откликались на эту задачу');
@@ -160,7 +244,39 @@ export class TaskApplicationService {
       throw new NotFoundException(`Отклик с "${id}" не найден`);
     }
 
+    const statsByUserId = await this.reviewStatsByUser([updatedApplication]);
+    const people = [updatedApplication.user, updatedApplication.task?.author];
+
+    people.forEach((person) => {
+      if (!person?.id) {
+        return;
+      }
+
+      const current = statsByUserId.get(person.id);
+      person.rating = current?.rating ?? 0;
+      person.reviewsCount = current?.reviewsCount ?? 0;
+    });
+
     return updatedApplication;
+  }
+
+  private async reviewStatsByUser(
+    applications: TaskApplicationEntity[],
+  ): Promise<Map<string, ReviewStats>> {
+    const userIds = applications.flatMap((application) => [
+      ...(application.user?.id ? [application.user.id] : []),
+      ...(application.task?.author?.id ? [application.task.author.id] : []),
+    ]);
+    const stats = await this.reviewService.getStatsByUserIds(userIds);
+
+    const statsByUserId = new Map<string, ReviewStats>();
+
+    stats.forEach((item) => {
+      const { userId, rating, reviewsCount } = item;
+      statsByUserId.set(userId, { rating, reviewsCount });
+    });
+
+    return statsByUserId;
   }
 
   private buildPerformerUpdate(

@@ -2,6 +2,7 @@ import { ForbiddenException, NotFoundException } from '@nestjs/common';
 import { AuthUserPayload, UserEntity, UserRole } from '@freelance-platform/shared-types';
 
 import { SkillService } from '../skill/skill.service';
+import { ReviewService } from '../review/review.service';
 import { UserRepository } from './user.repository';
 import { UserService } from './user.service';
 
@@ -19,6 +20,9 @@ describe('UserService testing', () => {
   let skillService: {
     findByUserId: ReturnType<typeof vi.fn>;
     replaceForUser: ReturnType<typeof vi.fn>;
+  };
+  let reviewService: {
+    getStats: ReturnType<typeof vi.fn>;
   };
   let service: UserService;
 
@@ -43,12 +47,16 @@ describe('UserService testing', () => {
       findByUserId: vi.fn(),
       replaceForUser: vi.fn(),
     };
+    reviewService = {
+      getStats: vi.fn().mockResolvedValue({ rating: 0, reviewsCount: 0 }),
+    };
     delete user.skills;
 
     service = new UserService(
       userRepository as unknown as UserRepository,
       authConfiguration,
       skillService as unknown as SkillService,
+      reviewService as unknown as ReviewService,
     );
   });
 
@@ -102,6 +110,7 @@ describe('UserService testing', () => {
     const result = await service.findOne(user.id);
 
     expect(skillService.findByUserId).not.toHaveBeenCalled();
+    expect(reviewService.getStats).toHaveBeenCalledWith(user.id);
     expect(result.skills).toBeUndefined();
   });
 

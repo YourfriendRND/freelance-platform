@@ -13,6 +13,7 @@ import {
   TaskStatus,
   UserRole,
 } from '@freelance-platform/shared-types';
+import { ReviewService } from '../review/review.service';
 import { TaskCategoryService } from '../task-category/task-category.service';
 import { TaskRepository } from './task.repository';
 
@@ -21,6 +22,7 @@ export class TaskService {
   constructor(
     private readonly taskRepository: TaskRepository,
     private readonly taskCategoryService: TaskCategoryService,
+    private readonly reviewService: ReviewService,
   ) {}
 
   async create(dto: CreateTaskDto, authUser: AuthUserPayload): Promise<TaskEntity> {
@@ -42,7 +44,7 @@ export class TaskService {
 
     await this.taskCategoryService.findOne(categoryId);
 
-    return this.taskRepository.create({
+    const task = await this.taskRepository.create({
       title,
       description,
       status: status ?? TaskStatus.Draft,
@@ -53,6 +55,15 @@ export class TaskService {
       customerId,
       categoryId,
     });
+    const { author } = task;
+
+    if (author?.id) {
+      const { rating, reviewsCount } = await this.reviewService.getStats(author.id);
+      author.rating = rating;
+      author.reviewsCount = reviewsCount;
+    }
+
+    return task;
   }
 
   async findAll(
@@ -70,11 +81,29 @@ export class TaskService {
       limit,
     };
 
-    if (authUser?.user.role === UserRole.Freelancer) {
-      return this.taskRepository.findAll(filters, authUser.user.id);
+    const foundTasks = authUser?.user.role === UserRole.Freelancer
+      ? await this.taskRepository.findAll(filters, authUser.user.id)
+      : await this.taskRepository.findAll(filters);
+    const authorIds = foundTasks.items.flatMap((task) => (task.author?.id ? [task.author.id] : []));
+
+    if (authorIds.length > 0) {
+      const stats = await this.reviewService.getStatsByUserIds(authorIds);
+      const statsByUserId = new Map(stats.map((item) => [item.userId, item]));
+
+      foundTasks.items.forEach((task) => {
+        const { author } = task;
+
+        if (!author?.id) {
+          return;
+        }
+
+        const current = statsByUserId.get(author.id);
+        author.rating = current?.rating ?? 0;
+        author.reviewsCount = current?.reviewsCount ?? 0;
+      });
     }
 
-    return this.taskRepository.findAll(filters);
+    return foundTasks;
   }
 
   async findAllByCustomer(
@@ -89,7 +118,7 @@ export class TaskService {
 
     const { categoryId, status, budgetMin, budgetMax, sort, page, limit } = query;
 
-    return this.taskRepository.findAllByCustomer(customerId, {
+    const customerTasks = await this.taskRepository.findAllByCustomer(customerId, {
       categoryId,
       status,
       budgetMin,
@@ -98,6 +127,26 @@ export class TaskService {
       page,
       limit,
     });
+    const authorIds = customerTasks.items.flatMap((task) => (task.author?.id ? [task.author.id] : []));
+
+    if (authorIds.length > 0) {
+      const stats = await this.reviewService.getStatsByUserIds(authorIds);
+      const statsByUserId = new Map(stats.map((item) => [item.userId, item]));
+
+      customerTasks.items.forEach((task) => {
+        const { author } = task;
+
+        if (!author?.id) {
+          return;
+        }
+
+        const current = statsByUserId.get(author.id);
+        author.rating = current?.rating ?? 0;
+        author.reviewsCount = current?.reviewsCount ?? 0;
+      });
+    }
+
+    return customerTasks;
   }
 
   async getCustomerStats(authUser: AuthUserPayload): Promise<CustomerTaskStats> {
@@ -122,6 +171,14 @@ export class TaskService {
     }
 
     if (!authUser) {
+      const { author } = task;
+
+      if (author?.id) {
+        const { rating, reviewsCount } = await this.reviewService.getStats(author.id);
+        author.rating = rating;
+        author.reviewsCount = reviewsCount;
+      }
+
       return task;
     }
 
@@ -129,7 +186,16 @@ export class TaskService {
 
     await this.taskRepository.recordView(userId, id);
 
-    return this.getTask(id, performerId);
+    const viewed = await this.getTask(id, performerId);
+    const { author } = viewed;
+
+    if (author?.id) {
+      const { rating, reviewsCount } = await this.reviewService.getStats(author.id);
+      author.rating = rating;
+      author.reviewsCount = reviewsCount;
+    }
+
+    return viewed;
   }
 
   async getTask(id: string, performerId?: string): Promise<TaskEntity> {
@@ -170,6 +236,14 @@ export class TaskService {
 
     if (!task) {
       throw new NotFoundException(`Задача с "${id}" не найдена`);
+    }
+
+    const { author } = task;
+
+    if (author?.id) {
+      const { rating, reviewsCount } = await this.reviewService.getStats(author.id);
+      author.rating = rating;
+      author.reviewsCount = reviewsCount;
     }
 
     return task;

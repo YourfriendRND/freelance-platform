@@ -86,9 +86,9 @@ describe('TaskApplicationRepository testing', () => {
     expect(result.user).toMatchObject({
       id: applicationRow.performer_id,
       email: 'freelancer@example.com',
-      rating: 0,
-      reviewsCount: 0,
     });
+    expect(result.user?.rating).toBeUndefined();
+    expect(result.user?.reviewsCount).toBeUndefined();
   });
 
   it('should throw DuplicateTaskApplicationError on unique violation', async () => {
@@ -147,9 +147,9 @@ describe('TaskApplicationRepository testing', () => {
       firstName: 'Иван',
       role: 'freelancer',
       createdAt: userCreatedAt,
-      rating: 0,
-      reviewsCount: 0,
     });
+    expect(result?.user?.rating).toBeUndefined();
+    expect(result?.user?.reviewsCount).toBeUndefined();
     expect(result?.task).toBeUndefined();
   });
 
@@ -231,9 +231,9 @@ describe('TaskApplicationRepository testing', () => {
       email: 'client@example.com',
       firstName: 'Мария',
       role: 'client',
-      rating: 0,
-      reviewsCount: 0,
     });
+    expect(result?.application.task?.author?.rating).toBeUndefined();
+    expect(result?.application.task?.author?.reviewsCount).toBeUndefined();
     expect(result?.application.task?.author?.lastName).toBeUndefined();
   });
 
@@ -276,9 +276,9 @@ describe('TaskApplicationRepository testing', () => {
       lastName: 'Петров',
       role: 'freelancer',
       createdAt: userCreatedAt,
-      rating: 0,
-      reviewsCount: 0,
     });
+    expect(application.user?.rating).toBeUndefined();
+    expect(application.user?.reviewsCount).toBeUndefined();
   });
 
   it('should map the short task on the performer list', async () => {
@@ -326,9 +326,9 @@ describe('TaskApplicationRepository testing', () => {
       id: customerId,
       firstName: 'Мария',
       lastName: 'Соколова',
-      rating: 0,
-      reviewsCount: 0,
     });
+    expect(application.task?.author?.rating).toBeUndefined();
+    expect(application.task?.author?.reviewsCount).toBeUndefined();
   });
 
   it('should join tasks when listing by customer', async () => {
