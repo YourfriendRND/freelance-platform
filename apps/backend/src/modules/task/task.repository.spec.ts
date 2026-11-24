@@ -142,9 +142,9 @@ describe('TaskRepository findAll testing', () => {
       email: 'client@example.com',
       firstName: 'Иван',
       role: 'client',
-      rating: 0,
-      reviewsCount: 0,
     });
+    expect(task.author?.rating).toBeUndefined();
+    expect(task.author?.reviewsCount).toBeUndefined();
     expect(task.author?.lastName).toBeUndefined();
   });
 

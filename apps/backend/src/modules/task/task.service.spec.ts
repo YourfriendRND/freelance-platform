@@ -12,6 +12,7 @@ import {
 } from '@freelance-platform/shared-types';
 
 import { TaskCategoryService } from '../task-category/task-category.service';
+import { ReviewService } from '../review/review.service';
 import { TaskRepository } from './task.repository';
 import { TaskService } from './task.service';
 
@@ -28,6 +29,10 @@ describe('TaskService testing', () => {
   };
   let taskCategoryService: {
     findOne: ReturnType<typeof vi.fn>;
+  };
+  let reviewService: {
+    getStats: ReturnType<typeof vi.fn>;
+    getStatsByUserIds: ReturnType<typeof vi.fn>;
   };
   let service: TaskService;
 
@@ -103,10 +108,15 @@ describe('TaskService testing', () => {
     taskCategoryService = {
       findOne: vi.fn(),
     };
+    reviewService = {
+      getStats: vi.fn().mockResolvedValue({ rating: 0, reviewsCount: 0 }),
+      getStatsByUserIds: vi.fn().mockResolvedValue([]),
+    };
 
     service = new TaskService(
       taskRepository as unknown as TaskRepository,
       taskCategoryService as unknown as TaskCategoryService,
+      reviewService as unknown as ReviewService,
     );
   });
 
@@ -179,6 +189,7 @@ describe('TaskService testing', () => {
     const result = await service.findAll(query);
 
     expect(result).toBe(paginated);
+    expect(reviewService.getStatsByUserIds).not.toHaveBeenCalled();
     expect(taskRepository.findAll).toHaveBeenCalledWith({
       categoryId,
       status: TaskStatus.Open,
@@ -188,6 +199,17 @@ describe('TaskService testing', () => {
       page: 2,
       limit: 10,
     });
+  });
+
+  it('should load the author rating for a page of tasks in one query', async () => {
+    task.author = user;
+    const paginated = { items: [task], total: 1, page: 1, limit: 20 };
+    taskRepository.findAll.mockResolvedValue(paginated);
+
+    await service.findAll(new FindTasksQueryDto());
+
+    expect(reviewService.getStatsByUserIds).toHaveBeenCalledWith([user.id]);
+    delete task.author;
   });
 
   it('should pass performer id when the viewer is a freelancer', async () => {

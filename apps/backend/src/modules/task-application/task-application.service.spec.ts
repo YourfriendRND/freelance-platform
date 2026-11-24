@@ -11,6 +11,7 @@ import {
   UserRole,
 } from '@freelance-platform/shared-types';
 import { TaskService } from '../task/task.service';
+import { ReviewService } from '../review/review.service';
 import { DuplicateTaskApplicationError } from './errors';
 import { TaskApplicationRepository } from './task-application.repository';
 import { TaskApplicationService } from './task-application.service';
@@ -30,6 +31,9 @@ describe('TaskApplicationService testing', () => {
   };
   let taskService: {
     getTask: ReturnType<typeof vi.fn>;
+  };
+  let reviewService: {
+    getStatsByUserIds: ReturnType<typeof vi.fn>;
   };
   let service: TaskApplicationService;
 
@@ -145,10 +149,14 @@ describe('TaskApplicationService testing', () => {
     taskService = {
       getTask: vi.fn(),
     };
+    reviewService = {
+      getStatsByUserIds: vi.fn().mockResolvedValue([]),
+    };
 
     service = new TaskApplicationService(
       taskApplicationRepository as unknown as TaskApplicationRepository,
       taskService as unknown as TaskService,
+      reviewService as unknown as ReviewService,
     );
   });
 
@@ -159,7 +167,39 @@ describe('TaskApplicationService testing', () => {
 
     expect(result).toEqual([application]);
     expect(taskApplicationRepository.findAllByPerformerId).toHaveBeenCalledWith(performerId);
+    expect(reviewService.getStatsByUserIds).toHaveBeenCalledWith([]);
     expect(taskApplicationRepository.findAllByCustomerId).not.toHaveBeenCalled();
+  });
+
+  it('should attach rating for the performer and the task author in one query', async () => {
+    const listed = new TaskApplicationEntity({
+      id: applicationId,
+      taskId,
+      performerId,
+      message: 'Готов выполнить задачу',
+      status: TaskApplicationStatus.Pending,
+    });
+    listed.user = freelancerUser;
+    listed.task = new TaskEntity({
+      id: taskId,
+      title: openTask.title,
+      description: openTask.description,
+      status: TaskStatus.Open,
+      budgetMin: openTask.budgetMin,
+      budgetMax: openTask.budgetMax,
+      executionType: TaskExecutionType.Remote,
+      deadline: openTask.deadline,
+      customerId,
+      categoryId,
+    });
+    listed.task.author = clientUser;
+    taskApplicationRepository.findAllByCustomerIdAndTaskId.mockResolvedValue([listed]);
+    taskApplicationRepository.customerOwnsTask.mockResolvedValue(true);
+    const query = Object.assign(new FindTaskApplicationsQueryDto(), { taskId });
+
+    await service.findAll(query, clientAuthUser);
+
+    expect(reviewService.getStatsByUserIds).toHaveBeenCalledWith([freelancerUser.id, clientUser.id]);
   });
 
   it('should throw BadRequestException when freelancer passes taskId', async () => {
