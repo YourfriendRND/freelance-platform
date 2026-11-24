@@ -18,10 +18,9 @@ export class ShortPublicUserRdo {
 
   @Expose()
   @ApiProperty({
-    description: 'Фамилия пользователя',
+    description: 'Фамилия пользователя. Пустая строка, если фамилия не задана',
     example: 'Иванов',
-    nullable: true,
   })
-  @Transform(({ value }) => value ?? null)
-  lastName!: string | null;
+  @Transform(({ value }) => value ?? '')
+  lastName!: string;
 }

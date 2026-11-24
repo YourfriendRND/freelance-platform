@@ -44,9 +44,9 @@ describe('ReviewRdo testing', () => {
     expect(result).not.toHaveProperty('updatedAt');
   });
 
-  it('should return null when the author has no last name', () => {
+  it('should return an empty last name when the author has none', () => {
     const [result] = fillRdo(ReviewRdo, [reviewWithAuthor()]);
 
-    expect(result.author.lastName).toBeNull();
+    expect(result.author.lastName).toBe('');
   });
 });

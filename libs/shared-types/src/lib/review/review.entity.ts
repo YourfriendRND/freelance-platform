@@ -29,7 +29,7 @@ export class ReviewEntity extends Entity<IReview> {
       review.author = new UserEntity({
         id: row.author_id,
         firstName: row.author_first_name,
-        ...(row.author_last_name != null && { lastName: row.author_last_name }),
+        lastName: row.author_last_name ?? '',
       });
     }
 

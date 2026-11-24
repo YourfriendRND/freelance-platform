@@ -43,8 +43,7 @@ describe('ReviewRepository testing', () => {
     expect(review?.mark).toBe(5);
     expect(review?.authorId).toBe(clientId);
     expect(review?.targetId).toBe(freelancerId);
-    expect(review?.author).toMatchObject({ id: clientId, firstName: 'Иван' });
-    expect(review?.author?.lastName).toBeUndefined();
+    expect(review?.author).toMatchObject({ id: clientId, firstName: 'Иван', lastName: '' });
   });
 
   it('should return an empty list when the user has no reviews', async () => {
