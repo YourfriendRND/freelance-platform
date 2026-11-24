@@ -13,9 +13,8 @@ export class UserEntity extends Entity<IUser> {
   bio?: string;
   birthday?: Date;
   rate!: number | null;
-  // TODO: Добавить таблицы рейтинга и отзывов
-  rating = 0;
-  reviewsCount = 0;
+  rating?: number;
+  reviewsCount?: number;
   skills?: UserSkill[];
 
   constructor(props?: Partial<IUser>) {

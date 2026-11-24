@@ -8,6 +8,7 @@ import { TaskCategoryModule } from './task-category/task-category.module';
 import { TaskModule } from './task/task.module';
 import { TaskApplicationModule } from './task-application/task-application.module';
 import { SkillApiModule } from './skill-api/skill-api.module';
+import { ReviewModule } from './review/review.module';
 
 @Module({
   imports: [
@@ -22,6 +23,7 @@ import { SkillApiModule } from './skill-api/skill-api.module';
     TaskModule,
     TaskApplicationModule,
     SkillApiModule,
+    ReviewModule,
   ],
 })
 export class AppModule {}

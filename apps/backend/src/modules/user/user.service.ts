@@ -10,6 +10,7 @@ import {
 import { CreateUserDto, UpdateUserDto } from '@freelance-platform/shared-dto';
 import { authConfig } from '@freelance-platform/shared-config';
 import { hashPassword } from '../../common/hash-password';
+import { ReviewService } from '../review/review.service';
 import { SkillService } from '../skill/skill.service';
 
 type FindUserOptions = {
@@ -23,6 +24,7 @@ export class UserService {
     @Inject(authConfig.KEY)
     private readonly authConfiguration: ConfigType<typeof authConfig>,
     private readonly skillService: SkillService,
+    private readonly reviewService: ReviewService,
   ) {}
 
   async findOne(id: string, { withSkills = false }: FindUserOptions = {}): Promise<UserEntity> {
@@ -36,6 +38,10 @@ export class UserService {
       user.skills = await this.skillService.findByUserId(user.id);
     }
 
+    const { rating, reviewsCount } = await this.reviewService.getStats(user.id);
+    user.rating = rating;
+    user.reviewsCount = reviewsCount;
+
     return user;
   }
 
@@ -45,6 +51,10 @@ export class UserService {
     if (!user) {
       throw new NotFoundException(`Пользователь с "${email}" не найден`);
     }
+
+    const { rating, reviewsCount } = await this.reviewService.getStats(user.id);
+    user.rating = rating;
+    user.reviewsCount = reviewsCount;
 
     return user;
   }
@@ -62,13 +72,19 @@ export class UserService {
   async createUser(dto: CreateUserDto): Promise<UserEntity> {
     const passwordHash = await hashPassword(dto.password, this.authConfiguration.saltWord);
 
-    return this.userRepository.create({
+    const user = await this.userRepository.create({
       email: dto.email,
       firstName: dto.firstName,
       lastName: dto.lastName,
       passwordHash,
       role: dto.role,
     });
+
+    const { rating, reviewsCount } = await this.reviewService.getStats(user.id);
+    user.rating = rating;
+    user.reviewsCount = reviewsCount;
+
+    return user;
   }
 
   async update(id: string, dto: UpdateUserDto, authUser: AuthUserPayload): Promise<UserEntity> {
@@ -103,6 +119,10 @@ export class UserService {
     if (skills !== undefined) {
       user.skills = skills;
     }
+
+    const { rating, reviewsCount } = await this.reviewService.getStats(user.id);
+    user.rating = rating;
+    user.reviewsCount = reviewsCount;
 
     return user;
   }
