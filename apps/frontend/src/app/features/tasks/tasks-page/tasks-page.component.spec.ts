@@ -1,6 +1,7 @@
 import { computed, signal } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ActivatedRoute, convertToParamMap, provideRouter, Router } from '@angular/router';
+import { of } from 'rxjs';
 import { AuthStore, TaskStore } from '@freelance-platform/client-state';
 import {
   createMockTaskCategoryResponse,
@@ -105,8 +106,18 @@ describe('TasksPageComponent testing', () => {
     return fixture.nativeElement as HTMLElement;
   }
 
-  it('should load tasks on init', () => {
+  function filtersComponent(): TasksFiltersComponent {
+    return fixture.debugElement.query(By.directive(TasksFiltersComponent))
+      .componentInstance as TasksFiltersComponent;
+  }
+
+  it('should load the default list from an empty address', () => {
     expect(load).toHaveBeenCalledTimes(1);
+    expect(load).toHaveBeenCalledWith({
+      page: PAGINATION_DEFAULT_PAGE,
+      limit: PAGINATION_DEFAULT_LIMIT,
+      sort: TaskSort.Newest,
+    });
   });
 
   it('should render the loading state', () => {
@@ -175,42 +186,17 @@ describe('TasksPageComponent testing', () => {
     expect(root().textContent).not.toContain('Черновик');
   });
 
-  it('should request the next page from the store', () => {
+  it('should keep filters when the page changes and write them with replaceUrl', async () => {
     categories.set([category]);
     tasks.set([
       createTask('e16523f1-0be9-41bd-b3cb-0e8360ce967f', 'Первая задача'),
     ]);
     total.set(21);
-    listQuery.set({
-      page: PAGINATION_DEFAULT_PAGE,
-      limit: PAGINATION_DEFAULT_LIMIT,
-    });
     fixture.detectChanges();
 
-    findButtonByLabel(root(), '2').click();
-    fixture.detectChanges();
-
-    expect(load).toHaveBeenCalledWith({
-      page: 2,
-      limit: PAGINATION_DEFAULT_LIMIT,
-    });
-  });
-
-  it('should request a filtered list from the first page', () => {
-    categories.set([category]);
-    tasks.set([
-      createTask('e16523f1-0be9-41bd-b3cb-0e8360ce967f', 'Первая задача'),
-    ]);
-    total.set(21);
-    listQuery.set({
-      page: 2,
-      limit: PAGINATION_DEFAULT_LIMIT,
-    });
-    fixture.detectChanges();
-
-    const filters = fixture.debugElement.query(
-      By.directive(TasksFiltersComponent),
-    ).componentInstance as TasksFiltersComponent;
+    const router = TestBed.inject(Router);
+    const navigate = vi.spyOn(router, 'navigate');
+    const filters = filtersComponent();
 
     filters.filtersChange.emit({
       categoryId: category.id,
@@ -219,8 +205,63 @@ describe('TasksPageComponent testing', () => {
       budgetMax: TASKS_TEST_BUDGET_MAX,
       sort: TaskSort.Oldest,
     });
+    await fixture.whenStable();
 
-    expect(load).toHaveBeenCalledWith({
+    findButtonByLabel(root(), '2').click();
+    await fixture.whenStable();
+
+    expect(navigate).toHaveBeenLastCalledWith(
+      [],
+      expect.objectContaining({
+        replaceUrl: true,
+        queryParams: {
+          categoryId: category.id,
+          status: TaskStatus.Open,
+          budgetMin: String(TASKS_TEST_BUDGET_MIN),
+          budgetMax: String(TASKS_TEST_BUDGET_MAX),
+          sort: TaskSort.Oldest,
+          page: '2',
+        },
+      }),
+    );
+    expect(load).toHaveBeenLastCalledWith({
+      page: 2,
+      limit: PAGINATION_DEFAULT_LIMIT,
+      categoryId: category.id,
+      status: TaskStatus.Open,
+      budgetMin: TASKS_TEST_BUDGET_MIN,
+      budgetMax: TASKS_TEST_BUDGET_MAX,
+      sort: TaskSort.Oldest,
+    });
+  });
+
+  it('should reset the page and write a filtered address with replaceUrl', async () => {
+    const router = TestBed.inject(Router);
+    const navigate = vi.spyOn(router, 'navigate');
+
+    filtersComponent().filtersChange.emit({
+      categoryId: category.id,
+      status: TaskStatus.Open,
+      budgetMin: TASKS_TEST_BUDGET_MIN,
+      budgetMax: TASKS_TEST_BUDGET_MAX,
+      sort: TaskSort.Oldest,
+    });
+    await fixture.whenStable();
+
+    expect(navigate).toHaveBeenCalledWith(
+      [],
+      expect.objectContaining({
+        replaceUrl: true,
+        queryParams: {
+          categoryId: category.id,
+          status: TaskStatus.Open,
+          budgetMin: String(TASKS_TEST_BUDGET_MIN),
+          budgetMax: String(TASKS_TEST_BUDGET_MAX),
+          sort: TaskSort.Oldest,
+        },
+      }),
+    );
+    expect(load).toHaveBeenLastCalledWith({
       page: PAGINATION_DEFAULT_PAGE,
       limit: PAGINATION_DEFAULT_LIMIT,
       categoryId: category.id,
@@ -229,6 +270,31 @@ describe('TasksPageComponent testing', () => {
       budgetMax: TASKS_TEST_BUDGET_MAX,
       sort: TaskSort.Oldest,
     });
+  });
+
+  it('should write search into the address and keep it out of the api query', async () => {
+    const router = TestBed.inject(Router);
+    const navigate = vi.spyOn(router, 'navigate');
+
+    filtersComponent().filtersChange.emit({
+      search: 'логотип',
+      sort: TaskSort.Newest,
+    });
+    await fixture.whenStable();
+
+    expect(navigate).toHaveBeenCalledWith(
+      [],
+      expect.objectContaining({
+        replaceUrl: true,
+        queryParams: { search: 'логотип' },
+      }),
+    );
+    expect(load).toHaveBeenLastCalledWith({
+      page: PAGINATION_DEFAULT_PAGE,
+      limit: PAGINATION_DEFAULT_LIMIT,
+      sort: TaskSort.Newest,
+    });
+    expect(load.mock.calls.at(-1)?.[0]).not.toHaveProperty('search');
   });
 
   it('should fall back to a default category title', () => {
@@ -268,9 +334,7 @@ describe('TasksPageComponent category query', () => {
         {
           provide: ActivatedRoute,
           useValue: {
-            snapshot: {
-              queryParamMap: convertToParamMap({ categoryId: category.id }),
-            },
+            queryParamMap: of(convertToParamMap({ categoryId: category.id })),
           },
         },
         {
@@ -313,7 +377,63 @@ describe('TasksPageComponent category query', () => {
     ) as HTMLSelectElement;
 
     expect(load).toHaveBeenCalledTimes(1);
-    expect(load).toHaveBeenCalledWith({ categoryId: category.id });
+    expect(load).toHaveBeenCalledWith({
+      page: PAGINATION_DEFAULT_PAGE,
+      limit: PAGINATION_DEFAULT_LIMIT,
+      categoryId: category.id,
+      sort: TaskSort.Newest,
+    });
     expect(categorySelect.value).toBe(category.id);
+  });
+});
+
+describe('TasksPageComponent empty address', () => {
+  it('should ignore the previous store query when the address has no params', async () => {
+    const load = vi.fn();
+
+    await TestBed.configureTestingModule({
+      imports: [TasksPageComponent],
+      providers: [
+        provideRouter([]),
+        {
+          provide: AuthStore,
+          useValue: {
+            isAuthenticated: signal(false),
+            user: signal<UserResponse | null>(null),
+            logout: vi.fn(),
+          },
+        },
+        {
+          provide: TaskStore,
+          useValue: {
+            tasks: signal<TaskResponse[]>([]),
+            categories: signal<TaskCategoryResponse[]>([]),
+            isLoading: signal(false),
+            error: signal<string | null>(null),
+            total: signal(0),
+            listQuery: signal<FindTasksQuery>({
+              page: 4,
+              limit: PAGINATION_DEFAULT_LIMIT,
+              categoryId: 'old-category',
+              sort: TaskSort.Oldest,
+            }),
+            page: computed(() => 4),
+            limit: computed(() => PAGINATION_DEFAULT_LIMIT),
+            categoryTitleById: () => new Map<string, string>(),
+            load,
+          },
+        },
+      ],
+    }).compileComponents();
+
+    const fixture = TestBed.createComponent(TasksPageComponent);
+    fixture.detectChanges();
+
+    expect(load).toHaveBeenCalledTimes(1);
+    expect(load).toHaveBeenCalledWith({
+      page: PAGINATION_DEFAULT_PAGE,
+      limit: PAGINATION_DEFAULT_LIMIT,
+      sort: TaskSort.Newest,
+    });
   });
 });

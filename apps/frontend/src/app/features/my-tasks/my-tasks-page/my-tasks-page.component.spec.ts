@@ -1,7 +1,8 @@
 import { signal } from '@angular/core';
 import { HttpErrorResponse } from '@angular/common/http';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { provideRouter } from '@angular/router';
+import { By } from '@angular/platform-browser';
+import { ActivatedRoute, convertToParamMap, provideRouter, Router } from '@angular/router';
 import { TaskApi, TaskCategoryApi } from '@freelance-platform/client-api';
 import { AuthStore } from '@freelance-platform/client-state';
 import {
@@ -19,7 +20,8 @@ import {
   TaskStatus,
   UserResponse,
 } from '@freelance-platform/shared-types';
-import { of, Subject, throwError } from 'rxjs';
+import { Observable, of, Subject, throwError } from 'rxjs';
+import { TasksFiltersComponent } from '../../tasks/tasks-filters/tasks-filters.component';
 import { MyTasksPageComponent } from './my-tasks-page.component';
 
 describe('MyTasksPageComponent testing', () => {
@@ -118,15 +120,17 @@ describe('MyTasksPageComponent testing', () => {
     expect(text).not.toContain('Откликнуться');
   });
 
-  it('should send draft status to the backend', async () => {
+  it('should send draft status to the backend and write it with replaceUrl', async () => {
     emitTasks();
-    vi.useFakeTimers();
+    const navigate = vi.spyOn(TestBed.inject(Router), 'navigate');
+    const filters = fixture.debugElement.query(By.directive(TasksFiltersComponent))
+      .componentInstance as TasksFiltersComponent;
 
-    const statusSelect = root().querySelector('#tasks-status') as HTMLSelectElement;
-    statusSelect.value = TaskStatus.Draft;
-    statusSelect.dispatchEvent(new Event('change'));
-    fixture.detectChanges();
-    await vi.advanceTimersByTimeAsync(300);
+    filters.filtersChange.emit({
+      status: TaskStatus.Draft,
+      sort: TaskSort.Newest,
+    });
+    await fixture.whenStable();
     fixture.detectChanges();
 
     const [lastCall] = findMine.mock.calls.slice(-1);
@@ -134,6 +138,14 @@ describe('MyTasksPageComponent testing', () => {
 
     expect(query.status).toBe(TaskStatus.Draft);
     expect(query.page).toBe(PAGINATION_DEFAULT_PAGE);
+    expect(query).not.toHaveProperty('search');
+    expect(navigate).toHaveBeenCalledWith(
+      [],
+      expect.objectContaining({
+        replaceUrl: true,
+        queryParams: { status: TaskStatus.Draft },
+      }),
+    );
   });
 
   it('should ignore search without a new request', async () => {
@@ -151,20 +163,29 @@ describe('MyTasksPageComponent testing', () => {
     expect(root().textContent).toContain('Дизайн интернет-магазина');
   });
 
-  it('should request the next page', () => {
+  it('should request the next page and keep it in the address', async () => {
     emitTasks(createMockTaskListResponse({ items: [ownTask], total: 21 }));
+    const navigate = vi.spyOn(TestBed.inject(Router), 'navigate');
 
     const next = Array.from(root().querySelectorAll('button')).find((button) =>
       button.textContent?.includes('Вперёд'),
     );
 
     next?.click();
+    await fixture.whenStable();
     fixture.detectChanges();
 
     const [lastCall] = findMine.mock.calls.slice(-1);
     const [query] = lastCall as [FindMyTasksQuery];
 
     expect(query.page).toBe(2);
+    expect(navigate).toHaveBeenCalledWith(
+      [],
+      expect.objectContaining({
+        replaceUrl: true,
+        queryParams: { page: '2' },
+      }),
+    );
   });
 
   it('should render the load error', () => {
@@ -176,5 +197,64 @@ describe('MyTasksPageComponent testing', () => {
     fixture.detectChanges();
 
     expect(root().textContent).toContain('Не удалось загрузить задачи');
+  });
+});
+
+describe('MyTasksPageComponent address', () => {
+  it('should load draft and page from the address without search', async () => {
+    const category = createMockTaskCategoryResponse();
+    const findMine = vi.fn<(query: FindMyTasksQuery) => Observable<TaskListResponse>>(() =>
+      of(createMockTaskListResponse({ items: [], total: 0 })),
+    );
+
+    await TestBed.configureTestingModule({
+      imports: [MyTasksPageComponent],
+      providers: [
+        provideRouter([]),
+        {
+          provide: ActivatedRoute,
+          useValue: {
+            queryParamMap: of(
+              convertToParamMap({
+                status: TaskStatus.Draft,
+                page: '2',
+                search: 'логотип',
+              }),
+            ),
+          },
+        },
+        {
+          provide: AuthStore,
+          useValue: {
+            isAuthenticated: signal(true),
+            user: signal<UserResponse | null>(mockClientUserResponse),
+            logout: vi.fn(),
+          },
+        },
+        { provide: TaskApi, useValue: { findMine } },
+        {
+          provide: TaskCategoryApi,
+          useValue: { findAll: () => of([category]) },
+        },
+      ],
+    }).compileComponents();
+
+    const fixture = TestBed.createComponent(MyTasksPageComponent);
+    fixture.detectChanges();
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    const query = findMine.mock.calls[0]?.[0];
+    const root = fixture.nativeElement as HTMLElement;
+
+    expect(query).toEqual({
+      page: 2,
+      limit: PAGINATION_DEFAULT_LIMIT,
+      status: TaskStatus.Draft,
+      sort: TaskSort.Newest,
+    });
+    expect(query).not.toHaveProperty('search');
+    expect(root.querySelector<HTMLInputElement>('#tasks-search')?.value).toBe('логотип');
+    expect(root.querySelector<HTMLSelectElement>('#tasks-status')?.value).toBe(TaskStatus.Draft);
   });
 });
