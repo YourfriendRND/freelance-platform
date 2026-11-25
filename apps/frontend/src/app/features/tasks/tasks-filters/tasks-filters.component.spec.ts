@@ -38,25 +38,140 @@ describe('TasksFiltersComponent testing', () => {
     return fixture.nativeElement as HTMLElement;
   }
 
-  it('should preset the category from the query without emitting', async () => {
+  function createFilters(): {
+    preset: ComponentFixture<TasksFiltersComponent>;
+    emittedSelection: TasksFiltersSelection[];
+  } {
     const preset = TestBed.createComponent(TasksFiltersComponent);
-    const presetEmitted: TasksFiltersSelection[] = [];
+    const emittedSelection: TasksFiltersSelection[] = [];
 
     preset.componentInstance.filtersChange.subscribe((query) => {
-      presetEmitted.push(query);
+      emittedSelection.push(query);
     });
+
+    return { preset, emittedSelection };
+  }
+
+  it('should fill the selection without emitting and open the panel', async () => {
+    vi.useFakeTimers();
+    const { preset, emittedSelection } = createFilters();
+    const selection: TasksFiltersSelection = {
+      search: 'верстка',
+      categoryId: category.id,
+      status: TaskStatus.Closed,
+      budgetMin: TASKS_TEST_BUDGET_MIN,
+      budgetMax: TASKS_TEST_BUDGET_MAX,
+      sort: TaskSort.Oldest,
+    };
+
     preset.componentRef.setInput('categories', [category]);
-    preset.componentRef.setInput('initialCategoryId', category.id);
+    preset.componentRef.setInput('selection', selection);
     preset.detectChanges();
-    await preset.whenStable();
+    await vi.advanceTimersByTimeAsync(300);
+
+    const presetRoot = preset.nativeElement as HTMLElement;
+
+    expect(presetRoot.querySelector<HTMLInputElement>('#tasks-search')?.value).toBe('верстка');
+    expect(presetRoot.querySelector<HTMLSelectElement>('#tasks-category')?.value).toBe(category.id);
+    expect(presetRoot.querySelector<HTMLSelectElement>('#tasks-status')?.value).toBe(
+      TaskStatus.Closed,
+    );
+    expect(presetRoot.querySelector<HTMLInputElement>('#tasks-budget-min')?.value).toBe(
+      String(TASKS_TEST_BUDGET_MIN),
+    );
+    expect(presetRoot.querySelector<HTMLInputElement>('#tasks-budget-max')?.value).toBe(
+      String(TASKS_TEST_BUDGET_MAX),
+    );
+    expect(presetRoot.querySelector<HTMLSelectElement>('#tasks-sort')?.value).toBe(TaskSort.Oldest);
+    expect(presetRoot.querySelector('.tasks-filters__panel')?.classList.contains(
+      'tasks-filters__panel--open',
+    )).toBe(true);
+    expect(emittedSelection).toEqual([]);
+  });
+
+  it('should keep the panel closed for search alone', async () => {
+    vi.useFakeTimers();
+    const { preset, emittedSelection } = createFilters();
+
+    preset.componentRef.setInput('selection', {
+      search: 'логотип',
+      sort: TaskSort.Newest,
+    });
+    preset.detectChanges();
+    await vi.advanceTimersByTimeAsync(300);
+
+    const presetRoot = preset.nativeElement as HTMLElement;
+
+    expect(presetRoot.querySelector<HTMLInputElement>('#tasks-search')?.value).toBe('логотип');
+    expect(presetRoot.querySelector('.tasks-filters__toggle')?.getAttribute('aria-expanded')).toBe(
+      'false',
+    );
+    expect(
+      presetRoot.querySelector('.tasks-filters__panel')?.classList.contains(
+        'tasks-filters__panel--open',
+      ),
+    ).toBe(false);
+    expect(emittedSelection).toEqual([]);
+  });
+
+  it.each<{ selection: TasksFiltersSelection }>([
+    { selection: { categoryId: category.id, sort: TaskSort.Newest } },
+    { selection: { status: TaskStatus.Open, sort: TaskSort.Newest } },
+    { selection: { budgetMin: TASKS_TEST_BUDGET_MIN, sort: TaskSort.Newest } },
+    { selection: { budgetMax: TASKS_TEST_BUDGET_MAX, sort: TaskSort.Newest } },
+    { selection: { sort: TaskSort.BudgetAsc } },
+  ])('should open the panel for a restored filter %#', ({ selection }) => {
+    const { preset, emittedSelection } = createFilters();
+
+    preset.componentRef.setInput('categories', [category]);
+    preset.componentRef.setInput('selection', selection);
     preset.detectChanges();
 
-    const categorySelect = preset.nativeElement.querySelector(
-      '#tasks-category',
-    ) as HTMLSelectElement;
+    const panel = (preset.nativeElement as HTMLElement).querySelector('.tasks-filters__panel');
 
-    expect(categorySelect.value).toBe(category.id);
-    expect(presetEmitted).toEqual([]);
+    expect(panel?.classList.contains('tasks-filters__panel--open')).toBe(true);
+    expect(emittedSelection).toEqual([]);
+  });
+
+  it('should apply the category after the category list arrives and keep the panel open', () => {
+    const { preset, emittedSelection } = createFilters();
+
+    preset.componentRef.setInput('selection', {
+      search: 'черновик',
+      categoryId: category.id,
+      sort: TaskSort.Newest,
+    });
+    preset.detectChanges();
+
+    const presetRoot = preset.nativeElement as HTMLElement;
+
+    expect(presetRoot.querySelector<HTMLSelectElement>('#tasks-category')?.value).toBe(
+      TASKS_ALL_FILTER_VALUE,
+    );
+    expect(presetRoot.querySelector('.tasks-filters__panel')?.classList.contains(
+      'tasks-filters__panel--open',
+    )).toBe(false);
+
+    preset.componentRef.setInput('categories', [category]);
+    preset.detectChanges();
+
+    expect(presetRoot.querySelector<HTMLInputElement>('#tasks-search')?.value).toBe('черновик');
+    expect(presetRoot.querySelector<HTMLSelectElement>('#tasks-category')?.value).toBe(category.id);
+    expect(presetRoot.querySelector('.tasks-filters__panel')?.classList.contains(
+      'tasks-filters__panel--open',
+    )).toBe(true);
+
+    preset.componentRef.setInput('selection', {
+      search: 'логотип',
+      sort: TaskSort.Newest,
+    });
+    preset.detectChanges();
+
+    expect(presetRoot.querySelector<HTMLInputElement>('#tasks-search')?.value).toBe('логотип');
+    expect(presetRoot.querySelector('.tasks-filters__panel')?.classList.contains(
+      'tasks-filters__panel--open',
+    )).toBe(true);
+    expect(emittedSelection).toEqual([]);
   });
 
   it('should toggle the extra filters', () => {

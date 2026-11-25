@@ -5,7 +5,6 @@ import {
   effect,
   inject,
   input,
-  OnInit,
   output,
   signal,
 } from '@angular/core';
@@ -27,6 +26,7 @@ import {
   TASKS_STATUS_OPTIONS,
   TasksFiltersFormValue,
   TasksFiltersSelection,
+  toTasksFiltersFormValue,
   toTasksFiltersSelection,
 } from './tasks-filters.model';
 
@@ -37,14 +37,14 @@ import {
   styleUrl: './tasks-filters.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class TasksFiltersComponent implements OnInit {
+export class TasksFiltersComponent {
   private readonly formBuilder = inject(NonNullableFormBuilder);
 
   readonly categories = input<readonly TaskCategoryResponse[]>([]);
   readonly shownCount = input(0);
   readonly totalCount = input(0);
   readonly includeDraft = input(false);
-  readonly initialCategoryId = input<string | null>(null);
+  readonly selection = input<TasksFiltersSelection | null>(null);
 
   readonly filtersChange = output<TasksFiltersSelection>();
 
@@ -73,8 +73,6 @@ export class TasksFiltersComponent implements OnInit {
     ],
   );
 
-  private applyInitialCategory = (): void => undefined;
-
   protected readonly form = this.formBuilder.group({
     search: this.formBuilder.control(''),
     category: this.formBuilder.control(TASKS_ALL_FILTER_VALUE),
@@ -86,45 +84,78 @@ export class TasksFiltersComponent implements OnInit {
     sort: this.formBuilder.control<TaskSort>(TaskSort.Newest),
   });
 
-  ngOnInit(): void {
-    this.applyInitialCategory();
-  }
+  private lastSelection = toTasksFiltersSelection(this.form.getRawValue());
 
   constructor() {
-    let lastQuery = toTasksFiltersSelection(this.form.getRawValue());
-    let categoryApplied = false;
-
-    this.applyInitialCategory = () => {
-      const categoryId = this.initialCategoryId();
-      const categoryKnown = this.categories().some((category) => category.id === categoryId);
-
-      if (!categoryId || !categoryKnown || categoryApplied) {
-        return;
-      }
-
-      categoryApplied = true;
-      this.form.controls.category.setValue(categoryId, { emitEvent: false });
-      lastQuery = toTasksFiltersSelection(this.form.getRawValue());
-    };
-
     effect(() => {
-      this.applyInitialCategory();
+      this.applySelection();
     });
 
     this.form.valueChanges
       .pipe(
         debounceTime(300),
         map(() => toTasksFiltersSelection(this.form.getRawValue())),
-        filter((query) => !isSameTasksFiltersSelection(query, lastQuery)),
+        filter((query) => !isSameTasksFiltersSelection(query, this.lastSelection)),
         takeUntilDestroyed(),
       )
       .subscribe((query) => {
-        lastQuery = query;
+        this.lastSelection = query;
         this.filtersChange.emit(query);
       });
   }
 
   protected onToggleFilters(): void {
     this.filtersOpen.update((open) => !open);
+  }
+
+  private applySelection(): void {
+    const next = this.selection();
+    const categories = this.categories();
+
+    if (!next) {
+      return;
+    }
+
+    const applicable = this.applicableSelection(next, categories);
+
+    if (isSameTasksFiltersSelection(applicable, this.lastSelection)) {
+      return;
+    }
+
+    this.form.patchValue(toTasksFiltersFormValue(applicable), { emitEvent: false });
+    this.lastSelection = toTasksFiltersSelection(this.form.getRawValue());
+
+    if (this.selectionOpensPanel(applicable)) {
+      this.filtersOpen.set(true);
+    }
+  }
+
+  private applicableSelection(
+    selection: TasksFiltersSelection,
+    categories: readonly TaskCategoryResponse[],
+  ): TasksFiltersSelection {
+    const categoryKnown = categories.some((category) => category.id === selection.categoryId);
+
+    if (selection.categoryId === undefined || categoryKnown) {
+      return selection;
+    }
+
+    return {
+      search: selection.search,
+      status: selection.status,
+      budgetMin: selection.budgetMin,
+      budgetMax: selection.budgetMax,
+      sort: selection.sort,
+    };
+  }
+
+  private selectionOpensPanel(selection: TasksFiltersSelection): boolean {
+    return (
+      selection.categoryId !== undefined ||
+      selection.status !== undefined ||
+      selection.budgetMin !== undefined ||
+      selection.budgetMax !== undefined ||
+      selection.sort !== TaskSort.Newest
+    );
   }
 }

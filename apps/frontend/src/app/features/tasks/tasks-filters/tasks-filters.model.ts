@@ -21,6 +21,15 @@ export type TasksFiltersFormValue = {
   sort: TaskSort;
 };
 
+export type TasksFiltersPatchValue = {
+  search: string;
+  category: string;
+  status: TasksFilterStatus;
+  budgetMin: number | null;
+  budgetMax: number | null;
+  sort: TaskSort;
+};
+
 export type TasksFiltersSelection = {
   search?: string;
   categoryId?: string;
@@ -48,6 +57,7 @@ export const TASKS_SORT_OPTIONS: readonly UiSelectOption<TaskSort>[] = [
   { value: TaskSort.BudgetAsc, label: 'Бюджет: по возрастанию' },
 ];
 
+/** Собирает набор фильтров из значений формы. Пустой поиск и пункт «все» отбрасывает. */
 export function toTasksFiltersSelection(value: TasksFiltersFormValue): TasksFiltersSelection {
   const selection: TasksFiltersSelection = {
     sort: value.sort,
@@ -79,10 +89,12 @@ export function toTasksFiltersSelection(value: TasksFiltersFormValue): TasksFilt
   return selection;
 }
 
+/** Собирает публичный запрос списка из значений формы. Поиск и черновик не включает. */
 export function toFindTasksQuery(value: TasksFiltersFormValue): FindTasksQuery {
   return toPublicTasksQuery(toTasksFiltersSelection(value));
 }
 
+/** Собирает запрос «Моих задач». Поиск не включает, черновик сохраняет. */
 export function toMyTasksQuery(selection: TasksFiltersSelection): FindMyTasksQuery {
   const query: FindMyTasksQuery = {
     sort: selection.sort,
@@ -107,6 +119,7 @@ export function toMyTasksQuery(selection: TasksFiltersSelection): FindMyTasksQue
   return query;
 }
 
+/** Собирает публичный запрос списка из набора фильтров. Поиск и черновик не включает. */
 export function toPublicTasksQuery(selection: TasksFiltersSelection): FindTasksQuery {
   const query: FindTasksQuery = {
     sort: selection.sort,
@@ -131,6 +144,19 @@ export function toPublicTasksQuery(selection: TasksFiltersSelection): FindTasksQ
   return query;
 }
 
+/** Возвращает значения формы для восстановления из набора фильтров. */
+export function toTasksFiltersFormValue(selection: TasksFiltersSelection): TasksFiltersPatchValue {
+  return {
+    search: selection.search ?? '',
+    category: selection.categoryId ?? TASKS_ALL_FILTER_VALUE,
+    status: selection.status ?? TASKS_ALL_FILTER_VALUE,
+    budgetMin: selection.budgetMin ?? null,
+    budgetMax: selection.budgetMax ?? null,
+    sort: selection.sort,
+  };
+}
+
+/** Сравнивает два набора фильтров, включая поиск. */
 export function isSameTasksFiltersSelection(
   left: TasksFiltersSelection,
   right: TasksFiltersSelection,
@@ -145,6 +171,7 @@ export function isSameTasksFiltersSelection(
   );
 }
 
+/** Оставляет бюджет от 1. Дробную часть отбрасывает, мусор не возвращает. */
 function parseBudget(value: string | number | null | undefined): number | undefined {
   if (value === null || value === undefined || value === '') {
     return;
