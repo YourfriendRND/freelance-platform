@@ -7,6 +7,7 @@ import {
   signal,
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { ActivatedRoute, ParamMap, Router } from '@angular/router';
 import { TaskApi, TaskCategoryApi } from '@freelance-platform/client-api';
 import { resolveHttpErrorMessage } from '@freelance-platform/http';
 import {
@@ -30,6 +31,12 @@ import {
 } from '../../tasks/tasks-filters/tasks-filters.model';
 import { TasksPageContainerComponent } from '../../tasks/tasks-page-container/tasks-page-container.component';
 import { TasksPaginationComponent } from '../../tasks/tasks-pagination/tasks-pagination.component';
+import {
+  isCanonicalTasksListQuery,
+  parseTasksListParams,
+  TasksListParamsMode,
+  toTasksListQueryParams,
+} from '../../tasks/tasks-filters/tasks-list-params';
 import {
   categoryTitleById,
   hasAppliedFilters,
@@ -55,6 +62,8 @@ import {
 export class MyTasksPageComponent {
   private readonly taskApi = inject(TaskApi);
   private readonly taskCategoryApi = inject(TaskCategoryApi);
+  private readonly route = inject(ActivatedRoute);
+  private readonly router = inject(Router);
   private readonly destroyRef = inject(DestroyRef);
   private requestId = 0;
   private loadedQuery: FindMyTasksQuery | null = null;
@@ -70,6 +79,7 @@ export class MyTasksPageComponent {
   protected readonly errorMessage = signal<string | null>(null);
   protected readonly categories = this.loadedCategories;
   protected readonly currentPage = this.page;
+  protected readonly filtersSelection = this.filters.asReadonly();
 
   protected readonly tasks = computed<readonly TaskViewData[]>(() => {
     const titles = categoryTitleById(this.loadedCategories());
@@ -116,21 +126,13 @@ export class MyTasksPageComponent {
         },
       });
 
-    this.loadTasks();
+    this.route.queryParamMap.pipe(takeUntilDestroyed()).subscribe((paramMap) => {
+      this.applyQuery(paramMap);
+    });
   }
 
   protected onFiltersChange(filters: TasksFiltersSelection): void {
-    const previous = toMyTasksQuery(this.filters());
-    const next = toMyTasksQuery(filters);
-
-    this.filters.set(filters);
-
-    if (isSameTasksQuery(previous, next)) {
-      return;
-    }
-
-    this.page.set(PAGINATION_DEFAULT_PAGE);
-    this.loadTasks();
+    this.replaceListUrl(filters, PAGINATION_DEFAULT_PAGE);
   }
 
   protected onPageChange(page: number): void {
@@ -140,8 +142,28 @@ export class MyTasksPageComponent {
       return;
     }
 
-    this.page.set(nextPage);
+    this.replaceListUrl(this.filters(), nextPage);
+  }
+
+  private applyQuery(paramMap: ParamMap): void {
+    const parsed = parseTasksListParams(paramMap, TasksListParamsMode.Mine);
+
+    if (!isCanonicalTasksListQuery(paramMap, TasksListParamsMode.Mine)) {
+      this.replaceListUrl(parsed.selection, parsed.page);
+      return;
+    }
+
+    this.filters.set(parsed.selection);
+    this.page.set(parsed.page);
     this.loadTasks();
+  }
+
+  private replaceListUrl(selection: TasksFiltersSelection, page: number): void {
+    void this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: toTasksListQueryParams({ selection, page }),
+      replaceUrl: true,
+    });
   }
 
   private loadTasks(): void {

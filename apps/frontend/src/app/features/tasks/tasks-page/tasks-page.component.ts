@@ -3,12 +3,15 @@ import {
   Component,
   computed,
   inject,
+  signal,
 } from '@angular/core';
-import { ActivatedRoute } from '@angular/router';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { ActivatedRoute, ParamMap, Router } from '@angular/router';
 import { TaskStore } from '@freelance-platform/client-state';
 import {
   FindTasksQuery,
   PAGINATION_DEFAULT_PAGE,
+  TaskSort,
   TaskViewData,
 } from '@freelance-platform/shared-types';
 import { UiDashboardWrapperComponent } from '@freelance-platform/ui';
@@ -22,6 +25,13 @@ import {
   toPublicTasksQuery,
 } from '../tasks-filters/tasks-filters.model';
 import { TasksPaginationComponent } from '../tasks-pagination/tasks-pagination.component';
+import {
+  isCanonicalTasksListQuery,
+  parseTasksListParams,
+  TasksListParams,
+  TasksListParamsMode,
+  toTasksListQueryParams,
+} from '../tasks-filters/tasks-list-params';
 
 type TasksPageView = 'loading' | 'empty' | 'error' | 'list';
 
@@ -56,8 +66,13 @@ function hasAppliedListFilters(query: FindTasksQuery): boolean {
 export class TasksPageComponent {
   private readonly taskStore = inject(TaskStore);
   private readonly route = inject(ActivatedRoute);
+  private readonly router = inject(Router);
+  private readonly listParams = signal<TasksListParams>({
+    selection: { sort: TaskSort.Newest },
+    page: PAGINATION_DEFAULT_PAGE,
+  });
 
-  protected readonly initialCategoryId = this.route.snapshot.queryParamMap.get('categoryId');
+  protected readonly filtersSelection = computed(() => this.listParams().selection);
 
   protected readonly categories = this.taskStore.categories;
   protected readonly errorMessage = this.taskStore.error;
@@ -111,25 +126,46 @@ export class TasksPageComponent {
   });
 
   constructor() {
-    const categoryId = this.initialCategoryId;
-
-    this.taskStore.load(categoryId ? { categoryId } : undefined);
+    this.route.queryParamMap.pipe(takeUntilDestroyed()).subscribe((paramMap) => {
+      this.applyQuery(paramMap);
+    });
   }
 
   protected onPageChange(page: number): void {
     const nextPage = Math.min(Math.max(page, 1), this.totalPages());
 
-    this.taskStore.load({
-      ...this.taskStore.listQuery(),
-      page: nextPage,
-    });
+    if (nextPage === this.listParams().page) {
+      return;
+    }
+
+    this.replaceListUrl(this.listParams().selection, nextPage);
   }
 
   protected onFiltersChange(filters: TasksFiltersSelection): void {
+    this.replaceListUrl(filters, PAGINATION_DEFAULT_PAGE);
+  }
+
+  private applyQuery(paramMap: ParamMap): void {
+    const parsed = parseTasksListParams(paramMap, TasksListParamsMode.Public);
+
+    if (!isCanonicalTasksListQuery(paramMap, TasksListParamsMode.Public)) {
+      this.replaceListUrl(parsed.selection, parsed.page);
+      return;
+    }
+
+    this.listParams.set(parsed);
     this.taskStore.load({
-      page: PAGINATION_DEFAULT_PAGE,
+      page: parsed.page,
       limit: this.taskStore.limit(),
-      ...toPublicTasksQuery(filters),
+      ...toPublicTasksQuery(parsed.selection),
+    });
+  }
+
+  private replaceListUrl(selection: TasksFiltersSelection, page: number): void {
+    void this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: toTasksListQueryParams({ selection, page }),
+      replaceUrl: true,
     });
   }
 }
